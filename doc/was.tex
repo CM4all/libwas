@@ -1,0 +1,225 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[pdftex,bookmarks]{hyperref}
+\usepackage{longtable}
+
+\setlength\LTleft{0pt}
+\setlength\LTright{0pt}
+
+\begin{document}
+\title{The Web Application Socket Protocol}
+\author{Max Kellermann}
+
+\maketitle
+
+\begin{abstract}
+\emph{Web Application Socket} is a protocol between a web server and
+an application generating dynamic content.  Unlike other protocols
+such as (Fast)CGI and AJPv13, it is optimized for fast zero-copy
+operation.
+\end{abstract}
+
+\setcounter{tocdepth}{2}
+\tableofcontents
+\newpage
+
+\section{Why?}
+
+Why yet another protocol?
+
+The problem with existing protocols is that all of them are slow.  CGI
+suffers from forking overhead.  HTTP is complex and text based.
+AJPv13 and FastCGI are packet based, and thus do not allow zero-copy.
+
+The \emph{WAS} protocol is packet based, but opens a dedicated pipe
+for the payload (request/response body), to allow direct raw transfer.
+The goal is to have out-of-process web applications while reducing the
+multi-process overhead to the theoretical minimum.
+
+\section{Terminology}
+
+The \emph{container} is the web server which receives requests from
+the \emph{browser}.  It forwards the request to the
+\emph{application}.  Its response is being forwarded back to the
+\emph{browser}.
+
+\section{Concept}
+
+This protocol is built to mimic the semantics of HTTP.  A request has
+a method, a URI, headers (name/value pairs) and optionally a body.  A
+response has a status code, headers and optionally a body.
+
+Similar to FastCGI, the container launches as many application
+processes as it needs.  For simplicity, each application process
+handles one request at a time (this limitation may be lifted in a
+future protocol version, if advantages can be demonstrated).
+
+There are three connections between the container and the application:
+
+\begin{itemize}
+\item the \emph{control channel} carries metadata, such as request
+  method, request and response headers and the response status
+\item the \emph{output channel} is used to send the raw body of a
+  message
+\item the \emph{input channel} is used to receive the raw body of a
+  message
+\end{itemize}
+
+The control channel is an anonymous local socket pair (Unix domain
+sockets), while the input/output channels are unidirectional anonymous
+pipes.  Pipes were chosen because the Linux kernel is especially
+optimized for zero-copy from and to pipes (using the \texttt{splice()}
+system call).
+
+\subsection{Portability}
+
+This protocol was designed with optimizations for the Linux kernel in
+mind.  It is possible to implement it on other operating systems, but
+some of the protocol's advantages may not be available.  Other kernels
+may offer zero-copy system calls similar to \texttt{splice()}, and
+utilizing those may require an amendment to this protocol
+specification.
+
+Transferring WAS over the network is not intended.  Therefore, byte
+ordering and other platform dependent differences do not apply - all
+values are sent in host byte order.
+
+\section{Reference}
+
+\subsection{Lifecycle of an application process}
+
+The container may launch any number of application processes at any
+time.  The application should be able to handle an arbitrary number of
+consecutive requests.  Implementation of an ``idle timeout'' should be
+left to the container.  When the container does not need the
+application anymore, it closes the control socket.  A well-implemented
+application exits upon receiving end-of-file on the control socket,
+without the need for \texttt{SIGTERM} and \texttt{SIGKILL}.
+
+\subsection{States of an application process}
+
+\begin{itemize}
+\item idle, waiting for a request
+\item receiving request metadata
+\item processing request, sending the response
+\item flushing buffers (optional, see below)
+\end{itemize}
+
+\subsection{Lifecycle of a request}
+
+After initialization, the application waits for requests on the
+control socket.  It does not need to monitor the pipes at this point.
+
+The container first sends request metadata (method, URI, headers).
+This is completed by either a \texttt{DATA} or a \texttt{NO\_DATA}
+packet.  \texttt{NO\_DATA} indicates that no request body is
+available.  \texttt{DATA} is the opposite, and in this case, the
+container starts sending it to its output pipe (the application's
+input pipe).
+
+The application sends response metadata (status code, headers),
+followed by either \texttt{DATA} or \texttt{NO\_DATA}.  After that, it
+(optionally) starts sending the response body to its output pipe (the
+container's input pipe).
+
+An entity (request or response) is finished when the body transfer was
+completed, or when the \texttt{NO\_DATA} was transferred.  Except for
+\texttt{NO\_DATA}, there is no special ``end'' packet.
+
+\subsection{The data channel}
+
+After one party has announced a ``body'' with a \texttt{DATA} packet,
+it starts sending its contents on the according data channel.  As soon
+as it knows the total length of the body, a \texttt{LENGTH} packet
+follows.  That may well be after sending is complete.
+
+If the receiver does not want it (but wants to continue handling the
+request), it sends a \texttt{STOP} packet as soon as possible.  The
+sender responds with a \texttt{PREMATURE} packet, announcing the number
+of bytes it has sent so far, to allow the receiver to flush the pipe
+buffer reliably.  This allows reusing the pipe for the next request.
+
+\subsection{The control channel protocol}
+
+\subsubsection{Format}
+
+Information on the control channel is enclosed in packets.  A packet
+consists of a command, and an optional payload.  The header is defined
+by the following C declaration:
+
+\begin{verbatim}
+struct was_header {
+    uint16_t length;
+    uint16_t command;
+};
+\end{verbatim}
+
+\texttt{length} is the length of the payload in bytes.  If the payload
+length is not a multiple of 4, it is padded.
+
+All numbers are in host byte order.  That includes the packet payload,
+if applicable.
+
+\subsubsection{Request packets}
+
+\begin{longtable}{|l|p{10cm}|}
+\hline
+
+\texttt{REQUEST} & start of a HTTP request \\
+
+\hline
+
+\texttt{METHOD} & the HTTP request method \\
+
+\hline
+
+\texttt{URI} & the HTTP request URI \\
+
+\hline
+\end{longtable}
+
+\subsubsection{Response packets}
+
+\begin{longtable}{|l|p{10cm}|}
+\hline
+
+\texttt{STATUS} & start of a HTTP request \\
+
+\hline
+\end{longtable}
+
+\subsubsection{Common packets}
+
+\begin{longtable}{|l|p{10cm}|}
+\hline
+
+\texttt{HEADER} & a name-value pair \\
+
+\hline
+
+\texttt{NO\_DATA} & no body present, this entity is finished \\
+
+\hline
+
+\texttt{DATA} & a body is present, the length will be announced as
+soon as it is known \\
+
+\hline
+
+\texttt{LENGTH} & announces the body length; payload is a
+\texttt{uint64\_t} \\
+
+\hline
+
+\texttt{STOP} & asks the communication partner to stop sending the
+body \\
+
+\hline
+
+\texttt{PREMATURE} & announces the premature end of the body; packet
+includes the total number of bytes sent to the data pipe
+(\texttt{uint64\_t}) \\
+
+\hline
+\end{longtable}
+
+\end{document}
