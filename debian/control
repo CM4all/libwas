@@ -11,9 +11,18 @@ Standards-Version: 3.9.1
 Package: libcm4all-was-dev
 Section: non-free/libdevel
 Architecture: any
-Depends: pkg-config (>= 0.9.0), libcm4all-http-dev,
- libapreq2-dev (>= 2.08)
+Depends: pkg-config (>= 0.9.0), libcm4all-http-dev
 Description: Development files for libwas
  libwas is a support library for the Web Application Socket protocol.
  .
  This package contains development files.
+
+Package: libcm4all-was-apreq-dev
+Section: non-free/libdevel
+Architecture: any
+Depends: pkg-config (>= 0.9.0), libcm4all-was-dev,
+ libapreq2-dev (>= 2.08)
+Description: Development files for libwas/apreq2
+ libwas is a support library for the Web Application Socket protocol.
+ .
+ This package contains development files for the libapreq2 module.
