@@ -15,6 +15,13 @@ dnl
 dnl Checks for libraries.
 dnl
 
+AC_PATH_PROG(APREQ2_CONFIG, [apreq2-config],
+	AC_MSG_ERROR([apreq2-config not found]))
+LIBAPREQ2_CFLAGS=`$APREQ2_CONFIG --includes`
+LIBAPREQ2_LIBS=`$APREQ2_CONFIG --link-ld --ldflags --libs`
+AC_SUBST(LIBAPREQ2_CFLAGS)
+AC_SUBST(LIBAPREQ2_LIBS)
+
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.16],,
 	[AC_MSG_ERROR([glib 2.16 is required])])
 
@@ -64,4 +71,5 @@ dnl
 AC_OUTPUT(
 Makefile
 libcm4all-was-simple.pc
+libcm4all-was-apreq.pc
 )
