@@ -57,6 +57,7 @@ struct was_simple {
 
     struct {
         enum {
+            RESPONSE_STATE_NONE,
             RESPONSE_STATE_STATUS,
             RESPONSE_STATE_HEADERS,
             RESPONSE_STATE_BODY,
@@ -68,6 +69,8 @@ struct was_simple {
 static void
 was_simple_free_request(struct was_simple *w)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     g_free(w->request.uri);
 }
 
@@ -87,9 +90,7 @@ was_simple_new(void)
     w->output.sent = 0;
     w->output.known_length = false;
 
-    w->response.state = RESPONSE_STATE_STATUS;
-
-    memset(&w->request, 0, sizeof(w->request));
+    w->response.state = RESPONSE_STATE_NONE;
 
     return w;
 }
@@ -224,14 +225,18 @@ was_simple_control_send_packet(struct was_simple *w, enum was_command command,
 static void
 was_simple_clear_request(struct was_simple *w)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     was_simple_free_request(w);
-    memset(&w->request, 0, sizeof(w->request));
-    w->request.method = HTTP_METHOD_GET;
+
+    w->response.state = RESPONSE_STATE_NONE;
 }
 
 static void
 was_simple_finish_request(struct was_simple *w)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     // XXX
     was_simple_set_eof(w);
     was_simple_clear_request(w);
@@ -241,6 +246,8 @@ static bool
 was_simple_apply_request_packet(struct was_simple *w,
                                 const struct was_control_packet *packet)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     switch (packet->command) {
     case WAS_COMMAND_NOP:
         break;
@@ -283,12 +290,21 @@ was_simple_apply_request_packet(struct was_simple *w,
 const char *
 was_simple_accept(struct was_simple *w)
 {
-    was_simple_finish_request(w);
+    if (w->response.state != RESPONSE_STATE_NONE)
+        was_simple_finish_request(w);
+
+    assert(w->response.state == RESPONSE_STATE_NONE);
 
     const struct was_control_packet *packet;
     packet = was_simple_control_expect(w, WAS_COMMAND_REQUEST);
     if (packet == NULL)
         return NULL;
+
+    assert(w->response.state == RESPONSE_STATE_NONE);
+    w->response.state = RESPONSE_STATE_STATUS;
+
+    memset(&w->request, 0, sizeof(w->request));
+    w->request.method = HTTP_METHOD_GET;
 
     do {
         packet = was_simple_control_read(w, false);
@@ -305,12 +321,16 @@ was_simple_accept(struct was_simple *w)
 http_method_t
 was_simple_get_method(const struct was_simple *w)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     return w->request.method;
 }
 
 const char *
 was_simple_get_header(struct was_simple *w, const char *name)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     /* XXX */
     (void)w;
     (void)name;
@@ -320,12 +340,16 @@ was_simple_get_header(struct was_simple *w, const char *name)
 int
 was_simple_input_fd(const struct was_simple *w)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     return w->input.fd;
 }
 
 bool
 was_simple_received(struct was_simple *w, size_t nbytes)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     w->input.received += nbytes;
     /* XXX */
     return true;
@@ -334,6 +358,8 @@ was_simple_received(struct was_simple *w, size_t nbytes)
 void
 was_simple_input_close(struct was_simple *w)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     // XXX
     (void)w;
 }
@@ -341,6 +367,8 @@ was_simple_input_close(struct was_simple *w)
 bool
 was_simple_status(struct was_simple *w, http_status_t status)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     if (w->response.state != RESPONSE_STATE_STATUS)
         /* too late for sending the status */
         return false;
@@ -358,6 +386,8 @@ bool
 was_simple_set_header(struct was_simple *w,
                       const char *name, const char *value)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     if (w->response.state == RESPONSE_STATE_STATUS &&
         !was_simple_status(w, HTTP_STATUS_OK))
         return false;
@@ -373,6 +403,8 @@ was_simple_set_header(struct was_simple *w,
 bool
 was_simple_set_length(struct was_simple *w, uint64_t length)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     if (w->output.no_body)
         return false;
 
@@ -408,6 +440,8 @@ was_simple_set_length(struct was_simple *w, uint64_t length)
 static bool
 was_simple_set_response_state_body(struct was_simple *w)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     if (w->response.state == RESPONSE_STATE_STATUS &&
         !was_simple_status(w, HTTP_STATUS_OK))
         return false;
@@ -433,6 +467,8 @@ was_simple_set_response_state_body(struct was_simple *w)
 int
 was_simple_output_fd(struct was_simple *w)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     if (!was_simple_set_response_state_body(w))
         return -1;
 
@@ -442,6 +478,8 @@ was_simple_output_fd(struct was_simple *w)
 bool
 was_simple_sent(struct was_simple *w, size_t nbytes)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     if (w->output.no_body)
         return false;
 
@@ -457,6 +495,8 @@ was_simple_sent(struct was_simple *w, size_t nbytes)
 bool
 was_simple_write(struct was_simple *w, const void *data0, size_t length)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     if (!was_simple_set_response_state_body(w))
         return -1;
 
@@ -497,6 +537,8 @@ was_simple_printf(struct was_simple *w, const char *fmt, ...)
 bool
 was_simple_set_eof(struct was_simple *w)
 {
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
     if (w->response.state == RESPONSE_STATE_STATUS &&
         !was_simple_status(w, HTTP_STATUS_NO_CONTENT))
         return false;
