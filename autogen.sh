@@ -4,7 +4,6 @@ set -e
 
 rm -rf config.cache build
 mkdir build
-libtoolize --force
 aclocal
 automake --add-missing --foreign
 autoconf
