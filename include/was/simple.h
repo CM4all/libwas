@@ -50,6 +50,12 @@ was_simple_get_method(const struct was_simple *w);
 const char *
 was_simple_get_header(struct was_simple *w, const char *name);
 
+/**
+ * Returns the value of a WAS parameter.
+ */
+const char *
+was_simple_get_parameter(struct was_simple *w, const char *name);
+
 int
 was_simple_input_fd(const struct was_simple *w);
 

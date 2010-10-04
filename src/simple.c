@@ -337,6 +337,17 @@ was_simple_get_header(struct was_simple *w, const char *name)
     return NULL;
 }
 
+const char *
+was_simple_get_parameter(struct was_simple *w, const char *name)
+{
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
+    /* XXX */
+    (void)w;
+    (void)name;
+    return NULL;
+}
+
 int
 was_simple_input_fd(const struct was_simple *w)
 {
