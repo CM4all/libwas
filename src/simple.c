@@ -52,6 +52,9 @@ struct was_simple {
     struct {
         http_method_t method;
         char *uri;
+
+        GHashTable *headers, *parameters;
+
         bool finished;
     } request;
 
@@ -72,6 +75,8 @@ was_simple_free_request(struct was_simple *w)
     assert(w->response.state != RESPONSE_STATE_NONE);
 
     g_free(w->request.uri);
+    g_hash_table_destroy(w->request.headers);
+    g_hash_table_destroy(w->request.parameters);
 }
 
 struct was_simple *
@@ -243,6 +248,18 @@ was_simple_finish_request(struct was_simple *w)
 }
 
 static bool
+was_simple_apply_map(GHashTable *map, const char *payload, size_t length)
+{
+    const char *p = memchr(payload, '=', length);
+    if (p == NULL || p == payload)
+        return false;
+
+    g_hash_table_insert(map, g_strndup(payload, p - payload),
+                        g_strndup(p + 1, payload + length - p));
+    return true;
+}
+
+static bool
 was_simple_apply_request_packet(struct was_simple *w,
                                 const struct was_control_packet *packet)
 {
@@ -264,9 +281,17 @@ was_simple_apply_request_packet(struct was_simple *w,
     case WAS_COMMAND_SCRIPT_NAME:
     case WAS_COMMAND_PATH_INFO:
     case WAS_COMMAND_QUERY_STRING:
-    case WAS_COMMAND_HEADER:
-    case WAS_COMMAND_PARAMETER:
         /* XXX implement */
+        break;
+
+    case WAS_COMMAND_HEADER:
+        was_simple_apply_map(w->request.headers,
+                             packet->payload, packet->length);
+        break;
+
+    case WAS_COMMAND_PARAMETER:
+        was_simple_apply_map(w->request.parameters,
+                             packet->payload, packet->length);
         break;
 
     case WAS_COMMAND_STATUS:
@@ -305,6 +330,10 @@ was_simple_accept(struct was_simple *w)
 
     memset(&w->request, 0, sizeof(w->request));
     w->request.method = HTTP_METHOD_GET;
+    w->request.headers = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                               g_free, g_free);
+    w->request.parameters = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                                  g_free, g_free);
 
     do {
         packet = was_simple_control_read(w, false);
@@ -331,10 +360,7 @@ was_simple_get_header(struct was_simple *w, const char *name)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
 
-    /* XXX */
-    (void)w;
-    (void)name;
-    return NULL;
+    return g_hash_table_lookup(w->request.headers, name);
 }
 
 const char *
@@ -342,10 +368,7 @@ was_simple_get_parameter(struct was_simple *w, const char *name)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
 
-    /* XXX */
-    (void)w;
-    (void)name;
-    return NULL;
+    return g_hash_table_lookup(w->request.parameters, name);
 }
 
 int
