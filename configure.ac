@@ -28,6 +28,9 @@ PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.16],,
 PKG_CHECK_MODULES([LIBHTTP], [libcm4all-http],,
 	[AC_MSG_ERROR([libcm4all-http is required])])
 
+PKG_CHECK_MODULES([LIBCORE], [libcore >= 1.20.5],,
+	[AC_MSG_ERROR([libcore not found])])
+
 dnl
 dnl CFLAGS
 dnl
@@ -72,4 +75,5 @@ AC_OUTPUT(
 Makefile
 libcm4all-was-simple.pc
 libcm4all-was-apreq.pc
+libcm4all-was-xios.pc
 )

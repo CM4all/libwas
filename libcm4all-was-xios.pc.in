@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libcm4all-was-xios
+Description: CM4all WAS server library, libcore xios implementation
+Version: @VERSION@
+Requires: libcm4all-was-simple, libcore
+Libs: -L${libdir} -lcm4all-was-xios
+Cflags: -I${includedir}
