@@ -7,5 +7,5 @@ Name: libcm4all-was-simple
 Description: CM4all simple WAS server library
 Version: @VERSION@
 Requires: libcm4all-http
-Libs: -L${libdir} -lcm4all-was-simple
+Libs: -L${libdir} -lcm4all-was-simple @GLIB_LIBS@
 Cflags: -I${includedir}
