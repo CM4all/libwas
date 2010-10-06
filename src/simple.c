@@ -596,15 +596,11 @@ was_simple_set_eof(struct was_simple *w)
         return false;
 
     if (w->response.state == RESPONSE_STATE_HEADERS) {
-        if (w->output.no_body) {
-            if (!was_simple_control_send_empty(w, WAS_COMMAND_NO_DATA))
-                return false;
+        if (!was_simple_control_send_empty(w, WAS_COMMAND_NO_DATA))
+            return false;
 
-            w->response.state = RESPONSE_STATE_END;
-            return true;
-        }
-
-        w->response.state = RESPONSE_STATE_BODY;
+        w->response.state = RESPONSE_STATE_END;
+        return true;
     }
 
     if (w->response.state == RESPONSE_STATE_BODY) {
