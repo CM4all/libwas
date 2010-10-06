@@ -175,6 +175,24 @@ if applicable.
 \texttt{URI} & the HTTP request URI \\
 
 \hline
+
+\texttt{SCRIPT\_NAME} & the relevant part of the URI which refers to
+the WAS application \\
+
+\hline
+
+\texttt{PATH\_INFO} & the tail of the URI after \texttt{SCRIPT\_NAME} \\
+
+\hline
+
+\texttt{PATH\_INFO} & the tail of the URI after \texttt{SCRIPT\_NAME} \\
+
+\hline
+
+\texttt{PARAMETER} & an application-defined parameter: a name-value
+pair, separated by a ``='' character \\
+
+\hline
 \end{longtable}
 
 \subsubsection{Response packets}
@@ -192,7 +210,8 @@ if applicable.
 \begin{longtable}{|l|p{10cm}|}
 \hline
 
-\texttt{HEADER} & a name-value pair \\
+\texttt{HEADER} & a request or response header: a name-value pair,
+separated by a ``='' character \\
 
 \hline
 
