@@ -266,11 +266,29 @@ was_simple_apply_request_packet(struct was_simple *w,
     assert(w->response.state != RESPONSE_STATE_NONE);
 
     switch (packet->command) {
+        http_method_t method;
+
     case WAS_COMMAND_NOP:
         break;
 
     case WAS_COMMAND_REQUEST:
         return false;
+
+    case WAS_COMMAND_METHOD:
+        if (packet->length != sizeof(method))
+            return false;
+
+        method = *(const http_method_t *)packet->payload;
+        if (w->request.method != HTTP_METHOD_GET &&
+            method != w->request.method)
+            /* sending that packet twice is illegal */
+            return false;
+
+        if (!http_method_is_valid(method))
+            return false;
+
+        w->request.method = method;
+        break;
 
     case WAS_COMMAND_URI:
         if (w->request.uri != NULL)
