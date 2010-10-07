@@ -89,11 +89,7 @@ was_simple_new(void)
     w->control.packet.payload = NULL;
 
     w->input.fd = 0;
-    w->input.received = 0;
-
     w->output.fd = 1;
-    w->output.sent = 0;
-    w->output.known_length = false;
 
     w->response.state = RESPONSE_STATE_NONE;
 
@@ -345,6 +341,12 @@ was_simple_accept(struct was_simple *w)
         return NULL;
 
     assert(w->response.state == RESPONSE_STATE_NONE);
+
+    w->input.received = 0;
+
+    w->output.sent = 0;
+    w->output.known_length = false;
+
     w->response.state = RESPONSE_STATE_STATUS;
 
     memset(&w->request, 0, sizeof(w->request));
