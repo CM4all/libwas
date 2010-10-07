@@ -23,7 +23,8 @@ enum was_command {
     WAS_COMMAND_NO_DATA,
     WAS_COMMAND_DATA,
     WAS_COMMAND_LENGTH,
-    WAS_COMMAND_ABORT,
+    WAS_COMMAND_STOP,
+    WAS_COMMAND_PREMATURE,
 };
 
 struct was_header {

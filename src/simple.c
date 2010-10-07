@@ -322,7 +322,8 @@ was_simple_apply_request_packet(struct was_simple *w,
         break;
 
     case WAS_COMMAND_LENGTH:
-    case WAS_COMMAND_ABORT:
+    case WAS_COMMAND_STOP:
+    case WAS_COMMAND_PREMATURE:
         /* XXX implement */
         return false;
     }
