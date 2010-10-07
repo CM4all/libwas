@@ -38,7 +38,8 @@ struct was_simple {
     struct {
         int fd;
 
-        uint64_t received;
+        uint64_t received, announced;
+        bool known_length;
     } input;
 
     struct {
@@ -263,6 +264,7 @@ was_simple_apply_request_packet(struct was_simple *w,
 
     switch (packet->command) {
         http_method_t method;
+        uint64_t length;
 
     case WAS_COMMAND_NOP:
         break;
@@ -318,6 +320,18 @@ was_simple_apply_request_packet(struct was_simple *w,
         break;
 
     case WAS_COMMAND_LENGTH:
+        if (packet->length != sizeof(length))
+            return false;
+
+        length = *(const uint64_t *)packet->payload;
+        if (length < w->input.received ||
+            (w->input.known_length && length != w->input.announced))
+            return false;
+
+        w->input.announced = length;
+        w->input.known_length = true;
+        break;
+
     case WAS_COMMAND_STOP:
     case WAS_COMMAND_PREMATURE:
         /* XXX implement */
@@ -343,6 +357,7 @@ was_simple_accept(struct was_simple *w)
     assert(w->response.state == RESPONSE_STATE_NONE);
 
     w->input.received = 0;
+    w->input.known_length = false;
 
     w->output.sent = 0;
     w->output.known_length = false;
@@ -406,6 +421,12 @@ was_simple_received(struct was_simple *w, size_t nbytes)
     assert(w->response.state != RESPONSE_STATE_NONE);
 
     w->input.received += nbytes;
+
+    if (w->input.known_length && w->input.received > w->input.announced) {
+        // XXX handle error
+        return false;
+    }
+
     /* XXX */
     return true;
 }
