@@ -91,7 +91,12 @@ bool
 was_simple_printf(struct was_simple *w, const char *s, ...)
 __attribute__((format(printf, 2, 3)));
 
+/**
+ * Mark the end of the current request.  If no status has been set,
+ * then "204 No Content" is used.  If no request body has been
+ * announced, then NO_DATA is sent.
+ */
 bool
-was_simple_set_eof(struct was_simple *w);
+was_simple_end(struct was_simple *w);
 
 #endif

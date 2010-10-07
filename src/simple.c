@@ -239,7 +239,7 @@ was_simple_finish_request(struct was_simple *w)
     assert(w->response.state != RESPONSE_STATE_NONE);
 
     // XXX
-    was_simple_set_eof(w);
+    was_simple_end(w);
     was_simple_clear_request(w);
 }
 
@@ -590,7 +590,7 @@ was_simple_printf(struct was_simple *w, const char *fmt, ...)
 }
 
 bool
-was_simple_set_eof(struct was_simple *w)
+was_simple_end(struct was_simple *w)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
 
@@ -616,6 +616,8 @@ was_simple_set_eof(struct was_simple *w)
                 return false;
         }
     }
+
+    assert(w->response.state == RESPONSE_STATE_END);
 
     return true;
 }
