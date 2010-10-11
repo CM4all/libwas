@@ -14,6 +14,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <sys/types.h>
 
 /**
  * Creates a default #was_simple object for this process.
@@ -67,6 +68,15 @@ was_simple_input_fd(const struct was_simple *w);
 
 bool
 was_simple_received(struct was_simple *w, size_t nbytes);
+
+/**
+ * Read data from the request body.
+ *
+ * @return the number of bytes read, 0 if the end of the request body
+ * has been reached, -1 on error
+ */
+ssize_t
+was_simple_input_read(struct was_simple *w, void *buffer, size_t length);
 
 void
 was_simple_input_close(struct was_simple *w);

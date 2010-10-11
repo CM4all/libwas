@@ -446,6 +446,24 @@ was_simple_received(struct was_simple *w, size_t nbytes)
     return true;
 }
 
+ssize_t
+was_simple_input_read(struct was_simple *w, void *buffer, size_t length)
+{
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
+    if (w->input.known_length && w->input.received >= w->input.announced)
+        return 0;
+
+    ssize_t nbytes = read(w->input.fd, buffer, length);
+    if (nbytes <= 0)
+        return -1;
+
+    if (!was_simple_received(w, nbytes))
+        return -1;
+
+    return nbytes;
+}
+
 void
 was_simple_input_close(struct was_simple *w)
 {
