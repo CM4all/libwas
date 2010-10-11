@@ -56,6 +56,12 @@ was_simple_get_header(struct was_simple *w, const char *name);
 const char *
 was_simple_get_parameter(struct was_simple *w, const char *name);
 
+/**
+ * Is a request body present?  (May be empty, though)
+ */
+bool
+was_simple_has_body(const struct was_simple *w);
+
 int
 was_simple_input_fd(const struct was_simple *w);
 

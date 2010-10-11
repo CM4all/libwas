@@ -39,7 +39,7 @@ struct was_simple {
         int fd;
 
         uint64_t received, announced;
-        bool known_length;
+        bool known_length, no_body;
     } input;
 
     struct {
@@ -314,8 +314,15 @@ was_simple_apply_request_packet(struct was_simple *w,
         return false;
 
     case WAS_COMMAND_NO_DATA:
+        w->input.announced = 0;
+        w->input.known_length = true;
+        w->input.no_body = true;
+        w->request.finished = true;
+        break;
+
     case WAS_COMMAND_DATA:
         /* XXX body? */
+        w->input.no_body = false;
         w->request.finished = true;
         break;
 
@@ -405,6 +412,14 @@ was_simple_get_parameter(struct was_simple *w, const char *name)
     assert(w->response.state != RESPONSE_STATE_NONE);
 
     return g_hash_table_lookup(w->request.parameters, name);
+}
+
+bool
+was_simple_has_body(const struct was_simple *w)
+{
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
+    return w->input.no_body;
 }
 
 int
