@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <string.h>
 #include <unistd.h>
+#include <poll.h>
 #include <stdarg.h>
 #include <sys/socket.h>
 #include <glib.h>
@@ -422,6 +423,58 @@ was_simple_has_body(const struct was_simple *w)
     assert(w->response.state != RESPONSE_STATE_NONE);
 
     return !w->input.no_body;
+}
+
+static bool
+was_simple_input_eof(const struct was_simple *w)
+{
+    return w->input.known_length && w->input.received >= w->input.announced;
+}
+
+enum was_simple_poll_result
+was_simple_input_poll(struct was_simple *w, int timeout_ms)
+{
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
+    if (w->input.no_body)
+        return WAS_SIMPLE_POLL_END;
+
+    struct pollfd fds[2] = {
+        {
+            .fd = w->control.fd,
+            .events = POLLIN,
+        },
+        {
+            .fd = w->input.fd,
+            .events = POLLIN,
+        },
+    };
+
+    while (true) {
+        if (was_simple_input_eof(w))
+            return WAS_SIMPLE_POLL_END;
+
+        int ret = poll(fds, G_N_ELEMENTS(fds), timeout_ms);
+        if (ret < 0)
+            return WAS_SIMPLE_POLL_ERROR;
+
+        if (ret == 0)
+            return WAS_SIMPLE_POLL_TIMEOUT;
+
+        if (fds[0].revents & POLLIN) {
+            const struct was_control_packet *packet;
+            while ((packet = was_simple_control_read(w, true)) != NULL) {
+                if (!was_simple_apply_request_packet(w, packet))
+                    return WAS_SIMPLE_POLL_ERROR;
+            }
+
+            if (was_simple_input_eof(w))
+                return WAS_SIMPLE_POLL_END;
+        }
+
+        if (fds[1].revents & POLLIN)
+            return WAS_SIMPLE_POLL_SUCCESS;
+    }
 }
 
 int

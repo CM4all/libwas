@@ -16,6 +16,35 @@
 #include <stddef.h>
 #include <sys/types.h>
 
+enum was_simple_poll_result {
+    /**
+     * The pipe is ready for I/O.
+     */
+    WAS_SIMPLE_POLL_SUCCESS,
+
+    /**
+     * An error has occurred, and this request shall be aborted.
+     */
+    WAS_SIMPLE_POLL_ERROR,
+
+    /**
+     * The timeout has expired before the pipe has become ready.
+     */
+    WAS_SIMPLE_POLL_TIMEOUT,
+
+    /**
+     * At the end of the entity.  The caller must not attempt to do
+     * further I/O on the pipe.
+     */
+    WAS_SIMPLE_POLL_END,
+
+    /**
+     * The entity has been closed, but the application may continue to
+     * handle the request.
+     */
+    WAS_SIMPLE_POLL_CLOSED,
+};
+
 /**
  * Creates a default #was_simple object for this process.
  */
@@ -62,6 +91,16 @@ was_simple_get_parameter(struct was_simple *w, const char *name);
  */
 bool
 was_simple_has_body(const struct was_simple *w);
+
+/**
+ * Wait for request body data.  Handles pending control channel
+ * commands before returning.
+ *
+ * @param timeout_ms the timeout in milliseconds; 0 means do not block
+ * at all; -1 means wait forever
+ */
+enum was_simple_poll_result
+was_simple_input_poll(struct was_simple *w, int timeout_ms);
 
 int
 was_simple_input_fd(const struct was_simple *w);
