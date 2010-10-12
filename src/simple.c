@@ -421,7 +421,7 @@ was_simple_has_body(const struct was_simple *w)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
 
-    return w->input.no_body;
+    return !w->input.no_body;
 }
 
 int
