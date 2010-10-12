@@ -100,7 +100,9 @@ was_simple_new(void)
 void
 was_simple_free(struct was_simple *w)
 {
-    was_simple_free_request(w);
+    if (w->response.state != RESPONSE_STATE_NONE)
+        was_simple_free_request(w);
+
     g_free(w);
 }
 
