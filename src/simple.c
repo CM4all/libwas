@@ -166,6 +166,16 @@ was_simple_control_get(struct was_simple *w)
 }
 
 static const struct was_control_packet *
+was_simple_control_next(struct was_simple *w)
+{
+    /* clean up the previous packet */
+    if (w->control.packet.payload != NULL)
+        was_simple_control_shift(w);
+
+    return was_simple_control_get(w);
+}
+
+static const struct was_control_packet *
 was_simple_control_read(struct was_simple *w, bool dontwait)
 {
     /* clean up the previous packet */
@@ -351,6 +361,17 @@ was_simple_apply_request_packet(struct was_simple *w,
     return true;
 }
 
+static bool
+was_simple_control_apply_pending(struct was_simple *w)
+{
+    const struct was_control_packet *packet;
+    while ((packet = was_simple_control_next(w)) != NULL)
+        if (!was_simple_apply_request_packet(w, packet))
+            return false;
+
+    return true;
+}
+
 const char *
 was_simple_accept(struct was_simple *w)
 {
@@ -439,6 +460,14 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
     if (w->input.no_body || was_simple_input_eof(w))
         return WAS_SIMPLE_POLL_END;
 
+    if (!was_simple_control_apply_pending(w))
+        return WAS_SIMPLE_POLL_ERROR;
+
+    /* check "eof" again, as it may have changed after control packets
+       have been handled */
+    if (was_simple_input_eof(w))
+        return WAS_SIMPLE_POLL_END;
+
     struct pollfd fds[2] = {
         {
             .fd = w->control.fd,
@@ -459,11 +488,9 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
             return WAS_SIMPLE_POLL_TIMEOUT;
 
         if (fds[0].revents & POLLIN) {
-            const struct was_control_packet *packet;
-            while ((packet = was_simple_control_read(w, true)) != NULL) {
-                if (!was_simple_apply_request_packet(w, packet))
-                    return WAS_SIMPLE_POLL_ERROR;
-            }
+            if (!was_simple_control_fill(w, true) ||
+                !was_simple_control_apply_pending(w))
+                return WAS_SIMPLE_POLL_ERROR;
 
             if (was_simple_input_eof(w))
                 return WAS_SIMPLE_POLL_END;
