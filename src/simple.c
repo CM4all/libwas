@@ -436,7 +436,7 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
 
-    if (w->input.no_body)
+    if (w->input.no_body || was_simple_input_eof(w))
         return WAS_SIMPLE_POLL_END;
 
     struct pollfd fds[2] = {
@@ -451,9 +451,6 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
     };
 
     while (true) {
-        if (was_simple_input_eof(w))
-            return WAS_SIMPLE_POLL_END;
-
         int ret = poll(fds, G_N_ELEMENTS(fds), timeout_ms);
         if (ret < 0)
             return WAS_SIMPLE_POLL_ERROR;
