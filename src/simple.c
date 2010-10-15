@@ -598,6 +598,10 @@ was_simple_set_length(struct was_simple *w, uint64_t length)
 
     w->output.announced = length;
     w->output.known_length = true;
+
+    if (w->output.announced == w->output.sent)
+        w->response.state = RESPONSE_STATE_END;
+
     return true;
 }
 
