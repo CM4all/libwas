@@ -506,7 +506,7 @@ was_simple_input_read(struct was_simple *w, void *buffer, size_t length)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
 
-    if (w->input.known_length && w->input.received >= w->input.announced)
+    if (w->input.no_body || was_simple_input_eof(w))
         return 0;
 
     ssize_t nbytes = read(w->input.fd, buffer, length);
