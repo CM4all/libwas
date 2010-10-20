@@ -265,7 +265,7 @@ was_simple_apply_map(GHashTable *map, const char *payload, size_t length)
         return false;
 
     g_hash_table_insert(map, g_strndup(payload, p - payload),
-                        g_strndup(p + 1, payload + length - p));
+                        g_strndup(p + 1, payload + length - (p + 1)));
     return true;
 }
 
