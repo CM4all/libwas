@@ -53,7 +53,7 @@ struct was_simple {
 
     struct {
         http_method_t method;
-        char *uri;
+        char *uri, *script_name, *path_info, *query_string;
 
         GHashTable *headers, *parameters;
 
@@ -308,9 +308,21 @@ was_simple_apply_request_packet(struct was_simple *w,
         break;
 
     case WAS_COMMAND_SCRIPT_NAME:
+        if (w->request.script_name != NULL)
+            return false;
+        w->request.script_name = g_strndup(packet->payload, packet->length);
+        break;
+
     case WAS_COMMAND_PATH_INFO:
+        if (w->request.path_info != NULL)
+            return false;
+        w->request.path_info = g_strndup(packet->payload, packet->length);
+        break;
+
     case WAS_COMMAND_QUERY_STRING:
-        /* XXX implement */
+        if (w->request.query_string != NULL)
+            return false;
+        w->request.query_string = g_strndup(packet->payload, packet->length);
         break;
 
     case WAS_COMMAND_HEADER:
@@ -420,6 +432,30 @@ was_simple_get_method(const struct was_simple *w)
     assert(w->response.state != RESPONSE_STATE_NONE);
 
     return w->request.method;
+}
+
+const char *
+was_simple_get_script_name(const struct was_simple *w)
+{
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
+    return w->request.script_name;
+}
+
+const char *
+was_simple_get_path_info(const struct was_simple *w)
+{
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
+    return w->request.path_info;
+}
+
+const char *
+was_simple_get_query_string(const struct was_simple *w)
+{
+    assert(w->response.state != RESPONSE_STATE_NONE);
+
+    return w->request.query_string;
 }
 
 const char *

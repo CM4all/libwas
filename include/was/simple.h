@@ -73,6 +73,15 @@ was_simple_accept(struct was_simple *w);
 http_method_t
 was_simple_get_method(const struct was_simple *w);
 
+const char *
+was_simple_get_script_name(const struct was_simple *w);
+
+const char *
+was_simple_get_path_info(const struct was_simple *w);
+
+const char *
+was_simple_get_query_string(const struct was_simple *w);
+
 /**
  * Returns the value of a request header.  In this library, each
  * header name can not have more than one value.
