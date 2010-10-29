@@ -286,10 +286,10 @@ was_simple_apply_request_packet(struct was_simple *w,
         return false;
 
     case WAS_COMMAND_METHOD:
-        if (packet->length != sizeof(method))
+        if (packet->length != sizeof(uint32_t))
             return false;
 
-        method = *(const http_method_t *)packet->payload;
+        method = (http_method_t)*(const uint32_t *)packet->payload;
         if (w->request.method != HTTP_METHOD_GET &&
             method != w->request.method)
             /* sending that packet twice is illegal */
