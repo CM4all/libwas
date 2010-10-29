@@ -48,6 +48,9 @@ This protocol is built to mimic the semantics of HTTP.  A request has
 a method, a URI, headers (name/value pairs) and optionally a body.  A
 response has a status code, headers and optionally a body.
 
+Additionally, a request can have application specific ``parameters'',
+a list of name-value pairs.
+
 Similar to FastCGI, the container launches as many application
 processes as it needs.  For simplicity, each application process
 handles one request at a time (this limitation may be lifted in a
@@ -100,7 +103,8 @@ without the need for \texttt{SIGTERM} and \texttt{SIGKILL}.
 \begin{itemize}
 \item idle, waiting for a request
 \item receiving request metadata
-\item processing request, sending the response
+\item receiving the request body, processing request, sending the
+  response
 \item flushing buffers (optional, see below)
 \end{itemize}
 
@@ -109,12 +113,12 @@ without the need for \texttt{SIGTERM} and \texttt{SIGKILL}.
 After initialization, the application waits for requests on the
 control socket.  It does not need to monitor the pipes at this point.
 
-The container first sends request metadata (method, URI, headers).
-This is completed by either a \texttt{DATA} or a \texttt{NO\_DATA}
-packet.  \texttt{NO\_DATA} indicates that no request body is
-available.  \texttt{DATA} is the opposite, and in this case, the
-container starts sending it to its output pipe (the application's
-input pipe).
+The container first sends \texttt{REQUEST}, then request metadata
+(method, URI, headers).  This is completed by either a \texttt{DATA}
+or a \texttt{NO\_DATA} packet.  \texttt{NO\_DATA} indicates that no
+request body is available.  \texttt{DATA} is the opposite, and in this
+case, the container starts sending it to its output pipe (the
+application's input pipe).
 
 The application sends response metadata (status code, headers),
 followed by either \texttt{DATA} or \texttt{NO\_DATA}.  After that, it
@@ -154,7 +158,8 @@ struct was_header {
 \end{verbatim}
 
 \texttt{length} is the length of the payload in bytes.  If the payload
-length is not a multiple of 4, it is padded.
+length is not a multiple of 4, it is padded.  This padding is not
+included in the \texttt{length} attribute.
 
 All numbers are in host byte order.  That includes the packet payload,
 if applicable.
@@ -168,7 +173,10 @@ if applicable.
 
 \hline
 
-\texttt{METHOD} & the HTTP request method \\
+\texttt{METHOD} & The HTTP request method; payload is a
+\texttt{uint16\_t} with integer values from \texttt{libcm4all-http}'s
+enumeration type \texttt{http\_method}.  If this packet is not
+received, the application assumes that the method is \texttt{GET}. \\
 
 \hline
 
@@ -181,11 +189,13 @@ the WAS application \\
 
 \hline
 
-\texttt{PATH\_INFO} & the tail of the URI after \texttt{SCRIPT\_NAME} \\
+\texttt{PATH\_INFO} & the tail of the URI after \texttt{SCRIPT\_NAME},
+not including the query string (and the question mark) \\
 
 \hline
 
-\texttt{PATH\_INFO} & the tail of the URI after \texttt{SCRIPT\_NAME} \\
+\texttt{QUERY\_STRING} & the query string, i.e. the tail or the URI
+after the question mark (excluding the question mark itself) \\
 
 \hline
 
@@ -200,7 +210,9 @@ pair, separated by a ``='' character \\
 \begin{longtable}{|l|p{10cm}|}
 \hline
 
-\texttt{STATUS} & start of a HTTP request \\
+\texttt{STATUS} & start of a HTTP request; payload is a
+\texttt{uint16\_t} with integer values from \texttt{libcm4all-http}'s
+enumeration type \texttt{http\_status} \\
 
 \hline
 \end{longtable}
