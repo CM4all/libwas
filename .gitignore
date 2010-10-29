@@ -39,3 +39,9 @@ tags
 *.so
 \#*#
 *.pc
+
+*.aux
+*.log
+*.out
+*.pdf
+*.toc

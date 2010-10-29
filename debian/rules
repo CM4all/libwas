@@ -76,7 +76,7 @@ binary-arch: build check install
 	dh_install -a --sourcedir=debian/tmp
 	dh_link -a
 	#dh_strip -a
-	dh_compress -a
+	dh_compress -a -X.pdf
 	dh_fixperms -a
 	dh_makeshlibs -a
 	dh_installdeb -a

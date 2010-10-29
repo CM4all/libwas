@@ -25,3 +25,13 @@ pkgconfig_DATA = \
 	libcm4all-was-simple.pc \
 	libcm4all-was-apreq.pc \
 	libcm4all-was-xios.pc
+
+# Documentation
+
+doc_DATA = doc/was.pdf
+doc/was.pdf: $(srcdir)/doc/was.tex
+	@mkdir -p $(@D)
+	pdflatex -output-directory $(@D) $<
+	pdflatex -output-directory $(@D) $<
+
+CLEANFILES = doc/was.pdf
