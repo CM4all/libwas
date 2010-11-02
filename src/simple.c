@@ -237,6 +237,14 @@ was_simple_control_send_packet(struct was_simple *w, enum was_command command,
         was_simple_control_send(w, payload, length);
 }
 
+static bool
+was_simple_control_send_uint64(struct was_simple *w, enum was_command command,
+                               uint64_t payload)
+{
+    return was_simple_control_send_packet(w, command,
+                                          &payload, sizeof(payload));
+}
+
 static void
 was_simple_clear_request(struct was_simple *w)
 {
@@ -652,8 +660,7 @@ was_simple_set_length(struct was_simple *w, uint64_t length)
 
     assert(w->response.state == RESPONSE_STATE_BODY);
 
-    if (!was_simple_control_send_packet(w, WAS_COMMAND_LENGTH,
-                                        &length, sizeof(length)))
+    if (!was_simple_control_send_uint64(w, WAS_COMMAND_LENGTH, length))
         return false;
 
     w->output.announced = length;
