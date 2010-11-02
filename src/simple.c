@@ -48,6 +48,12 @@ struct was_simple {
 
         uint64_t sent, announced;
         bool known_length;
+
+        /**
+         * Was this stream aborted prematurely by the peer?
+         */
+        bool premature;
+
         bool no_body;
     } output;
 
@@ -373,6 +379,18 @@ was_simple_apply_request_packet(struct was_simple *w,
         break;
 
     case WAS_COMMAND_STOP:
+        w->output.premature = true;
+
+        if (w->response.state <= RESPONSE_STATE_BODY &&
+            !was_simple_control_send_uint64(w, WAS_COMMAND_PREMATURE,
+                                            w->output.sent))
+            return false;
+
+        if (w->response.state == RESPONSE_STATE_BODY)
+            w->response.state = RESPONSE_STATE_END;
+
+        break;
+
     case WAS_COMMAND_PREMATURE:
         /* XXX implement */
         return false;
@@ -412,6 +430,7 @@ was_simple_accept(struct was_simple *w)
 
     w->output.sent = 0;
     w->output.known_length = false;
+    w->output.premature = false;
 
     w->response.state = RESPONSE_STATE_STATUS;
 
@@ -696,6 +715,11 @@ was_simple_set_response_state_body(struct was_simple *w)
 
     assert(w->response.state == RESPONSE_STATE_BODY);
 
+    if (w->output.premature) {
+        w->response.state = RESPONSE_STATE_END;
+        return false;
+    }
+
     return true;
 }
 
@@ -787,7 +811,9 @@ was_simple_end(struct was_simple *w)
     }
 
     if (w->response.state == RESPONSE_STATE_BODY) {
-        if (w->output.known_length) {
+        if (w->output.premature) {
+            w->response.state = RESPONSE_STATE_END;
+        } else if (w->output.known_length) {
             if (w->output.sent != w->output.announced)
                 // XXX
                 return false;
