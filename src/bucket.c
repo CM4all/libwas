@@ -4,6 +4,9 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
+/* workaround for libapr compiler warning */
+#define APR_NOT_DONE_YET 0
+
 #include "bucket.h"
 
 #include <was/simple.h>
