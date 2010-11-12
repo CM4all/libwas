@@ -647,10 +647,11 @@ was_simple_set_header(struct was_simple *w,
 
     assert(w->response.state == RESPONSE_STATE_HEADERS);
 
-    // XXX
-    (void)name;
-    (void)value;
-    return true;
+    char *p = g_strconcat(name, "=", value, NULL);
+    bool success = was_simple_control_send_packet(w, WAS_COMMAND_HEADER,
+                                                  p, strlen(p));
+    g_free(p);
+    return success;
 }
 
 bool
