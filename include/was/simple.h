@@ -136,6 +136,12 @@ bool
 was_simple_set_header(struct was_simple *w,
                       const char *name, const char *value);
 
+/**
+ * Copies all request headers to the response.
+ */
+bool
+was_simple_copy_all_headers(struct was_simple *w);
+
 bool
 was_simple_set_length(struct was_simple *w, uint64_t length);
 

@@ -8,6 +8,8 @@
 #include <was/simple.h>
 #include <was/protocol.h>
 
+#include <http/header.h>
+
 #include <assert.h>
 #include <string.h>
 #include <unistd.h>
@@ -652,6 +654,23 @@ was_simple_set_header(struct was_simple *w,
                                                   p, strlen(p));
     g_free(p);
     return success;
+}
+
+static void
+copy_header(gpointer _key, gpointer _value, gpointer user_data)
+{
+    struct was_simple *w = user_data;
+    const char *key = _key, *value = _value;
+
+    if (!http_header_is_hop_by_hop(key))
+        was_simple_set_header(w, key, value);
+}
+
+bool
+was_simple_copy_all_headers(struct was_simple *w)
+{
+    g_hash_table_foreach(w->request.headers, copy_header, w);
+    return w->response.state <= RESPONSE_STATE_HEADERS;
 }
 
 bool
