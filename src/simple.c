@@ -318,7 +318,9 @@ was_simple_apply_request_packet(struct was_simple *w,
     case WAS_COMMAND_URI:
         if (w->request.uri != NULL)
             return false;
-        w->request.uri = g_strndup(packet->payload, packet->length);
+        w->request.uri = packet->length > 0
+            ? g_strndup(packet->payload, packet->length)
+            : g_strdup("");
         break;
 
     case WAS_COMMAND_SCRIPT_NAME:
