@@ -35,6 +35,11 @@ struct was_simple {
 
         size_t input_position;
 
+        struct {
+            unsigned position;
+            char data[4096];
+        } output_buffer;
+
         struct was_control_packet packet;
     } control;
 
@@ -96,6 +101,7 @@ was_simple_new(void)
 
     w->control.fd = 3;
     w->control.input_position = 0;
+    w->control.output_buffer.position = 0;
     w->control.packet.payload = NULL;
 
     w->input.fd = 0;
@@ -213,11 +219,64 @@ was_simple_control_expect(struct was_simple *w, enum was_command command)
         : NULL;
 }
 
+static ssize_t
+was_simple_control_direct_send(struct was_simple *w,
+                               const void *p, size_t length)
+{
+    return send(w->control.fd, p, length, MSG_NOSIGNAL);
+}
+
+static bool
+was_simple_control_flush(struct was_simple *w)
+{
+    assert(w != NULL);
+    assert(w->control.output_buffer.position <= sizeof(w->control.output_buffer.data));
+
+    if (w->control.output_buffer.position == 0)
+        /* buffer is empty */
+        return true;
+
+    ssize_t nbytes =
+        was_simple_control_direct_send(w, w->control.output_buffer.data,
+                                       w->control.output_buffer.position);
+    if (nbytes <= 0)
+        return false;
+
+    w->control.output_buffer.position -= nbytes;
+    memmove(w->control.output_buffer.data + nbytes,
+            w->control.output_buffer.data,
+            w->control.output_buffer.position);
+    return true;
+}
+
+static void
+was_simple_control_append(struct was_simple *w, const void *p, size_t length)
+{
+    assert(w != NULL);
+    assert(w->control.output_buffer.position <= sizeof(w->control.output_buffer.data));
+    assert(w->control.output_buffer.position + length <= sizeof(w->control.output_buffer.data));
+
+    memcpy(w->control.output_buffer.data + w->control.output_buffer.position,
+           p, length);
+    w->control.output_buffer.position += length;
+}
+
 static bool
 was_simple_control_send(struct was_simple *w, const void *data, size_t length)
 {
-    ssize_t nbytes = send(w->control.fd, data, length, MSG_NOSIGNAL);
-    return nbytes == (ssize_t)length;
+    while (w->control.output_buffer.position + length > sizeof(w->control.output_buffer.data)) {
+        if (w->control.output_buffer.position == 0) {
+            /* too large for the buffer */
+            ssize_t nbytes = was_simple_control_direct_send(w, data, length);
+            return nbytes == (ssize_t)length;
+        }
+
+        if (!was_simple_control_flush(w))
+            return false;
+    }
+
+    was_simple_control_append(w, data, length);
+    return true;
 }
 
 static bool
@@ -528,7 +587,8 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
     if (w->input.no_body || was_simple_input_eof(w))
         return WAS_SIMPLE_POLL_END;
 
-    if (!was_simple_control_apply_pending(w))
+    if (!was_simple_control_flush(w) || !was_simple_control_apply_pending(w) ||
+        !was_simple_control_flush(w))
         return WAS_SIMPLE_POLL_ERROR;
 
     /* check "eof" again, as it may have changed after control packets
@@ -765,6 +825,9 @@ was_simple_sent(struct was_simple *w, size_t nbytes)
     if (w->output.no_body)
         return false;
 
+    if (!was_simple_control_flush(w))
+        return false;
+
     assert(!w->output.known_length || w->output.sent <= w->output.announced);
     assert(!w->output.known_length || nbytes <= w->output.announced);
     assert(!w->output.known_length ||
@@ -779,7 +842,8 @@ was_simple_write(struct was_simple *w, const void *data0, size_t length)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
 
-    if (!was_simple_set_response_state_body(w))
+    if (!was_simple_set_response_state_body(w) ||
+        !was_simple_control_flush(w))
         return false;
 
     const char *data = data0;
@@ -820,6 +884,9 @@ bool
 was_simple_end(struct was_simple *w)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
+
+    if (!was_simple_control_flush(w))
+        return false;
 
     if (w->response.state == RESPONSE_STATE_STATUS &&
         !was_simple_status(w, HTTP_STATUS_NO_CONTENT))
