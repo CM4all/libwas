@@ -779,7 +779,7 @@ was_simple_write(struct was_simple *w, const void *data0, size_t length)
     assert(w->response.state != RESPONSE_STATE_NONE);
 
     if (!was_simple_set_response_state_body(w))
-        return -1;
+        return false;
 
     const char *data = data0;
 
