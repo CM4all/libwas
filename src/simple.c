@@ -31,9 +31,9 @@ struct was_simple {
         union {
             char raw[4096];
             struct was_header header;
-        } buffer;
+        } input_buffer;
 
-        size_t position;
+        size_t input_position;
 
         struct was_control_packet packet;
     } control;
@@ -95,7 +95,7 @@ was_simple_new(void)
     struct was_simple *w = g_new(struct was_simple, 1);
 
     w->control.fd = 3;
-    w->control.position = 0;
+    w->control.input_position = 0;
     w->control.packet.payload = NULL;
 
     w->input.fd = 0;
@@ -118,24 +118,25 @@ was_simple_free(struct was_simple *w)
 static bool
 was_simple_control_fill(struct was_simple *w, bool dontwait)
 {
-    assert(w->control.position < sizeof(w->control.buffer));
+    assert(w->control.input_position < sizeof(w->control.input_buffer));
 
     ssize_t nbytes = recv(w->control.fd,
-                          w->control.buffer.raw + w->control.position,
-                          sizeof(w->control.buffer) - w->control.position,
+                          w->control.input_buffer.raw + w->control.input_position,
+                          sizeof(w->control.input_buffer) - w->control.input_position,
                           dontwait * MSG_DONTWAIT);
     if (nbytes <= 0)
         return false;
 
-    w->control.position += nbytes;
+    w->control.input_position += nbytes;
     return true;
 }
 
 static bool
 was_simple_control_complete(const struct was_simple *w)
 {
-    return w->control.position >= sizeof(w->control.buffer.header) &&
-        w->control.position >= sizeof(w->control.buffer.header) + w->control.buffer.header.length;
+    return w->control.input_position >= sizeof(w->control.input_buffer.header) &&
+        w->control.input_position >= sizeof(w->control.input_buffer.header) +
+        w->control.input_buffer.header.length;
 }
 
 static void
@@ -143,12 +144,12 @@ was_simple_control_shift(struct was_simple *w)
 {
     assert(was_simple_control_complete(w));
 
-    unsigned full_length = sizeof(w->control.buffer.header) +
-        w->control.buffer.header.length;
+    unsigned full_length = sizeof(w->control.input_buffer.header) +
+        w->control.input_buffer.header.length;
 
-    w->control.position -= full_length;
-    memmove(w->control.buffer.raw, w->control.buffer.raw + full_length,
-            w->control.position);
+    w->control.input_position -= full_length;
+    memmove(w->control.input_buffer.raw, w->control.input_buffer.raw + full_length,
+            w->control.input_position);
 
     w->control.packet.payload = NULL;
 }
@@ -159,12 +160,12 @@ was_simple_control_get(struct was_simple *w)
     if (!was_simple_control_complete(w))
         return NULL;
 
-    w->control.packet.command = w->control.buffer.header.command;
-    w->control.packet.length = w->control.buffer.header.length;
+    w->control.packet.command = w->control.input_buffer.header.command;
+    w->control.packet.length = w->control.input_buffer.header.length;
 
     if (w->control.packet.length > 0) {
-        w->control.packet.payload = w->control.buffer.raw +
-            sizeof(w->control.buffer.header);
+        w->control.packet.payload = w->control.input_buffer.raw +
+            sizeof(w->control.input_buffer.header);
     } else {
         w->control.packet.payload = NULL;
         was_simple_control_shift(w);
