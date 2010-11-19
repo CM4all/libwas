@@ -907,6 +907,8 @@ was_simple_end(struct was_simple *w)
             if (w->output.sent != w->output.announced)
                 // XXX
                 return false;
+
+            w->response.state = RESPONSE_STATE_END;
         } else {
             if (!was_simple_set_length(w, w->output.sent))
                 return false;
