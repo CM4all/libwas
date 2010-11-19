@@ -910,7 +910,8 @@ was_simple_end(struct was_simple *w)
 
             w->response.state = RESPONSE_STATE_END;
         } else {
-            if (!was_simple_set_length(w, w->output.sent))
+            if (!was_simple_set_length(w, w->output.sent) ||
+                !was_simple_control_flush(w))
                 return false;
         }
     }
