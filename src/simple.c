@@ -885,15 +885,13 @@ was_simple_end(struct was_simple *w)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
 
-    if (!was_simple_control_flush(w))
-        return false;
-
     if (w->response.state == RESPONSE_STATE_STATUS &&
         !was_simple_status(w, HTTP_STATUS_NO_CONTENT))
         return false;
 
     if (w->response.state == RESPONSE_STATE_HEADERS) {
-        if (!was_simple_control_send_empty(w, WAS_COMMAND_NO_DATA))
+        if (!was_simple_control_send_empty(w, WAS_COMMAND_NO_DATA) ||
+            !was_simple_control_flush(w))
             return false;
 
         w->response.state = RESPONSE_STATE_END;
@@ -910,11 +908,13 @@ was_simple_end(struct was_simple *w)
 
             w->response.state = RESPONSE_STATE_END;
         } else {
-            if (!was_simple_set_length(w, w->output.sent) ||
-                !was_simple_control_flush(w))
+            if (!was_simple_set_length(w, w->output.sent))
                 return false;
         }
     }
+
+    if (!was_simple_control_flush(w))
+        return false;
 
     assert(w->response.state == RESPONSE_STATE_END);
 
