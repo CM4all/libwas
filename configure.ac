@@ -25,7 +25,7 @@ AC_SUBST(LIBAPREQ2_LIBS)
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.16],,
 	[AC_MSG_ERROR([glib 2.16 is required])])
 
-PKG_CHECK_MODULES([LIBHTTP], [libcm4all-http],,
+PKG_CHECK_MODULES([LIBHTTP], [libcm4all-http >= 1.2],,
 	[AC_MSG_ERROR([libcm4all-http is required])])
 
 PKG_CHECK_MODULES([LIBCORE], [libcore >= 1.20.5],,

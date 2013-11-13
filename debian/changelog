@@ -2,6 +2,7 @@ libcm4all-was (0.2) unstable; urgency=low
 
   * simple: flush the control buffer in _end()
   * simple: auto-dispose the unused request body
+  * support WebDAV
 
  --   
 

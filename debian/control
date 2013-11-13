@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 5), autoconf (>= 2.60), automake (>= 1.11),
  libglib2.0-dev (>= 2.16),
  libapreq2-dev (>= 2.08),
  libcm4all-core-dev,
- libcm4all-http-dev
+ libcm4all-http-dev (>= 1.2)
 Standards-Version: 3.9.1
 
 Package: libcm4all-was-dev
@@ -16,7 +16,7 @@ Section: non-free/libdevel
 Architecture: any
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
  libglib2.0-dev (>= 2.16),
- libcm4all-http-dev
+ libcm4all-http-dev (>= 1.2)
 Description: Development files for libwas
  libwas is a support library for the Web Application Socket protocol.
  .
