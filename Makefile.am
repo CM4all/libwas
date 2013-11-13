@@ -1,4 +1,4 @@
-AUTOMAKE_OPTIONS = foreign 1.10 dist-bzip2 subdir-objects
+AUTOMAKE_OPTIONS = foreign 1.11 subdir-objects
 
 AM_CPPFLAGS += -Iinclude $(LIBHTTP_CFLAGS)
 AM_CPPFLAGS += $(GLIB_CFLAGS)

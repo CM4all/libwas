@@ -10,4 +10,5 @@ autoconf
 CFLAGS="-O0 -ggdb" ./configure \
         --prefix=/usr/local/stow/libcm4all-was \
         --enable-debug \
+	--enable-silent-rules \
         "$@"

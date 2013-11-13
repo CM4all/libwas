@@ -2,7 +2,8 @@ Source: libcm4all-was
 Section: non-free/libs
 Priority: optional
 Maintainer: Max Kellermann <mk@cm4all.com>
-Build-Depends: debhelper (>= 5), doxygen (>= 1.2),
+Build-Depends: debhelper (>= 5), autoconf (>= 2.60), automake (>= 1.11),
+ doxygen (>= 1.2),
  texlive, texlive-latex-extra,
  libglib2.0-dev (>= 2.16),
  libapreq2-dev (>= 2.08),
