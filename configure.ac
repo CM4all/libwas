@@ -1,6 +1,6 @@
 AC_PREREQ(2.60)
-AC_INIT(CM4all libwas, 0.1, mk@cm4all.com, libcm4all-was)
-AC_COPYRIGHT(Copyright 2010 Content Management AG)
+AC_INIT(CM4all libwas, 0.2, mk@cm4all.com, libcm4all-was)
+AC_COPYRIGHT(Copyright 2010-2013 Content Management AG)
 AC_CONFIG_SRCDIR(src/simple.c)
 AC_CONFIG_AUX_DIR(build)
 AM_INIT_AUTOMAKE([foreign 1.10 dist-bzip2 subdir-objects])
