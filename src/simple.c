@@ -474,6 +474,15 @@ was_simple_control_apply_pending(struct was_simple *w)
     return true;
 }
 
+static bool
+was_simple_control_read_and_apply(struct was_simple *w)
+{
+    const struct was_control_packet *packet =
+        was_simple_control_read(w, false);
+    return packet != NULL &&
+        was_simple_apply_request_packet(w, packet);
+}
+
 const char *
 was_simple_accept(struct was_simple *w)
 {
@@ -506,11 +515,7 @@ was_simple_accept(struct was_simple *w)
                                                   g_free, g_free);
 
     do {
-        packet = was_simple_control_read(w, false);
-        if (packet == NULL)
-            return NULL;
-
-        if (!was_simple_apply_request_packet(w, packet))
+        if (!was_simple_control_read_and_apply(w))
             return NULL;
     } while (!w->request.finished);
 
