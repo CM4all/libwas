@@ -4,7 +4,7 @@ libcm4all-was (0.2) unstable; urgency=low
   * simple: auto-dispose the unused request body
   * support WebDAV
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Wed, 13 Nov 2013 17:15:27 -0000
 
 libcm4all-was (0.1) unstable; urgency=low
 
