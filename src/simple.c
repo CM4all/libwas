@@ -11,6 +11,7 @@
 #include <http/header.h>
 
 #include <assert.h>
+#include <errno.h>
 #include <string.h>
 #include <unistd.h>
 #include <poll.h>
@@ -885,6 +886,31 @@ was_simple_printf(struct was_simple *w, const char *fmt, ...)
     return was_simple_puts(w, buffer);
 }
 
+static bool
+discard_all_input(struct was_simple *w)
+{
+    while (true) {
+        enum was_simple_poll_result r = was_simple_input_poll(w, -1);
+        switch (r) {
+        case WAS_SIMPLE_POLL_SUCCESS:
+            break;
+
+        case WAS_SIMPLE_POLL_END:
+            return true;
+
+        case WAS_SIMPLE_POLL_ERROR:
+        case WAS_SIMPLE_POLL_TIMEOUT:
+        case WAS_SIMPLE_POLL_CLOSED:
+            return false;
+        }
+
+        char buffer[4096];
+        ssize_t nbytes = was_simple_input_read(w, buffer, sizeof(buffer));
+        if (nbytes <= 0)
+            return false;
+    }
+}
+
 bool
 was_simple_end(struct was_simple *w)
 {
@@ -922,6 +948,9 @@ was_simple_end(struct was_simple *w)
         return false;
 
     assert(w->response.state == RESPONSE_STATE_END);
+
+    if (!discard_all_input(w))
+        return false;
 
     return true;
 }
