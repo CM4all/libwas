@@ -984,7 +984,6 @@ was_simple_end(struct was_simple *w)
             return false;
 
         w->response.state = RESPONSE_STATE_END;
-        return true;
     }
 
     /* finish the response body? */
