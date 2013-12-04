@@ -70,6 +70,11 @@ struct was_simple {
         bool known_length;
 
         /**
+         * Did we send #WAS_COMMAND_STOP?
+         */
+        bool stopped;
+
+        /**
          * True if #WAS_COMMAND_PREMATURE has been received.
          */
         bool premature;
@@ -766,13 +771,20 @@ was_simple_input_read(struct was_simple *w, void *buffer, size_t length)
     return nbytes;
 }
 
-void
+bool
 was_simple_input_close(struct was_simple *w)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
 
-    // XXX
-    (void)w;
+    if (w->input.no_body || w->input.stopped || w->input.premature ||
+        was_simple_input_eof(w))
+        return true;
+
+    if (!was_simple_control_send_empty(w, WAS_COMMAND_STOP))
+        return false;
+
+    w->input.stopped = true;
+    return true;
 }
 
 bool
@@ -1006,6 +1018,9 @@ was_simple_end(struct was_simple *w)
     assert(w->response.state != RESPONSE_STATE_NONE);
 
     w->input.ignore_premature = true;
+
+    if (!was_simple_input_close(w))
+        return false;
 
     /* generate a status code? */
     if (w->response.state == RESPONSE_STATE_STATUS &&

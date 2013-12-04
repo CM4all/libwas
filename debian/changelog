@@ -2,6 +2,7 @@ libcm4all-was (0.3) unstable; urgency=low
 
   * simple: reuse connection after discarding request body
   * simple: handle WAS_COMMAND_PREMATURE
+  * simple: implement was_simple_input_close()
   * protocol: documentation
 
  --   

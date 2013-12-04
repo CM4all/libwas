@@ -126,7 +126,7 @@ was_simple_received(struct was_simple *w, size_t nbytes);
 ssize_t
 was_simple_input_read(struct was_simple *w, void *buffer, size_t length);
 
-void
+bool
 was_simple_input_close(struct was_simple *w);
 
 bool
