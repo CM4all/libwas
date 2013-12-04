@@ -1,6 +1,7 @@
 libcm4all-was (0.3) unstable; urgency=low
 
   * simple: reuse connection after discarding request body
+  * protocol: documentation
 
  --   
 
