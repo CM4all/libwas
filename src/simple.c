@@ -1062,6 +1062,12 @@ was_simple_end(struct was_simple *w)
     if (!discard_all_input(w))
         return false;
 
+    /* wait for PREMATURE? */
+    if (w->input.stopped && !was_simple_input_eof(w))
+        while (!w->input.premature)
+            if (!was_simple_control_read_and_apply(w))
+                return false;
+
     /* connection is ready to be reused */
     return true;
 }
