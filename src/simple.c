@@ -70,6 +70,18 @@ struct was_simple {
         bool known_length;
 
         /**
+         * True if #WAS_COMMAND_PREMATURE has been received.
+         */
+        bool premature;
+
+        /**
+         * True if reading from the input shall ignore the #premature
+         * flag.  This is used to disable the checks while discarding
+         * remaining input.
+         */
+        bool ignore_premature;
+
+        /**
          * True if #WAS_COMMAND_NO_DATA has been received.
          */
         bool no_body;
@@ -512,7 +524,17 @@ was_simple_apply_request_packet(struct was_simple *w,
         break;
 
     case WAS_COMMAND_PREMATURE:
-        /* XXX implement */
+        if (packet->length != sizeof(length))
+            return false;
+
+        length = *(const uint64_t *)packet->payload;
+        if (length < w->input.received ||
+            (w->input.known_length && length > w->input.announced))
+            return false;
+
+        w->input.announced = length;
+        w->input.known_length = true;
+        w->input.premature = true;
         return false;
     }
 
@@ -557,6 +579,8 @@ was_simple_accept(struct was_simple *w)
 
     w->input.received = 0;
     w->input.known_length = false;
+    w->input.premature = false;
+    w->input.ignore_premature = false;
 
     w->output.sent = 0;
     w->output.known_length = false;
@@ -649,6 +673,9 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
     if (w->input.no_body || was_simple_input_eof(w))
         return WAS_SIMPLE_POLL_END;
 
+    if (w->input.premature && !w->input.ignore_premature)
+        return WAS_SIMPLE_POLL_ERROR;
+
     if (!was_simple_control_flush(w) || !was_simple_control_apply_pending(w) ||
         !was_simple_control_flush(w))
         return WAS_SIMPLE_POLL_ERROR;
@@ -704,6 +731,9 @@ was_simple_received(struct was_simple *w, size_t nbytes)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
 
+    if (w->input.premature && !w->input.ignore_premature)
+        return false;
+
     w->input.received += nbytes;
 
     if (w->input.known_length && w->input.received > w->input.announced) {
@@ -722,6 +752,9 @@ was_simple_input_read(struct was_simple *w, void *buffer, size_t length)
 
     if (w->input.no_body || was_simple_input_eof(w))
         return 0;
+
+    if (w->input.premature && !w->input.ignore_premature)
+        return -1;
 
     ssize_t nbytes = read(w->input.fd, buffer, length);
     if (nbytes <= 0)
@@ -971,6 +1004,8 @@ bool
 was_simple_end(struct was_simple *w)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
+
+    w->input.ignore_premature = true;
 
     /* generate a status code? */
     if (w->response.state == RESPONSE_STATE_STATUS &&
