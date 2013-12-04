@@ -324,14 +324,18 @@ was_simple_clear_request(struct was_simple *w)
     w->response.state = RESPONSE_STATE_NONE;
 }
 
-static void
+/**
+ * @return true if the connection can be reused
+ */
+static bool
 was_simple_finish_request(struct was_simple *w)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
 
     // XXX
-    was_simple_end(w);
+    bool result = was_simple_end(w);
     was_simple_clear_request(w);
+    return result;
 }
 
 static bool
@@ -487,8 +491,9 @@ was_simple_control_read_and_apply(struct was_simple *w)
 const char *
 was_simple_accept(struct was_simple *w)
 {
-    if (w->response.state != RESPONSE_STATE_NONE)
-        was_simple_finish_request(w);
+    if (w->response.state != RESPONSE_STATE_NONE &&
+        !was_simple_finish_request(w))
+        return NULL;
 
     assert(w->response.state == RESPONSE_STATE_NONE);
 
