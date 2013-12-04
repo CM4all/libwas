@@ -1,3 +1,9 @@
+libcm4all-was (0.3) unstable; urgency=low
+
+  * 
+
+ --   
+
 libcm4all-was (0.2) unstable; urgency=low
 
   * simple: flush the control buffer in _end()
