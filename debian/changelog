@@ -5,7 +5,7 @@ libcm4all-was (0.3) unstable; urgency=low
   * simple: implement was_simple_input_close()
   * protocol: documentation
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Sat, 07 Dec 2013 07:55:57 -0000
 
 libcm4all-was (0.2) unstable; urgency=low
 
