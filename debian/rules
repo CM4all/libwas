@@ -20,7 +20,7 @@ debian/stamp-build:
 	dh_testdir
 
 	mkdir -p build
-	aclocal
+	aclocal -I m4
 	automake --add-missing --foreign
 	autoconf
 

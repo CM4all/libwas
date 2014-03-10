@@ -3,6 +3,7 @@ AC_INIT(CM4all libwas, 0.4, mk@cm4all.com, libcm4all-was)
 AC_COPYRIGHT(Copyright 2010-2014 Content Management AG)
 AC_CONFIG_SRCDIR(src/simple.c)
 AC_CONFIG_AUX_DIR(build)
+AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign 1.11 subdir-objects silent-rules])
 
 dnl Checks for programs.
@@ -17,13 +18,7 @@ dnl
 
 AM_LIBAPR
 AM_LIBAPR_UTIL
-
-AC_PATH_PROG(APREQ2_CONFIG, [apreq2-config],
-	AC_MSG_ERROR([apreq2-config not found]))
-LIBAPREQ2_CFLAGS=`$APREQ2_CONFIG --includes`
-LIBAPREQ2_LIBS=`$APREQ2_CONFIG --link-ld --ldflags --libs`
-AC_SUBST(LIBAPREQ2_CFLAGS)
-AC_SUBST(LIBAPREQ2_LIBS)
+AX_LIBAPREQ2([], [AC_MSG_ERROR([libapreq2 not found])])
 
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.16],,
 	[AC_MSG_ERROR([glib 2.16 is required])])

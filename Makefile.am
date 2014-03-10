@@ -1,3 +1,4 @@
+ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = foreign 1.11 subdir-objects
 
 AM_CPPFLAGS += -Iinclude $(LIBHTTP_CFLAGS)
