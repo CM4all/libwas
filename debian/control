@@ -25,7 +25,8 @@ Description: Development files for libwas
 Package: libcm4all-was-apreq-dev
 Section: non-free/libdevel
 Architecture: any
-Depends: ${misc:Depends}, pkg-config (>= 0.9.0), libcm4all-was-dev,
+Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
+ libcm4all-was-dev (= ${binary:Version}),
  libapreq2-dev (>= 2.13-2), libaprutil1-dev
 Description: Development files for libwas/apreq2
  libwas is a support library for the Web Application Socket protocol.
@@ -35,7 +36,8 @@ Description: Development files for libwas/apreq2
 Package: libcm4all-was-xios-dev
 Section: non-free/libdevel
 Architecture: any
-Depends: ${misc:Depends}, pkg-config (>= 0.9.0), libcm4all-was-dev,
+Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
+ libcm4all-was-dev (= ${binary:Version}),
  libcm4all-core-dev
 Description: Development files for libwas/xios
  libwas is a support library for the Web Application Socket protocol.
