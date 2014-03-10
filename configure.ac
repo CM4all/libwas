@@ -12,6 +12,10 @@ AC_PROG_INSTALL
 AC_PROG_RANLIB
 AC_PROG_CC_C99
 
+dnl Checks for OS features
+
+AC_SYS_LARGEFILE
+
 dnl
 dnl Checks for libraries.
 dnl
