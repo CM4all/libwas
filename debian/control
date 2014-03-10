@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 5), autoconf (>= 2.60), automake (>= 1.11),
  texlive, texlive-latex-extra,
  libglib2.0-dev (>= 2.16),
  libapreq2-dev (>= 2.13-2), libaprutil1-dev,
- libcm4all-core-dev,
+ libcm4all-core-dev (>= 1.20.5),
  libcm4all-http-dev (>= 1.2)
 Standards-Version: 3.9.1
 
@@ -38,7 +38,7 @@ Section: non-free/libdevel
 Architecture: any
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
  libcm4all-was-dev (= ${binary:Version}),
- libcm4all-core-dev
+ libcm4all-core-dev (>= 1.20.5)
 Description: Development files for libwas/xios
  libwas is a support library for the Web Application Socket protocol.
  .
