@@ -47,6 +47,8 @@ if test "$am_cv_CC_dependencies_compiler_type" = "gcc3"; then
     AM_CFLAGS="$AM_CFLAGS -Wmissing-prototypes -Wwrite-strings -Wcast-qual -Wfloat-equal -Wshadow -Wpointer-arith -Wbad-function-cast -Wsign-compare -Waggregate-return -Wmissing-declarations -Wmissing-noreturn -Wpacked -Wredundant-decls -Wnested-externs -Winline -Wdisabled-optimization -Wno-long-long -Wstrict-prototypes -Wundef -pedantic"
 fi
 
+AM_CFLAGS="$AM_CFLAGS -ffunction-sections -fdata-sections"
+
 dnl
 dnl DEBUG
 dnl
