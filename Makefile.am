@@ -9,7 +9,7 @@ lib_LIBRARIES = \
 	src/libcm4all-was-xios.a
 src_libcm4all_was_simple_a_SOURCES = src/simple.c
 src_libcm4all_was_apreq_a_SOURCES = src/parser.c src/bucket.c
-src_libcm4all_was_apreq_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBAPREQ2_CFLAGS)
+src_libcm4all_was_apreq_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBAPR_CFLAGS) $(LIBAPR_UTIL_CFLAGS) $(LIBAPREQ2_CFLAGS)
 src_libcm4all_was_xios_a_SOURCES = src/istub.c src/ostub.c
 src_libcm4all_was_xios_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBCORE_CFLAGS)
 

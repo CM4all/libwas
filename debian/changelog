@@ -1,6 +1,6 @@
 libcm4all-was (0.4) unstable; urgency=low
 
-  * 
+  * apreq: compile and link with libapr and libapr-util
 
  --   
 

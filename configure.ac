@@ -15,6 +15,9 @@ dnl
 dnl Checks for libraries.
 dnl
 
+AM_LIBAPR
+AM_LIBAPR_UTIL
+
 AC_PATH_PROG(APREQ2_CONFIG, [apreq2-config],
 	AC_MSG_ERROR([apreq2-config not found]))
 LIBAPREQ2_CFLAGS=`$APREQ2_CONFIG --includes`

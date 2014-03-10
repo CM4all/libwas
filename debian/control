@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 5), autoconf (>= 2.60), automake (>= 1.11),
  doxygen (>= 1.2),
  texlive, texlive-latex-extra,
  libglib2.0-dev (>= 2.16),
- libapreq2-dev (>= 2.08),
+ libapreq2-dev (>= 2.08), libaprutil1-dev,
  libcm4all-core-dev,
  libcm4all-http-dev (>= 1.2)
 Standards-Version: 3.9.1
