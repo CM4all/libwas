@@ -3,7 +3,7 @@ libcm4all-was (0.4) unstable; urgency=low
   * apreq: compile and link with libapr and libapr-util
   * build with libapreq 2.13
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Mon, 10 Mar 2014 16:15:45 -0000
 
 libcm4all-was (0.3) unstable; urgency=low
 
