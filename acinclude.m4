@@ -27,7 +27,7 @@ AC_DEFUN([AM_LIBAPR],[
 
         AC_MSG_RESULT( $with_apr_config )
 
-        LIBAPR_CFLAGS="`$with_apr_config --cppflags` -isystem `$with_apr_config --includedir`"
+        LIBAPR_CFLAGS="`$with_apr_config --cppflags` -isystem`$with_apr_config --includedir`"
         LIBAPR_LIBS=`$with_apr_config --link-ld`
 
         AC_SUBST(LIBAPR_CFLAGS)
@@ -51,7 +51,7 @@ AC_DEFUN([AM_LIBAPR_UTIL],[
 
         AC_MSG_RESULT( $with_apu_config )
 
-        LIBAPR_UTIL_CFLAGS="-isystem `$with_apu_config --includedir`"
+        LIBAPR_UTIL_CFLAGS="-isystem`$with_apu_config --includedir`"
         LIBAPR_UTIL_LIBS=`$with_apu_config --link-ld`
 
         AC_SUBST(LIBAPR_UTIL_CFLAGS)

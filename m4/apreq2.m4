@@ -14,7 +14,7 @@ AC_DEFUN([AX_LIBAPREQ2], [
 		$2
 		:
 	else
-                LIBAPREQ2_CFLAGS="-isystem `$with_apreq2_config --includedir`"
+                LIBAPREQ2_CFLAGS="-isystem`$with_apreq2_config --includedir`"
                 LIBAPREQ2_LIBS="`$with_apreq2_config --link-ld`"
 		$1
 	fi
