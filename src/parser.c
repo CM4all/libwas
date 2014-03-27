@@ -36,6 +36,7 @@
 #include <apreq_util.h>
 
 #include <assert.h>
+#include <stdlib.h>
 
 #define USER_DATA_KEY "apreq"
 
@@ -634,6 +635,30 @@ static apr_status_t ba_cleanup(void *data)
 
 static APREQ_MODULE(cgi, 20050425);
 
+static bool
+parse_size_t(const char *string, size_t *value_r)
+{
+    char *endptr;
+    long lvalue = strtol(string, &endptr, 10);
+    if (endptr == string || lvalue <= 0)
+        return false;
+
+    size_t zvalue = (size_t)lvalue;
+    if (strcmp(endptr, "k") == 0)
+        zvalue *= 1024;
+    else if (strcmp(endptr, "M") == 0)
+        zvalue *= 1024 * 1024;
+    else if (strcmp(endptr, "G") == 0)
+        zvalue *= 1024 * 1024 * 1024;
+    else if (*endptr != 0)
+        return false;
+
+    *value_r = zvalue;
+    return true;
+
+}
+
+
 APREQ_DECLARE(apreq_handle_t *)
 apreq_handle_was(apr_pool_t *pool, struct was_simple *was, const char *uri)
 {
@@ -659,7 +684,17 @@ apreq_handle_was(apr_pool_t *pool, struct was_simple *was, const char *uri)
     req->uri = uri;
 
     req->read_limit           = (apr_uint64_t) -1;
-    req->brigade_limit        = APREQ_DEFAULT_BRIGADE_LIMIT;
+
+    apr_size_t brigade_limit = APREQ_DEFAULT_BRIGADE_LIMIT;
+    const char *brigade_limit_string =
+        was_simple_get_parameter(was, "UPLOAD_BUFFER_SIZE");
+    if (brigade_limit_string != NULL) {
+        size_t value;
+        if (parse_size_t(brigade_limit_string, &value))
+            brigade_limit = value;
+    }
+
+    req->brigade_limit = brigade_limit;
 
     req->args_status =
         req->jar_status =
