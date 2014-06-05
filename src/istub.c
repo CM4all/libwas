@@ -7,7 +7,7 @@
 #include <was/istub.h>
 #include <was/simple.h>
 
-#include <glib.h>
+#include <inline/compiler.h>
 
 #include <sysx/assert.h>
 #include <sysx/result.h>
@@ -22,7 +22,7 @@ struct xios_was_input {
 };
 
 static int
-xios_was_input_read(xiostub *stub, G_GNUC_UNUSED xioexec *exec, void *ctxt)
+xios_was_input_read(xiostub *stub, gcc_unused xioexec *exec, void *ctxt)
 {
     struct was_simple *w = ctxt;
     int fd = was_simple_input_fd(w);
@@ -52,7 +52,7 @@ xios_was_input_read(xiostub *stub, G_GNUC_UNUSED xioexec *exec, void *ctxt)
 }
 
 static xoffs
-xios_was_input_readn(xiostub *stub, G_GNUC_UNUSED xioexec *exec, void *ctxt,
+xios_was_input_readn(xiostub *stub, gcc_unused xioexec *exec, void *ctxt,
                      char *buff, xoffs size)
 {
     struct was_simple *w = ctxt;

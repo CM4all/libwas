@@ -8,6 +8,7 @@ Build-Depends: debhelper (>= 5), autoconf (>= 2.60), automake (>= 1.11),
  libglib2.0-dev (>= 2.16),
  libapreq2-dev (>= 2.13-2), libaprutil1-dev,
  libcm4all-core-dev (>= 1.20.5),
+ libcm4all-inline-dev (>= 0.3.4),
  libcm4all-http-dev (>= 1.2)
 Standards-Version: 3.9.1
 
