@@ -3,7 +3,7 @@ libcm4all-was (0.5) unstable; urgency=low
   * apreq: add option UPLOAD_BUFFER_SIZE
   * headers are now C++ compatible
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Mon, 19 Jan 2015 11:53:59 -0000
 
 libcm4all-was (0.4) unstable; urgency=low
 
