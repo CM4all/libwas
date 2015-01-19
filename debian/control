@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 5), autoconf (>= 2.60), automake (>= 1.11),
  doxygen (>= 1.2),
  texlive, texlive-latex-extra,
  libglib2.0-dev (>= 2.16),
- libapreq2-dev (>= 2.13-2), libaprutil1-dev,
+ libcm4all-thirdparty-apreq2-dev,
  libcm4all-core-dev (>= 1.20.5),
  libcm4all-inline-dev (>= 0.3.4),
  libcm4all-http-dev (>= 1.2)
@@ -28,7 +28,7 @@ Section: non-free/libdevel
 Architecture: any
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
  libcm4all-was-dev (= ${binary:Version}),
- libapreq2-dev (>= 2.13-2), libaprutil1-dev
+ libcm4all-thirdparty-apreq2-dev
 Description: Development files for libwas/apreq2
  libwas is a support library for the Web Application Socket protocol.
  .
