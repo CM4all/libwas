@@ -45,6 +45,10 @@ enum was_simple_poll_result {
     WAS_SIMPLE_POLL_CLOSED,
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Creates a default #was_simple object for this process.
  */
@@ -168,5 +172,9 @@ __attribute__((format(printf, 2, 3)));
  */
 bool
 was_simple_end(struct was_simple *w);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
