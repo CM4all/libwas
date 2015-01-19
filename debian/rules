@@ -25,7 +25,9 @@ debian/stamp-build:
 	autoconf
 
 	# ./configure
-	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
+	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
+		CC=clang \
+		CFLAGS="$(CFLAGS)" \
 		--disable-dependency-tracking \
 		--prefix=/usr \
 		--sysconfdir=/etc \
