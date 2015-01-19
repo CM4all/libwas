@@ -1,3 +1,9 @@
+libcm4all-was (0.6) unstable; urgency=low
+
+  * 
+
+ --   
+
 libcm4all-was (0.5) unstable; urgency=low
 
   * apreq: add option UPLOAD_BUFFER_SIZE
