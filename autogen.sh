@@ -9,8 +9,8 @@ aclocal -I m4
 automake --add-missing --foreign
 autoconf
 ./configure \
-	CC=clang \
-	CFLAGS="-O0 -ggdb" \
+	CC=clang CXX=clang++ \
+	CFLAGS="-O0 -ggdb" CXXFLAGS="-O0 -ggdb" \
         --prefix=/usr/local/stow/libcm4all-was \
         --enable-debug \
 	--enable-silent-rules \
