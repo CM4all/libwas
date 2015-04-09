@@ -1,3 +1,9 @@
+libcm4all-was (0.7) unstable; urgency=low
+
+  * 
+
+ --   
+
 libcm4all-was (0.6) unstable; urgency=low
 
   * debian: build with libcm4all-apreq2
