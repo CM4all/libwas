@@ -1,7 +1,7 @@
 AC_PREREQ(2.60)
 AC_INIT(CM4all libwas, 0.8, mk@cm4all.com, libcm4all-was)
 AC_COPYRIGHT(Copyright 2010-2015 Content Management AG)
-AC_CONFIG_SRCDIR(src/simple.c)
+AC_CONFIG_SRCDIR(src/simple.cxx)
 AC_CONFIG_AUX_DIR(build)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign 1.11 subdir-objects silent-rules])

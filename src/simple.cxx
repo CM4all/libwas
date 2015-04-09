@@ -8,7 +8,7 @@
 #include <was/simple.h>
 #include <was/protocol.h>
 
-#include "iterator.h"
+#include "iterator.hxx"
 
 #include <http/header.h>
 
@@ -148,13 +148,13 @@ struct was_simple {
         bool finished;
     } request;
 
-    struct {
-        enum {
-            RESPONSE_STATE_NONE,
-            RESPONSE_STATE_STATUS,
-            RESPONSE_STATE_HEADERS,
-            RESPONSE_STATE_BODY,
-            RESPONSE_STATE_END,
+    struct Response {
+        enum class State {
+            NONE,
+            STATUS,
+            HEADERS,
+            BODY,
+            END,
         } state;
     } response;
 };
@@ -180,7 +180,7 @@ was_simple_init_request(struct was_simple *w)
 static void
 was_simple_free_request(struct was_simple *w)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     free(w->request.uri);
     free(w->request.script_name);
@@ -194,17 +194,17 @@ was_simple_free_request(struct was_simple *w)
 struct was_simple *
 was_simple_new(void)
 {
-    struct was_simple *w = g_new(struct was_simple, 1);
+    auto *w = new was_simple();
 
     w->control.fd = 3;
     w->control.input_position = 0;
     w->control.output_buffer.position = 0;
-    w->control.packet.payload = NULL;
+    w->control.packet.payload = nullptr;
 
     w->input.fd = 0;
     w->output.fd = 1;
 
-    w->response.state = RESPONSE_STATE_NONE;
+    w->response.state = was_simple::Response::State::NONE;
 
     return w;
 }
@@ -212,10 +212,10 @@ was_simple_new(void)
 void
 was_simple_free(struct was_simple *w)
 {
-    if (w->response.state != RESPONSE_STATE_NONE)
+    if (w->response.state != was_simple::Response::State::NONE)
         was_simple_free_request(w);
 
-    g_free(w);
+    delete w;
 }
 
 static bool
@@ -254,23 +254,24 @@ was_simple_control_shift(struct was_simple *w)
     memmove(w->control.input_buffer.raw, w->control.input_buffer.raw + full_length,
             w->control.input_position);
 
-    w->control.packet.payload = NULL;
+    w->control.packet.payload = nullptr;
 }
 
 static const struct was_control_packet *
 was_simple_control_get(struct was_simple *w)
 {
     if (!was_simple_control_complete(w))
-        return NULL;
+        return nullptr;
 
-    w->control.packet.command = w->control.input_buffer.header.command;
+    w->control.packet.command = (enum was_command)
+        w->control.input_buffer.header.command;
     w->control.packet.length = w->control.input_buffer.header.length;
 
     if (w->control.packet.length > 0) {
         w->control.packet.payload = w->control.input_buffer.raw +
             sizeof(w->control.input_buffer.header);
     } else {
-        w->control.packet.payload = NULL;
+        w->control.packet.payload = nullptr;
         was_simple_control_shift(w);
     }
 
@@ -281,7 +282,7 @@ static const struct was_control_packet *
 was_simple_control_next(struct was_simple *w)
 {
     /* clean up the previous packet */
-    if (w->control.packet.payload != NULL)
+    if (w->control.packet.payload != nullptr)
         was_simple_control_shift(w);
 
     return was_simple_control_get(w);
@@ -291,18 +292,18 @@ static const struct was_control_packet *
 was_simple_control_read(struct was_simple *w, bool dontwait)
 {
     /* clean up the previous packet */
-    if (w->control.packet.payload != NULL)
+    if (w->control.packet.payload != nullptr)
         was_simple_control_shift(w);
 
     while (true) {
         const struct was_control_packet *packet = was_simple_control_get(w);
-        if (packet != NULL)
+        if (packet != nullptr)
             return packet;
 
         /* XXX check if buffer is full */
 
         if (!was_simple_control_fill(w, dontwait))
-            return NULL;
+            return nullptr;
     }
 }
 
@@ -311,9 +312,9 @@ was_simple_control_expect(struct was_simple *w, enum was_command command)
 {
     const struct was_control_packet *packet =
         was_simple_control_read(w, false);
-    return packet != NULL && packet->command == command
+    return packet != nullptr && packet->command == command
         ? packet
-        : NULL;
+        : nullptr;
 }
 
 static ssize_t
@@ -326,7 +327,7 @@ was_simple_control_direct_send(struct was_simple *w,
 static bool
 was_simple_control_flush(struct was_simple *w)
 {
-    assert(w != NULL);
+    assert(w != nullptr);
     assert(w->control.output_buffer.position <= sizeof(w->control.output_buffer.data));
 
     if (w->control.output_buffer.position == 0)
@@ -349,7 +350,7 @@ was_simple_control_flush(struct was_simple *w)
 static void
 was_simple_control_append(struct was_simple *w, const void *p, size_t length)
 {
-    assert(w != NULL);
+    assert(w != nullptr);
     assert(w->control.output_buffer.position <= sizeof(w->control.output_buffer.data));
     assert(w->control.output_buffer.position + length <= sizeof(w->control.output_buffer.data));
 
@@ -381,8 +382,8 @@ was_simple_control_send_header(struct was_simple *w, enum was_command command,
                                size_t length)
 {
     struct was_header header = {
-        .command = command,
-        .length = length,
+        .command = uint16_t(command),
+        .length = uint16_t(length),
     };
 
     return was_simple_control_send(w, &header, sizeof(header));
@@ -413,11 +414,11 @@ was_simple_control_send_uint64(struct was_simple *w, enum was_command command,
 static void
 was_simple_clear_request(struct was_simple *w)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     was_simple_free_request(w);
 
-    w->response.state = RESPONSE_STATE_NONE;
+    w->response.state = was_simple::Response::State::NONE;
 }
 
 /**
@@ -426,7 +427,7 @@ was_simple_clear_request(struct was_simple *w)
 static bool
 was_simple_finish_request(struct was_simple *w)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     // XXX
     bool result = was_simple_end(w);
@@ -438,10 +439,10 @@ static bool
 was_simple_apply_string(char **value_r,
                         const void *payload, size_t length)
 {
-    if (*value_r != NULL)
+    if (*value_r != nullptr)
         return false;
 
-    *value_r = strndup(payload, length);
+    *value_r = strndup((const char *)payload, length);
     return true;
 }
 
@@ -450,8 +451,8 @@ was_simple_apply_map(GHashTable *map, const void *_payload, size_t length)
 {
     const char *payload = (const char *)_payload;
 
-    const char *p = memchr(payload, '=', length);
-    if (p == NULL || p == payload)
+    const char *p = (const char *)memchr(payload, '=', length);
+    if (p == nullptr || p == payload)
         return false;
 
     g_hash_table_insert(map, g_strndup(payload, p - payload),
@@ -463,7 +464,7 @@ static bool
 was_simple_apply_request_packet(struct was_simple *w,
                                 const struct was_control_packet *packet)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     switch (packet->command) {
         http_method_t method;
@@ -549,13 +550,13 @@ was_simple_apply_request_packet(struct was_simple *w,
     case WAS_COMMAND_STOP:
         w->output.premature = true;
 
-        if (w->response.state <= RESPONSE_STATE_BODY &&
+        if (w->response.state <= was_simple::Response::State::BODY &&
             !was_simple_control_send_uint64(w, WAS_COMMAND_PREMATURE,
                                             w->output.sent))
             return false;
 
-        if (w->response.state == RESPONSE_STATE_BODY)
-            w->response.state = RESPONSE_STATE_END;
+        if (w->response.state == was_simple::Response::State::BODY)
+            w->response.state = was_simple::Response::State::END;
 
         break;
 
@@ -581,7 +582,7 @@ static bool
 was_simple_control_apply_pending(struct was_simple *w)
 {
     const struct was_control_packet *packet;
-    while ((packet = was_simple_control_next(w)) != NULL)
+    while ((packet = was_simple_control_next(w)) != nullptr)
         if (!was_simple_apply_request_packet(w, packet))
             return false;
 
@@ -593,25 +594,25 @@ was_simple_control_read_and_apply(struct was_simple *w)
 {
     const struct was_control_packet *packet =
         was_simple_control_read(w, false);
-    return packet != NULL &&
+    return packet != nullptr &&
         was_simple_apply_request_packet(w, packet);
 }
 
 const char *
 was_simple_accept(struct was_simple *w)
 {
-    if (w->response.state != RESPONSE_STATE_NONE &&
+    if (w->response.state != was_simple::Response::State::NONE &&
         !was_simple_finish_request(w))
-        return NULL;
+        return nullptr;
 
-    assert(w->response.state == RESPONSE_STATE_NONE);
+    assert(w->response.state == was_simple::Response::State::NONE);
 
     const struct was_control_packet *packet;
     packet = was_simple_control_expect(w, WAS_COMMAND_REQUEST);
-    if (packet == NULL)
-        return NULL;
+    if (packet == nullptr)
+        return nullptr;
 
-    assert(w->response.state == RESPONSE_STATE_NONE);
+    assert(w->response.state == was_simple::Response::State::NONE);
 
     w->input.received = 0;
     w->input.known_length = false;
@@ -622,13 +623,13 @@ was_simple_accept(struct was_simple *w)
     w->output.known_length = false;
     w->output.premature = false;
 
-    w->response.state = RESPONSE_STATE_STATUS;
+    w->response.state = was_simple::Response::State::STATUS;
 
     was_simple_init_request(w);
 
     do {
         if (!was_simple_control_read_and_apply(w))
-            return NULL;
+            return nullptr;
     } while (!w->request.finished);
 
     return w->request.uri;
@@ -637,7 +638,7 @@ was_simple_accept(struct was_simple *w)
 http_method_t
 was_simple_get_method(const struct was_simple *w)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     return w->request.method;
 }
@@ -645,7 +646,7 @@ was_simple_get_method(const struct was_simple *w)
 const char *
 was_simple_get_script_name(const struct was_simple *w)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     return w->request.script_name;
 }
@@ -653,7 +654,7 @@ was_simple_get_script_name(const struct was_simple *w)
 const char *
 was_simple_get_path_info(const struct was_simple *w)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     return w->request.path_info;
 }
@@ -661,7 +662,7 @@ was_simple_get_path_info(const struct was_simple *w)
 const char *
 was_simple_get_query_string(const struct was_simple *w)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     return w->request.query_string;
 }
@@ -669,9 +670,9 @@ was_simple_get_query_string(const struct was_simple *w)
 const char *
 was_simple_get_header(struct was_simple *w, const char *name)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
-    return g_hash_table_lookup(w->request.headers, name);
+    return (const char *)g_hash_table_lookup(w->request.headers, name);
 }
 
 struct was_simple_iterator *
@@ -683,9 +684,9 @@ was_simple_get_header_iterator(struct was_simple *w)
 const char *
 was_simple_get_parameter(struct was_simple *w, const char *name)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
-    return g_hash_table_lookup(w->request.parameters, name);
+    return (const char *)g_hash_table_lookup(w->request.parameters, name);
 }
 
 struct was_simple_iterator *
@@ -697,7 +698,7 @@ was_simple_get_parameter_iterator(struct was_simple *w)
 bool
 was_simple_has_body(const struct was_simple *w)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     return !w->input.no_body;
 }
@@ -711,7 +712,7 @@ was_simple_input_eof(const struct was_simple *w)
 enum was_simple_poll_result
 was_simple_input_poll(struct was_simple *w, int timeout_ms)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     if (w->input.no_body || was_simple_input_eof(w))
         return WAS_SIMPLE_POLL_END;
@@ -764,7 +765,7 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
 int
 was_simple_input_fd(const struct was_simple *w)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     return w->input.fd;
 }
@@ -772,7 +773,7 @@ was_simple_input_fd(const struct was_simple *w)
 bool
 was_simple_received(struct was_simple *w, size_t nbytes)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     if (w->input.premature && !w->input.ignore_premature)
         return false;
@@ -791,7 +792,7 @@ was_simple_received(struct was_simple *w, size_t nbytes)
 ssize_t
 was_simple_input_read(struct was_simple *w, void *buffer, size_t length)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     if (w->input.no_body || was_simple_input_eof(w))
         return 0;
@@ -812,7 +813,7 @@ was_simple_input_read(struct was_simple *w, void *buffer, size_t length)
 bool
 was_simple_input_close(struct was_simple *w)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     if (w->input.no_body || w->input.stopped || w->input.premature ||
         was_simple_input_eof(w))
@@ -828,9 +829,9 @@ was_simple_input_close(struct was_simple *w)
 bool
 was_simple_status(struct was_simple *w, http_status_t status)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
-    if (w->response.state != RESPONSE_STATE_STATUS)
+    if (w->response.state != was_simple::Response::State::STATUS)
         /* too late for sending the status */
         return false;
 
@@ -838,7 +839,7 @@ was_simple_status(struct was_simple *w, http_status_t status)
                                         &status, sizeof(status)))
         return false;
 
-    w->response.state = RESPONSE_STATE_HEADERS;
+    w->response.state = was_simple::Response::State::HEADERS;
     w->output.no_body = http_status_is_empty(status);
     return true;
 }
@@ -847,13 +848,13 @@ bool
 was_simple_set_header(struct was_simple *w,
                       const char *name, const char *value)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
-    if (w->response.state == RESPONSE_STATE_STATUS &&
+    if (w->response.state == was_simple::Response::State::STATUS &&
         !was_simple_status(w, HTTP_STATUS_OK))
         return false;
 
-    assert(w->response.state == RESPONSE_STATE_HEADERS);
+    assert(w->response.state == was_simple::Response::State::HEADERS);
 
     const size_t name_length = strlen(name), value_length = strlen(value);
     char *p = (char *)malloc(name_length + 1 + value_length);
@@ -870,8 +871,8 @@ was_simple_set_header(struct was_simple *w,
 static void
 copy_header(gpointer _key, gpointer _value, gpointer user_data)
 {
-    struct was_simple *w = user_data;
-    const char *key = _key, *value = _value;
+    auto *w = (struct was_simple *)user_data;
+    const char *key = (const char *)_key, *value = (const char *)_value;
 
     if (!http_header_is_hop_by_hop(key))
         was_simple_set_header(w, key, value);
@@ -881,13 +882,13 @@ bool
 was_simple_copy_all_headers(struct was_simple *w)
 {
     g_hash_table_foreach(w->request.headers, copy_header, w);
-    return w->response.state <= RESPONSE_STATE_HEADERS;
+    return w->response.state <= was_simple::Response::State::HEADERS;
 }
 
 bool
 was_simple_set_length(struct was_simple *w, uint64_t length)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     if (w->output.no_body)
         return false;
@@ -899,18 +900,18 @@ was_simple_set_length(struct was_simple *w, uint64_t length)
         return true;
     }
 
-    if (w->response.state == RESPONSE_STATE_STATUS &&
+    if (w->response.state == was_simple::Response::State::STATUS &&
         !was_simple_status(w, HTTP_STATUS_OK))
         return false;
 
-    if (w->response.state == RESPONSE_STATE_HEADERS) {
+    if (w->response.state == was_simple::Response::State::HEADERS) {
         if (!was_simple_control_send_empty(w, WAS_COMMAND_DATA))
             return false;
 
-        w->response.state = RESPONSE_STATE_BODY;
+        w->response.state = was_simple::Response::State::BODY;
     }
 
-    assert(w->response.state == RESPONSE_STATE_BODY);
+    assert(w->response.state == was_simple::Response::State::BODY);
 
     if (!was_simple_control_send_uint64(w, WAS_COMMAND_LENGTH, length))
         return false;
@@ -919,7 +920,7 @@ was_simple_set_length(struct was_simple *w, uint64_t length)
     w->output.known_length = true;
 
     if (w->output.announced == w->output.sent)
-        w->response.state = RESPONSE_STATE_END;
+        w->response.state = was_simple::Response::State::END;
 
     return true;
 }
@@ -927,15 +928,15 @@ was_simple_set_length(struct was_simple *w, uint64_t length)
 static bool
 was_simple_set_response_state_body(struct was_simple *w)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
-    if (w->response.state == RESPONSE_STATE_STATUS &&
+    if (w->response.state == was_simple::Response::State::STATUS &&
         !was_simple_status(w, HTTP_STATUS_OK))
         return false;
 
-    if (w->response.state == RESPONSE_STATE_HEADERS) {
+    if (w->response.state == was_simple::Response::State::HEADERS) {
         if (w->output.no_body) {
-            w->response.state = RESPONSE_STATE_END;
+            w->response.state = was_simple::Response::State::END;
             was_simple_control_send_empty(w, WAS_COMMAND_NO_DATA);
             return false;
         }
@@ -943,13 +944,13 @@ was_simple_set_response_state_body(struct was_simple *w)
         if (!was_simple_control_send_empty(w, WAS_COMMAND_DATA))
             return false;
 
-        w->response.state = RESPONSE_STATE_BODY;
+        w->response.state = was_simple::Response::State::BODY;
     }
 
-    assert(w->response.state == RESPONSE_STATE_BODY);
+    assert(w->response.state == was_simple::Response::State::BODY);
 
     if (w->output.premature) {
-        w->response.state = RESPONSE_STATE_END;
+        w->response.state = was_simple::Response::State::END;
         return false;
     }
 
@@ -959,7 +960,7 @@ was_simple_set_response_state_body(struct was_simple *w)
 int
 was_simple_output_fd(struct was_simple *w)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     if (!was_simple_set_response_state_body(w))
         return -1;
@@ -970,7 +971,7 @@ was_simple_output_fd(struct was_simple *w)
 bool
 was_simple_sent(struct was_simple *w, size_t nbytes)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     if (w->output.no_body)
         return false;
@@ -990,13 +991,13 @@ was_simple_sent(struct was_simple *w, size_t nbytes)
 bool
 was_simple_write(struct was_simple *w, const void *data0, size_t length)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     if (!was_simple_set_response_state_body(w) ||
         !was_simple_control_flush(w))
         return false;
 
-    const char *data = data0;
+    const char *data = (const char *)data0;
 
     while (length > 0) {
         ssize_t nbytes = write(w->output.fd, data, length);
@@ -1058,7 +1059,7 @@ discard_all_input(struct was_simple *w)
 bool
 was_simple_end(struct was_simple *w)
 {
-    assert(w->response.state != RESPONSE_STATE_NONE);
+    assert(w->response.state != was_simple::Response::State::NONE);
 
     w->input.ignore_premature = true;
 
@@ -1066,29 +1067,29 @@ was_simple_end(struct was_simple *w)
         return false;
 
     /* generate a status code? */
-    if (w->response.state == RESPONSE_STATE_STATUS &&
+    if (w->response.state == was_simple::Response::State::STATUS &&
         !was_simple_status(w, HTTP_STATUS_NO_CONTENT))
         return false;
 
     /* no response body? */
-    if (w->response.state == RESPONSE_STATE_HEADERS) {
+    if (w->response.state == was_simple::Response::State::HEADERS) {
         if (!was_simple_control_send_empty(w, WAS_COMMAND_NO_DATA) ||
             !was_simple_control_flush(w))
             return false;
 
-        w->response.state = RESPONSE_STATE_END;
+        w->response.state = was_simple::Response::State::END;
     }
 
     /* finish the response body? */
-    if (w->response.state == RESPONSE_STATE_BODY) {
+    if (w->response.state == was_simple::Response::State::BODY) {
         if (w->output.premature) {
-            w->response.state = RESPONSE_STATE_END;
+            w->response.state = was_simple::Response::State::END;
         } else if (w->output.known_length) {
             if (w->output.sent != w->output.announced)
                 // XXX
                 return false;
 
-            w->response.state = RESPONSE_STATE_END;
+            w->response.state = was_simple::Response::State::END;
         } else {
             if (!was_simple_set_length(w, w->output.sent))
                 return false;
@@ -1099,7 +1100,7 @@ was_simple_end(struct was_simple *w)
     if (!was_simple_control_flush(w))
         return false;
 
-    assert(w->response.state == RESPONSE_STATE_END);
+    assert(w->response.state == was_simple::Response::State::END);
 
     /* discard the request body? */
     if (!discard_all_input(w))

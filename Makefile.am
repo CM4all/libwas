@@ -9,8 +9,8 @@ lib_LTLIBRARIES = \
 	libcm4all-was-xios.la
 
 libcm4all_was_simple_la_SOURCES = \
-	src/iterator.c src/iterator.h \
-	src/simple.c
+	src/iterator.cxx src/iterator.hxx \
+	src/simple.cxx
 libcm4all_was_simple_la_CPPFLAGS = $(AM_CPPFLAGS) \
 	$(GLIB_CFLAGS)
 libcm4all_was_simple_la_LDFLAGS = \
