@@ -8,6 +8,8 @@
 #include <was/simple.h>
 #include <was/protocol.h>
 
+#include "iterator.h"
+
 #include <http/header.h>
 
 #include <assert.h>
@@ -648,12 +650,24 @@ was_simple_get_header(struct was_simple *w, const char *name)
     return g_hash_table_lookup(w->request.headers, name);
 }
 
+struct was_simple_iterator *
+was_simple_get_header_iterator(struct was_simple *w)
+{
+    return was_simple_new_iterator(w->request.headers);
+}
+
 const char *
 was_simple_get_parameter(struct was_simple *w, const char *name)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
 
     return g_hash_table_lookup(w->request.parameters, name);
+}
+
+struct was_simple_iterator *
+was_simple_get_parameter_iterator(struct was_simple *w)
+{
+    return was_simple_new_iterator(w->request.parameters);
 }
 
 bool

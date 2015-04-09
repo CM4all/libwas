@@ -45,6 +45,12 @@ enum was_simple_poll_result {
     WAS_SIMPLE_POLL_CLOSED,
 };
 
+struct was_simple_pair {
+    const char *name, *value;
+};
+
+struct was_simple_iterator;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -94,10 +100,24 @@ const char *
 was_simple_get_header(struct was_simple *w, const char *name);
 
 /**
+ * Returns an object that can iterate all request headers.  It must be
+ * freed with was_simple_iterator_free().
+ */
+struct was_simple_iterator *
+was_simple_get_header_iterator(struct was_simple *w);
+
+/**
  * Returns the value of a WAS parameter.
  */
 const char *
 was_simple_get_parameter(struct was_simple *w, const char *name);
+
+/**
+ * Returns an object that can iterate all request parameters.  It must
+ * be freed with was_simple_iterator_free().
+ */
+struct was_simple_iterator *
+was_simple_get_parameter_iterator(struct was_simple *w);
 
 /**
  * Is a request body present?  (May be empty, though)
@@ -172,6 +192,12 @@ __attribute__((format(printf, 2, 3)));
  */
 bool
 was_simple_end(struct was_simple *w);
+
+void
+was_simple_iterator_free(struct was_simple_iterator *i);
+
+const struct was_simple_pair *
+was_simple_iterator_next(struct was_simple_iterator *i);
 
 #ifdef __cplusplus
 }
