@@ -1,5 +1,6 @@
 libcm4all-was (0.7) unstable; urgency=low
 
+  * debian/control: improved clang build-dependency
   * simple: add header and parameter iterator
 
  --   
