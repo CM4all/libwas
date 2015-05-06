@@ -29,6 +29,7 @@
 
 #include <was/simple.h>
 
+#include <apreq_module.h>
 #include <apreq_error.h>
 #include <apr_strings.h>
 #include <apr_lib.h>

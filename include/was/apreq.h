@@ -7,16 +7,17 @@
 #ifndef WAS_APREQ_H
 #define WAS_APREQ_H
 
-#include <apreq_module.h>
-
+struct apr_pool_t;
+struct apreq_handle_t;
 struct was_simple;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-apreq_handle_t *
-apreq_handle_was(apr_pool_t *pool, struct was_simple *was, const char *uri);
+struct apreq_handle_t *
+apreq_handle_was(struct apr_pool_t *pool,
+                 struct was_simple *was, const char *uri);
 
 #ifdef __cplusplus
 }

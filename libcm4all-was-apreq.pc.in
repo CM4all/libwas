@@ -8,4 +8,4 @@ Description: CM4all WAS server library, request parser
 Version: @VERSION@
 Requires: libcm4all-was-simple
 Libs: -L${libdir} -lcm4all-was-apreq @LIBAPR_LIBS@ @LIBAPR_UTIL_LIBS@ @LIBAPREQ2_LIBS@
-Cflags: -I${includedir} @LIBAPR_CFLAGS@ @LIBAPR_UTIL_CFLAGS@ @LIBAPREQ2_CFLAGS@
+Cflags: -I${includedir}
