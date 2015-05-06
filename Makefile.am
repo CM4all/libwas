@@ -2,7 +2,6 @@ ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = foreign 1.11 subdir-objects
 
 AM_CPPFLAGS += -Iinclude $(LIBHTTP_CFLAGS)
-AM_CPPFLAGS += $(GLIB_CFLAGS)
 
 lib_LIBRARIES = \
 	libcm4all-was-simple.a \
@@ -12,6 +11,8 @@ lib_LIBRARIES = \
 libcm4all_was_simple_a_SOURCES = \
 	src/iterator.c src/iterator.h \
 	src/simple.c
+libcm4all_was_simple_a_CPPFLAGS = $(AM_CPPFLAGS) \
+	$(GLIB_CFLAGS)
 
 libcm4all_was_apreq_a_SOURCES = src/parser.c src/bucket.c
 libcm4all_was_apreq_a_CPPFLAGS = $(AM_CPPFLAGS) \
