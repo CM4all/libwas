@@ -7,7 +7,8 @@ mkdir build
 aclocal -I m4
 automake --add-missing --foreign
 autoconf
-CFLAGS="-O0 -ggdb" ./configure \
+./configure \
+	CFLAGS="-O0 -ggdb" \
         --prefix=/usr/local/stow/libcm4all-was \
         --enable-debug \
 	--enable-silent-rules \
