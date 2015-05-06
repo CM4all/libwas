@@ -9,10 +9,10 @@
 
 #include <inline/compiler.h>
 
-#include <sysx/assert.h>
 #include <sysx/result.h>
 #include <sysx/util.h>
 
+#include <assert.h>
 #include <unistd.h>
 
 static int
@@ -94,9 +94,10 @@ xios_was_output_create(xmemctx *mctx, struct was_simple *was,
 {
     xiodriver driver = xios_was_output_driver;
 
-    REQUIRE(mctx != NULL);
-    REQUIRE(was != NULL);
-    REQUIRE(LOCUMTENENCY(stub_r));
+    assert(mctx != NULL);
+    assert(was != NULL);
+    assert(stub_r != NULL);
+    assert(*stub_r == NULL);
 
     driver.ctxt = was;
 
