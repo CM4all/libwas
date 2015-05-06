@@ -5,16 +5,16 @@ AM_CPPFLAGS += -Iinclude $(LIBHTTP_CFLAGS)
 AM_CPPFLAGS += $(GLIB_CFLAGS)
 
 lib_LIBRARIES = \
-	src/libcm4all-was-simple.a \
-	src/libcm4all-was-apreq.a \
-	src/libcm4all-was-xios.a
-src_libcm4all_was_simple_a_SOURCES = \
+	libcm4all-was-simple.a \
+	libcm4all-was-apreq.a \
+	libcm4all-was-xios.a
+libcm4all_was_simple_a_SOURCES = \
 	src/iterator.c src/iterator.h \
 	src/simple.c
-src_libcm4all_was_apreq_a_SOURCES = src/parser.c src/bucket.c
-src_libcm4all_was_apreq_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBAPR_CFLAGS) $(LIBAPR_UTIL_CFLAGS) $(LIBAPREQ2_CFLAGS)
-src_libcm4all_was_xios_a_SOURCES = src/istub.c src/ostub.c
-src_libcm4all_was_xios_a_CPPFLAGS = $(AM_CPPFLAGS) \
+libcm4all_was_apreq_a_SOURCES = src/parser.c src/bucket.c
+libcm4all_was_apreq_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBAPR_CFLAGS) $(LIBAPR_UTIL_CFLAGS) $(LIBAPREQ2_CFLAGS)
+libcm4all_was_xios_a_SOURCES = src/istub.c src/ostub.c
+libcm4all_was_xios_a_CPPFLAGS = $(AM_CPPFLAGS) \
 	$(LIBCORE_CFLAGS) \
 	$(LIBCM4ALL_INLINE_CFLAGS)
 
