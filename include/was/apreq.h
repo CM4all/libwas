@@ -15,7 +15,7 @@ struct was_simple;
 extern "C" {
 #endif
 
-APREQ_DECLARE(apreq_handle_t*)
+apreq_handle_t *
 apreq_handle_was(apr_pool_t *pool, struct was_simple *was, const char *uri);
 
 #ifdef __cplusplus
