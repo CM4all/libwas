@@ -8,11 +8,15 @@ lib_LIBRARIES = \
 	libcm4all-was-simple.a \
 	libcm4all-was-apreq.a \
 	libcm4all-was-xios.a
+
 libcm4all_was_simple_a_SOURCES = \
 	src/iterator.c src/iterator.h \
 	src/simple.c
+
 libcm4all_was_apreq_a_SOURCES = src/parser.c src/bucket.c
-libcm4all_was_apreq_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBAPR_CFLAGS) $(LIBAPR_UTIL_CFLAGS) $(LIBAPREQ2_CFLAGS)
+libcm4all_was_apreq_a_CPPFLAGS = $(AM_CPPFLAGS) \
+	$(LIBAPR_CFLAGS) $(LIBAPR_UTIL_CFLAGS) $(LIBAPREQ2_CFLAGS)
+
 libcm4all_was_xios_a_SOURCES = src/istub.c src/ostub.c
 libcm4all_was_xios_a_CPPFLAGS = $(AM_CPPFLAGS) \
 	$(LIBCORE_CFLAGS) \
