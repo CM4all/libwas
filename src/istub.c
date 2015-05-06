@@ -9,8 +9,8 @@
 
 #include <inline/compiler.h>
 
+#include <xios/iostub.h>
 #include <sysx/result.h>
-#include <sysx/util.h>
 
 #include <assert.h>
 #include <unistd.h>

@@ -7,8 +7,8 @@
 #ifndef WAS_ISTUB_H
 #define WAS_ISTUB_H
 
-#include <sysx/memory.h>
-#include <xios/iostub.h>
+#include <sysx/types.h>
+#include <xios/types.h>
 
 struct was_simple;
 
