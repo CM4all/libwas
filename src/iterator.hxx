@@ -4,7 +4,8 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#include <glib.h>
+#include <map>
+#include <string>
 
 struct was_simple_iterator *
-was_simple_new_iterator(GHashTable *ht);
+was_simple_new_iterator(const std::map<std::string, std::string> &map);

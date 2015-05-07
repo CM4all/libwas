@@ -9,17 +9,19 @@
 #include <was/simple.h>
 
 struct was_simple_iterator {
-    GHashTableIter iter;
+    std::map<std::string, std::string>::const_iterator i, end;
 
     struct was_simple_pair pair;
 };
 
 struct was_simple_iterator *
-was_simple_new_iterator(GHashTable *ht)
+was_simple_new_iterator(const std::map<std::string, std::string> &map)
 {
     auto *i = new was_simple_iterator();
 
-    g_hash_table_iter_init(&i->iter, ht);
+    i->i = map.begin();
+    i->end = map.end();
+
     return i;
 }
 
@@ -32,12 +34,12 @@ was_simple_iterator_free(struct was_simple_iterator *i)
 const struct was_simple_pair *
 was_simple_iterator_next(struct was_simple_iterator *i)
 {
-    gpointer key, value;
-
-    if (!g_hash_table_iter_next(&i->iter, &key, &value))
+    if (i->i == i->end)
         return nullptr;
 
-    i->pair.name = (const char *)key;
-    i->pair.value = (const char *)value;
+    i->pair.name = i->i->first.c_str();
+    i->pair.value = i->i->second.c_str();
+    ++i->i;
+
     return &i->pair;
 }

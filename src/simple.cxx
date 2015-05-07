@@ -12,6 +12,9 @@
 
 #include <http/header.h>
 
+#include <map>
+#include <string>
+
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
@@ -21,7 +24,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <sys/socket.h>
-#include <glib.h>
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
@@ -140,7 +142,7 @@ struct was_simple {
         http_method_t method;
         char *uri, *script_name, *path_info, *query_string;
 
-        GHashTable *headers, *parameters;
+        std::map<std::string, std::string> headers, parameters;
 
         /**
          * True when all request metadata has been received.
@@ -164,15 +166,10 @@ was_simple_init_request(struct was_simple *w)
 {
     w->request.method = HTTP_METHOD_GET;
 
-    w->request.uri = NULL;
-    w->request.script_name = NULL;
-    w->request.path_info = NULL;
-    w->request.query_string = NULL;
-
-    w->request.headers = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                               g_free, g_free);
-    w->request.parameters = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                                  g_free, g_free);
+    w->request.uri = nullptr;
+    w->request.script_name = nullptr;
+    w->request.path_info = nullptr;
+    w->request.query_string = nullptr;
 
     w->request.finished = false;
 }
@@ -187,8 +184,8 @@ was_simple_free_request(struct was_simple *w)
     free(w->request.path_info);
     free(w->request.query_string);
 
-    g_hash_table_destroy(w->request.headers);
-    g_hash_table_destroy(w->request.parameters);
+    w->request.headers.clear();
+    w->request.parameters.clear();
 }
 
 struct was_simple *
@@ -447,7 +444,8 @@ was_simple_apply_string(char **value_r,
 }
 
 static bool
-was_simple_apply_map(GHashTable *map, const void *_payload, size_t length)
+was_simple_apply_map(std::map<std::string, std::string> &map,
+                     const void *_payload, size_t length)
 {
     const char *payload = (const char *)_payload;
 
@@ -455,8 +453,8 @@ was_simple_apply_map(GHashTable *map, const void *_payload, size_t length)
     if (p == nullptr || p == payload)
         return false;
 
-    g_hash_table_insert(map, g_strndup(payload, p - payload),
-                        g_strndup(p + 1, payload + length - (p + 1)));
+    map.emplace(std::string(payload, p),
+                std::string(p + 1, payload + length));
     return true;
 }
 
@@ -672,7 +670,10 @@ was_simple_get_header(struct was_simple *w, const char *name)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
-    return (const char *)g_hash_table_lookup(w->request.headers, name);
+    auto i = w->request.headers.find(name);
+    return i != w->request.headers.end()
+        ? i->second.c_str()
+        : nullptr;
 }
 
 struct was_simple_iterator *
@@ -686,7 +687,10 @@ was_simple_get_parameter(struct was_simple *w, const char *name)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
-    return (const char *)g_hash_table_lookup(w->request.parameters, name);
+    auto i = w->request.parameters.find(name);
+    return i != w->request.parameters.end()
+        ? i->second.c_str()
+        : nullptr;
 }
 
 struct was_simple_iterator *
@@ -868,21 +872,15 @@ was_simple_set_header(struct was_simple *w,
     return success;
 }
 
-static void
-copy_header(gpointer _key, gpointer _value, gpointer user_data)
-{
-    auto *w = (struct was_simple *)user_data;
-    const char *key = (const char *)_key, *value = (const char *)_value;
-
-    if (!http_header_is_hop_by_hop(key))
-        was_simple_set_header(w, key, value);
-}
-
 bool
 was_simple_copy_all_headers(struct was_simple *w)
 {
-    g_hash_table_foreach(w->request.headers, copy_header, w);
-    return w->response.state <= was_simple::Response::State::HEADERS;
+    for (const auto &i : w->request.headers)
+        if (!http_header_is_hop_by_hop(i.first.c_str()))
+            if (!was_simple_set_header(w, i.first.c_str(), i.second.c_str()))
+                return false;
+
+    return true;
 }
 
 bool
