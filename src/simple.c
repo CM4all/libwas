@@ -409,6 +409,17 @@ was_simple_finish_request(struct was_simple *w)
 }
 
 static bool
+was_simple_apply_string(char **value_r,
+                        const void *payload, size_t length)
+{
+    if (*value_r != NULL)
+        return false;
+
+    *value_r = g_strndup(payload, length);
+    return true;
+}
+
+static bool
 was_simple_apply_map(GHashTable *map, const void *_payload, size_t length)
 {
     const char *payload = (const char *)_payload;
@@ -455,30 +466,20 @@ was_simple_apply_request_packet(struct was_simple *w,
         break;
 
     case WAS_COMMAND_URI:
-        if (w->request.uri != NULL)
-            return false;
-        w->request.uri = packet->length > 0
-            ? g_strndup(packet->payload, packet->length)
-            : g_strdup("");
-        break;
+        return was_simple_apply_string(&w->request.uri,
+                                       packet->payload, packet->length);
 
     case WAS_COMMAND_SCRIPT_NAME:
-        if (w->request.script_name != NULL)
-            return false;
-        w->request.script_name = g_strndup(packet->payload, packet->length);
-        break;
+        return was_simple_apply_string(&w->request.script_name,
+                                       packet->payload, packet->length);
 
     case WAS_COMMAND_PATH_INFO:
-        if (w->request.path_info != NULL)
-            return false;
-        w->request.path_info = g_strndup(packet->payload, packet->length);
-        break;
+        return was_simple_apply_string(&w->request.path_info,
+                                       packet->payload, packet->length);
 
     case WAS_COMMAND_QUERY_STRING:
-        if (w->request.query_string != NULL)
-            return false;
-        w->request.query_string = g_strndup(packet->payload, packet->length);
-        break;
+        return was_simple_apply_string(&w->request.query_string,
+                                       packet->payload, packet->length);
 
     case WAS_COMMAND_HEADER:
         was_simple_apply_map(w->request.headers,
