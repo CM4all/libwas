@@ -839,10 +839,15 @@ was_simple_set_header(struct was_simple *w,
 
     assert(w->response.state == RESPONSE_STATE_HEADERS);
 
-    char *p = g_strconcat(name, "=", value, NULL);
+    const size_t name_length = strlen(name), value_length = strlen(value);
+    char *p = (char *)malloc(name_length + 1 + value_length);
+    char *q = (char *)mempcpy(p, name, name_length);
+    *q++ = '=';
+    q = (char *)mempcpy(q, value, value_length);
+
     bool success = was_simple_control_send_packet(w, WAS_COMMAND_HEADER,
-                                                  p, strlen(p));
-    g_free(p);
+                                                  p, q - p);
+    free(p);
     return success;
 }
 
