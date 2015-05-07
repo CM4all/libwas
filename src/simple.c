@@ -22,6 +22,8 @@
 #include <sys/socket.h>
 #include <glib.h>
 
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+
 struct was_control_packet {
     enum was_command command;
     size_t length;
@@ -724,7 +726,7 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
     };
 
     while (true) {
-        int ret = poll(fds, G_N_ELEMENTS(fds), timeout_ms);
+        int ret = poll(fds, ARRAY_SIZE(fds), timeout_ms);
         if (ret < 0)
             return WAS_SIMPLE_POLL_ERROR;
 
