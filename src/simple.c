@@ -409,8 +409,10 @@ was_simple_finish_request(struct was_simple *w)
 }
 
 static bool
-was_simple_apply_map(GHashTable *map, const char *payload, size_t length)
+was_simple_apply_map(GHashTable *map, const void *_payload, size_t length)
 {
+    const char *payload = (const char *)_payload;
+
     const char *p = memchr(payload, '=', length);
     if (p == NULL || p == payload)
         return false;
