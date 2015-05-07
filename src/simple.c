@@ -159,6 +159,18 @@ struct was_simple {
 };
 
 static void
+was_simple_init_request(struct was_simple *w)
+{
+    memset(&w->request, 0, sizeof(w->request));
+
+    w->request.method = HTTP_METHOD_GET;
+    w->request.headers = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                               g_free, g_free);
+    w->request.parameters = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                                  g_free, g_free);
+}
+
+static void
 was_simple_free_request(struct was_simple *w)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
@@ -605,12 +617,7 @@ was_simple_accept(struct was_simple *w)
 
     w->response.state = RESPONSE_STATE_STATUS;
 
-    memset(&w->request, 0, sizeof(w->request));
-    w->request.method = HTTP_METHOD_GET;
-    w->request.headers = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                               g_free, g_free);
-    w->request.parameters = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                                  g_free, g_free);
+    was_simple_init_request(w);
 
     do {
         if (!was_simple_control_read_and_apply(w))
