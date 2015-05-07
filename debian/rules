@@ -15,8 +15,8 @@ else
   CFLAGS += -O2
 endif
 
-build: debian/stamp-build
-debian/stamp-build:
+configure: debian/stamp-configure
+debian/stamp-configure:
 	dh_testdir
 
 	mkdir -p build
@@ -24,7 +24,6 @@ debian/stamp-build:
 	automake --add-missing --foreign
 	autoconf
 
-	# ./configure
 	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
 		CC=clang \
 		CFLAGS="$(CFLAGS)" \
@@ -34,7 +33,12 @@ debian/stamp-build:
 		--includedir=/usr/include/cm4all/libwas-0 \
 		--enable-debug
 
-	# Build
+	@touch $@
+
+build: debian/stamp-build
+debian/stamp-build: debian/stamp-configure
+	dh_testdir
+
 	$(MAKE)
 
 	@touch $@
