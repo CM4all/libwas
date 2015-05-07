@@ -711,7 +711,7 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
     if (was_simple_input_eof(w))
         return WAS_SIMPLE_POLL_END;
 
-    struct pollfd fds[2] = {
+    struct pollfd fds[] = {
         {
             .fd = w->control.fd,
             .events = POLLIN,
