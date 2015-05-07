@@ -17,6 +17,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <poll.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <sys/socket.h>
 #include <glib.h>
@@ -160,10 +161,10 @@ was_simple_free_request(struct was_simple *w)
 {
     assert(w->response.state != RESPONSE_STATE_NONE);
 
-    g_free(w->request.uri);
-    g_free(w->request.script_name);
-    g_free(w->request.path_info);
-    g_free(w->request.query_string);
+    free(w->request.uri);
+    free(w->request.script_name);
+    free(w->request.path_info);
+    free(w->request.query_string);
 
     g_hash_table_destroy(w->request.headers);
     g_hash_table_destroy(w->request.parameters);
@@ -419,7 +420,7 @@ was_simple_apply_string(char **value_r,
     if (*value_r != NULL)
         return false;
 
-    *value_r = g_strndup(payload, length);
+    *value_r = strndup(payload, length);
     return true;
 }
 
