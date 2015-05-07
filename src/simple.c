@@ -161,6 +161,10 @@ was_simple_free_request(struct was_simple *w)
     assert(w->response.state != RESPONSE_STATE_NONE);
 
     g_free(w->request.uri);
+    g_free(w->request.script_name);
+    g_free(w->request.path_info);
+    g_free(w->request.query_string);
+
     g_hash_table_destroy(w->request.headers);
     g_hash_table_destroy(w->request.parameters);
 }
