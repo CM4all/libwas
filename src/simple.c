@@ -1021,7 +1021,7 @@ was_simple_printf(struct was_simple *w, const char *fmt, ...)
 
     va_list va;
     va_start(va, fmt);
-    g_vsnprintf(buffer, sizeof(buffer), fmt, va);
+    vsnprintf(buffer, sizeof(buffer), fmt, va);
     va_end(va);
 
     return was_simple_puts(w, buffer);
