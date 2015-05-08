@@ -173,6 +173,8 @@ was_simple_init_request(struct was_simple *w)
                                                g_free, g_free);
     w->request.parameters = g_hash_table_new_full(g_str_hash, g_str_equal,
                                                   g_free, g_free);
+
+    w->request.finished = false;
 }
 
 static void
