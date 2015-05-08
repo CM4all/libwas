@@ -1,0 +1,35 @@
+libcm4all_was_simple_0 {
+        global:
+		was_simple_new;
+		was_simple_free;
+		was_simple_accept;
+		was_simple_get_method;
+		was_simple_get_script_name;
+		was_simple_get_path_info;
+		was_simple_get_query_string;
+		was_simple_get_header;
+		was_simple_get_header_iterator;
+		was_simple_get_parameter;
+		was_simple_get_parameter_iterator;
+		was_simple_has_body;
+		was_simple_input_poll;
+		was_simple_input_fd;
+		was_simple_received;
+		was_simple_input_read;
+		was_simple_input_close;
+		was_simple_status;
+		was_simple_set_header;
+		was_simple_copy_all_headers;
+		was_simple_set_length;
+		was_simple_output_fd;
+		was_simple_sent;
+		was_simple_write;
+		was_simple_puts;
+		was_simple_printf;
+		was_simple_end;
+		was_simple_iterator_free;
+		was_simple_iterator_next;
+
+        local:
+                *;
+};

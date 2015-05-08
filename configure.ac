@@ -6,11 +6,14 @@ AC_CONFIG_AUX_DIR(build)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign 1.11 subdir-objects silent-rules])
 
+LIBWAS_LIBTOOL_VERSION=0:0:0
+AC_SUBST(LIBWAS_LIBTOOL_VERSION)
+
 dnl Checks for programs.
 
 AC_PROG_INSTALL
-AC_PROG_RANLIB
 AC_PROG_CC_C99
+AC_PROG_LIBTOOL
 
 dnl Checks for OS features
 
@@ -49,8 +52,6 @@ AM_CPPFLAGS="-D_REENTRANT -D_GNU_SOURCE"
 if test "$am_cv_CC_dependencies_compiler_type" = "gcc3"; then
     AM_CFLAGS="$AM_CFLAGS -Wmissing-prototypes -Wwrite-strings -Wcast-qual -Wfloat-equal -Wshadow -Wpointer-arith -Wbad-function-cast -Wsign-compare -Waggregate-return -Wmissing-declarations -Wmissing-noreturn -Wpacked -Wredundant-decls -Wnested-externs -Winline -Wdisabled-optimization -Wno-long-long -Wstrict-prototypes -Wundef -pedantic"
 fi
-
-AM_CFLAGS="$AM_CFLAGS -ffunction-sections -fdata-sections"
 
 dnl
 dnl DEBUG

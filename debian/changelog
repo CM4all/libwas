@@ -4,6 +4,7 @@ libcm4all-was (0.8) unstable; urgency=low
   * xios: reduce libcore header dependencies
   * simple: fix memory leak
   * simple: check for control commands before reading
+  * convert to shared library
 
  --   
 

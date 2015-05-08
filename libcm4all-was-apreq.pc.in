@@ -7,5 +7,5 @@ Name: libcm4all-was-apreq
 Description: CM4all WAS server library, request parser
 Version: @VERSION@
 Requires: libcm4all-was-simple
-Libs: -L${libdir} -lcm4all-was-apreq @LIBAPR_LIBS@ @LIBAPR_UTIL_LIBS@ @LIBAPREQ2_LIBS@
+Libs: -L${libdir} -lcm4all-was-apreq
 Cflags: -I${includedir}

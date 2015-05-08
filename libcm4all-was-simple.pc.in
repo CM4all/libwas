@@ -6,6 +6,6 @@ includedir=@includedir@
 Name: libcm4all-was-simple
 Description: CM4all simple WAS server library
 Version: @VERSION@
-Requires: libcm4all-http >= 1.2, glib-2.0 >= 2.16
+Requires: libcm4all-http >= 1.2
 Libs: -L${libdir} -lcm4all-was-simple
 Cflags: -I${includedir}

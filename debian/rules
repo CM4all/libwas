@@ -20,6 +20,7 @@ debian/stamp-configure:
 	dh_testdir
 
 	mkdir -p build
+	libtoolize --automake --copy --force
 	aclocal -I m4
 	automake --add-missing --foreign
 	autoconf
