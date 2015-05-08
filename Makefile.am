@@ -11,10 +11,7 @@ lib_LTLIBRARIES = \
 libcm4all_was_simple_la_SOURCES = \
 	src/iterator.cxx src/iterator.hxx \
 	src/simple.cxx
-libcm4all_was_simple_la_CPPFLAGS = $(AM_CPPFLAGS) \
-	$(GLIB_CFLAGS)
 libcm4all_was_simple_la_LDFLAGS = \
-	$(GLIB_LIBS) \
 	-no-undefined \
 	-Wl,--version-script=$(srcdir)/libcm4all-was-simple.ld \
 	-version-info $(LIBWAS_LIBTOOL_VERSION)
