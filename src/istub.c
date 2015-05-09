@@ -21,36 +21,6 @@ struct xios_was_input {
     uint64_t received;
 };
 
-static int
-xios_was_input_read(xiostub *stub, gcc_unused xioexec *exec, void *ctxt)
-{
-    struct was_simple *w = ctxt;
-    int fd = was_simple_input_fd(w);
-    if (fd < 0) {
-        xios_iostub_seterror(stub, SYSX_R_ILLEGALSTATE);
-        return -2;
-    }
-
-    uint8_t byte;
-    ssize_t nbytes = read(fd, &byte, sizeof(byte));
-    if (nbytes < 0) {
-        xios_iostub_seterror(stub, sysx_result_geterrno());
-        return -2;
-    }
-
-    if (nbytes != 1) {
-        xios_iostub_seterror(stub, SYSX_R_UNEXPECTEDEND);
-        return -2;
-    }
-
-    if (!was_simple_received(w, nbytes)) {
-        xios_iostub_seterror(stub, SYSX_R_FAILURE);
-        return -2;
-    }
-
-    return byte;
-}
-
 static xoffs
 xios_was_input_readn(xiostub *stub, gcc_unused xioexec *exec, void *ctxt,
                      char *buff, xoffs size)
@@ -79,6 +49,23 @@ xios_was_input_readn(xiostub *stub, gcc_unused xioexec *exec, void *ctxt,
     }
 
     return nbytes;
+}
+
+static int
+xios_was_input_read(xiostub *stub, xioexec *exec, void *ctxt)
+{
+    uint8_t value;
+    xoffs nbytes = xios_was_input_readn(stub, exec, ctxt,
+                                        (char *)&value, sizeof(value));
+    if (nbytes < 0)
+        return (int)nbytes;
+
+    if (nbytes != sizeof(value)) {
+        xios_iostub_seterror(stub, SYSX_R_ILLEGALSTATE);
+        return -2;
+    }
+
+    return (int)value;
 }
 
 static const xiodriver xios_was_input_driver = {
