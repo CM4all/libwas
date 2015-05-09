@@ -16,6 +16,30 @@
 #include <unistd.h>
 
 static int
+xios_was_output_write_internal(xiostub *stub, gcc_unused xioexec *exec,
+                               struct was_simple *w, int fd,
+                               const void *buff, size_t size)
+{
+    ssize_t nbytes = write(fd, buff, size);
+    if (nbytes < 0) {
+        xios_iostub_seterror(stub, sysx_result_geterrno());
+        return -2;
+    }
+
+    if (nbytes == 0) {
+        xios_iostub_seterror(stub, SYSX_R_NOSPACE);
+        return -2;
+    }
+
+    if (!was_simple_sent(w, nbytes)) {
+        xios_iostub_seterror(stub, SYSX_R_FAILURE);
+        return -2;
+    }
+
+    return nbytes;
+}
+
+static int
 xios_was_output_write(xiostub *stub, gcc_unused xioexec *exec, void *ctxt,
                       int byte)
 {
@@ -26,22 +50,13 @@ xios_was_output_write(xiostub *stub, gcc_unused xioexec *exec, void *ctxt,
         return -2;
     }
 
-    uint8_t x = byte;
-    ssize_t nbytes = write(fd, &x, sizeof(x));
-    if (nbytes < 0) {
-        xios_iostub_seterror(stub, sysx_result_geterrno());
-        return -2;
-    }
+    const uint8_t value = byte;
+    ssize_t nbytes = xios_was_output_write_internal(stub, exec, w, fd,
+                                                    &value, sizeof(value));
+    if (nbytes < 0)
+        return nbytes;
 
-    if (nbytes != 1) {
-        xios_iostub_seterror(stub, SYSX_R_NOSPACE);
-        return -2;
-    }
-
-    if (!was_simple_sent(w, nbytes)) {
-        xios_iostub_seterror(stub, SYSX_R_FAILURE);
-        return -2;
-    }
+    assert(nbytes == sizeof(value));
 
     return byte;
 }
@@ -58,21 +73,12 @@ xios_was_output_writen(xiostub *stub, gcc_unused xioexec *exec, void *ctxt,
     }
 
     while (size > 0) {
-        ssize_t nbytes = write(fd, buff, size);
-        if (nbytes < 0) {
-            xios_iostub_seterror(stub, sysx_result_geterrno());
-            return -2;
-        }
+        ssize_t nbytes = xios_was_output_write_internal(stub, exec, w, fd,
+                                                        buff, size);
+        if (nbytes < 0)
+            return nbytes;
 
-        if (nbytes == 0) {
-            xios_iostub_seterror(stub, SYSX_R_NOSPACE);
-            return -2;
-        }
-
-        if (!was_simple_sent(w, nbytes)) {
-            xios_iostub_seterror(stub, SYSX_R_FAILURE);
-            return -2;
-        }
+        assert(nbytes > 0);
 
         buff += nbytes;
         size -= nbytes;
