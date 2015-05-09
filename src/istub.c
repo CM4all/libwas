@@ -26,6 +26,28 @@ xios_was_input_readn(xiostub *stub, gcc_unused xioexec *exec, void *ctxt,
                      char *buff, xoffs size)
 {
     struct was_simple *w = ctxt;
+
+    enum was_simple_poll_result result = was_simple_input_poll(w, -1);
+    switch (result) {
+    case WAS_SIMPLE_POLL_SUCCESS:
+        break;
+
+    case WAS_SIMPLE_POLL_ERROR:
+        xios_iostub_seterror(stub, SYSX_R_FAILURE);
+        return -2;
+
+    case WAS_SIMPLE_POLL_TIMEOUT:
+        xios_iostub_seterror(stub, SYSX_R_ILLEGALSTATE);
+        return -2;
+
+    case WAS_SIMPLE_POLL_END:
+        return -1;
+
+    case WAS_SIMPLE_POLL_CLOSED:
+        xios_iostub_seterror(stub, SYSX_R_UNEXPECTEDEND);
+        return -2;
+    }
+
     int fd = was_simple_input_fd(w);
     if (fd < 0) {
         xios_iostub_seterror(stub, SYSX_R_ILLEGALSTATE);
