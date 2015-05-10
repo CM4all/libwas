@@ -37,8 +37,8 @@ struct was_simple {
     /**
      * The control channel.
      */
-    struct {
-        int fd;
+    struct Control {
+        static constexpr int fd = 3;
 
         union {
             char raw[4096];
@@ -58,8 +58,8 @@ struct was_simple {
     /**
      * The request body.
      */
-    struct {
-        int fd;
+    struct Input {
+        static constexpr int fd = 0;
 
         /**
          * Number of bytes received on the pipe.
@@ -103,8 +103,8 @@ struct was_simple {
     /**
      * The response body.
      */
-    struct {
-        int fd;
+    struct Output {
+        static constexpr int fd = 1;
 
         /**
          * Number of bytes sent to the pipe.
@@ -193,13 +193,9 @@ was_simple_new(void)
 {
     auto *w = new was_simple();
 
-    w->control.fd = 3;
     w->control.input_position = 0;
     w->control.output_buffer.position = 0;
     w->control.packet.payload = nullptr;
-
-    w->input.fd = 0;
-    w->output.fd = 1;
 
     w->response.state = was_simple::Response::State::NONE;
 
