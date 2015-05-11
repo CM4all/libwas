@@ -150,7 +150,8 @@ was_simple_received(struct was_simple *w, size_t nbytes);
  * Read data from the request body.
  *
  * @return the number of bytes read, 0 if the end of the request body
- * has been reached, -1 on error
+ * has been reached, -1 on I/O error (with errno set), -2 on other
+ * error
  */
 ssize_t
 was_simple_read(struct was_simple *w, void *buffer, size_t length);

@@ -811,7 +811,7 @@ was_simple_read(struct was_simple *w, void *buffer, size_t length)
         return 0;
 
     if (w->input.premature && !w->input.ignore_premature)
-        return -1;
+        return -2;
 
     ssize_t nbytes = read(w->input.fd, buffer, length);
     if (nbytes < 0 && errno == EAGAIN) {
@@ -824,9 +824,11 @@ was_simple_read(struct was_simple *w, void *buffer, size_t length)
             break;
 
         case WAS_SIMPLE_POLL_ERROR:
+            return -1;
+
         case WAS_SIMPLE_POLL_TIMEOUT:
         case WAS_SIMPLE_POLL_CLOSED:
-            return -1;
+            return -2;
 
         case WAS_SIMPLE_POLL_END:
             return 0;
@@ -834,10 +836,10 @@ was_simple_read(struct was_simple *w, void *buffer, size_t length)
     }
 
     if (nbytes <= 0)
-        return -1;
+        return nbytes < 0 ? -1 : -2;
 
     if (!was_simple_received(w, nbytes))
-        return -1;
+        return -2;
 
     return nbytes;
 }
