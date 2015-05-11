@@ -34,6 +34,28 @@ wbucket_read(apr_bucket *b, const char **data_r, apr_size_t *length_r,
 {
     struct was_bucket *fb = b->data;
 
+    if (block == APR_NONBLOCK_READ) {
+        switch (was_simple_input_poll(fb->was, 0)) {
+        case WAS_SIMPLE_POLL_SUCCESS:
+            break;
+
+        case WAS_SIMPLE_POLL_ERROR:
+            return APR_FROM_OS_ERROR(errno);
+
+        case WAS_SIMPLE_POLL_TIMEOUT:
+            return APR_EAGAIN;
+
+        case WAS_SIMPLE_POLL_CLOSED:
+            return APR_EGENERAL;
+
+        case WAS_SIMPLE_POLL_END:
+            b = apr_bucket_immortal_make(b, "", 0);
+            *data_r = b->data;
+            *length_r = 0;
+            return APR_SUCCESS;
+        }
+    }
+
     int fd = was_simple_input_fd(fb->was);
     if (fd < 0)
         return APR_EGENERAL;
@@ -41,20 +63,6 @@ wbucket_read(apr_bucket *b, const char **data_r, apr_size_t *length_r,
     char *buffer;
     int nbytes;
     apr_bucket_heap *h;
-
-    if (block == APR_NONBLOCK_READ) {
-        struct pollfd pfd = {
-            .fd = fd,
-            .events = POLLIN,
-        };
-
-        int ret = poll(&pfd, 1, 0);
-        if (ret < 0)
-            return APR_FROM_OS_ERROR(errno);
-
-        if (ret == 0)
-            return APR_EAGAIN;
-    }
 
     buffer = apr_bucket_alloc(*length_r, b->list); /* XXX: check for failure? */
 
