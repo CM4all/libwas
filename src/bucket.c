@@ -50,7 +50,7 @@ wbucket_read(apr_bucket *b, const char **data_r, apr_size_t *length_r,
 
         int ret = poll(&pfd, 1, 0);
         if (ret < 0)
-            return APR_EGENERAL;
+            return APR_FROM_OS_ERROR(errno);
 
         if (ret == 0)
             return APR_EAGAIN;
@@ -60,8 +60,9 @@ wbucket_read(apr_bucket *b, const char **data_r, apr_size_t *length_r,
 
     nbytes = read(fd, buffer, APR_BUCKET_BUFF_SIZE);
     if (nbytes < 0) {
+        apr_status_t status = APR_FROM_OS_ERROR(errno);
         apr_bucket_free(buffer);
-        return APR_EGENERAL; /* XXX which status code? */
+        return status;
     }
 
     if (nbytes == 0) {
