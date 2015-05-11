@@ -14,6 +14,7 @@
 
 #include <assert.h>
 #include <unistd.h>
+#include <errno.h>
 
 static int
 xios_was_output_write_internal(xiostub *stub, gcc_unused xioexec *exec,
@@ -21,6 +22,34 @@ xios_was_output_write_internal(xiostub *stub, gcc_unused xioexec *exec,
                                const void *buff, size_t size)
 {
     ssize_t nbytes = write(fd, buff, size);
+
+    if (nbytes < 0 && errno == EAGAIN) {
+        /* writing blocks: poll for the pipe to become writable again
+           (or for control commands and handle them) */
+        switch (was_simple_output_poll(w, -1)) {
+        case WAS_SIMPLE_POLL_SUCCESS:
+            /* time to try again */
+            nbytes = write(fd, buff, size);
+            break;
+
+        case WAS_SIMPLE_POLL_ERROR:
+            xios_iostub_seterror(stub, sysx_result_geterrno());
+            return -2;
+
+        case WAS_SIMPLE_POLL_TIMEOUT:
+            xios_iostub_seterror(stub, SYSX_R_ILLEGALSTATE);
+            return -2;
+
+        case WAS_SIMPLE_POLL_CLOSED:
+            xios_iostub_seterror(stub, SYSX_R_FAILURE);
+            return -2;
+
+        case WAS_SIMPLE_POLL_END:
+            xios_iostub_seterror(stub, SYSX_R_NOSPACE);
+            return -2;
+        }
+    }
+
     if (nbytes < 0) {
         xios_iostub_seterror(stub, sysx_result_geterrno());
         return -2;
