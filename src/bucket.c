@@ -56,15 +56,13 @@ wbucket_read(apr_bucket *b, const char **data_r, apr_size_t *length_r,
         }
     }
 
-    int fd = was_simple_input_fd(fb->was);
-    if (fd < 0)
-        return APR_EGENERAL;
-
     char *buffer = apr_bucket_alloc(*length_r, b->list); /* XXX: check for failure? */
 
-    ssize_t nbytes = read(fd, buffer, APR_BUCKET_BUFF_SIZE);
+    ssize_t nbytes = was_simple_read(fb->was, buffer, APR_BUCKET_BUFF_SIZE);
     if (nbytes < 0) {
-        apr_status_t status = APR_FROM_OS_ERROR(errno);
+        apr_status_t status = nbytes == -1
+            ? APR_FROM_OS_ERROR(errno)
+            : APR_EGENERAL;
         apr_bucket_free(buffer);
         return status;
     }
@@ -77,9 +75,6 @@ wbucket_read(apr_bucket *b, const char **data_r, apr_size_t *length_r,
         *length_r = 0;
         return APR_SUCCESS;
     }
-
-    if (!was_simple_received(fb->was, nbytes))
-        return APR_EGENERAL;
 
     /* Change the current bucket to refer to what we read */
     b = apr_bucket_heap_make(b, buffer, nbytes, apr_bucket_free);
