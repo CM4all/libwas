@@ -2,7 +2,6 @@ libcm4all-was (0.8) unstable; urgency=low
 
   * apreq: use libapreq2 forward-declarations
   * xios: reduce libcore header dependencies
-  * xios: check for control commands before reading
   * simple: fix memory leak
   * simple: rename _input_read() to _read()
   * simple: _read() returns -1 on I/O error, -2 on other error
