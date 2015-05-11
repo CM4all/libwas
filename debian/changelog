@@ -6,6 +6,8 @@ libcm4all-was (0.8) unstable; urgency=low
   * simple: fix memory leak
   * simple: rename _input_read() to _read()
   * simple: add _output_poll()
+  * simple: make file descriptors non-blocking
+  * simple: check for control commands when I/O blocks
   * convert to shared library
 
  --   

@@ -135,6 +135,11 @@ was_simple_has_body(const struct was_simple *w);
 enum was_simple_poll_result
 was_simple_input_poll(struct was_simple *w, int timeout_ms);
 
+/**
+ * Obtains the file descriptor for reading the request body.  It is in
+ * non-blocking mode.  If an operation returns EAGAIN,
+ * was_simple_input_poll() can be called to wait for more data.
+ */
 int
 was_simple_input_fd(const struct was_simple *w);
 
@@ -179,6 +184,10 @@ was_simple_set_length(struct was_simple *w, uint64_t length);
 enum was_simple_poll_result
 was_simple_output_poll(struct was_simple *w, int timeout_ms);
 
+/**
+ * Obtains the file descriptor for reading the request body.  It is in
+ * non-blocking mode.
+ */
 int
 was_simple_output_fd(struct was_simple *w);
 

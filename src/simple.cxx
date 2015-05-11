@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <sys/socket.h>
+#include <fcntl.h>
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
@@ -188,6 +189,15 @@ was_simple_free_request(struct was_simple *w)
     w->request.parameters.clear();
 }
 
+/**
+ * Enables non-blocking mode for the specified file descriptor.
+ */
+static void
+fd_set_nonblock(int fd)
+{
+    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
+}
+
 struct was_simple *
 was_simple_new(void)
 {
@@ -198,6 +208,9 @@ was_simple_new(void)
     w->control.packet.payload = nullptr;
 
     w->response.state = was_simple::Response::State::NONE;
+
+    fd_set_nonblock(w->input.fd);
+    fd_set_nonblock(w->output.fd);
 
     return w;
 }
@@ -801,6 +814,25 @@ was_simple_read(struct was_simple *w, void *buffer, size_t length)
         return -1;
 
     ssize_t nbytes = read(w->input.fd, buffer, length);
+    if (nbytes < 0 && errno == EAGAIN) {
+        /* reading blocks: poll for data (or for control commands and
+           handle them) */
+        switch (was_simple_input_poll(w, -1)) {
+        case WAS_SIMPLE_POLL_SUCCESS:
+            /* time to try again */
+            nbytes = read(w->input.fd, buffer, length);
+            break;
+
+        case WAS_SIMPLE_POLL_ERROR:
+        case WAS_SIMPLE_POLL_TIMEOUT:
+        case WAS_SIMPLE_POLL_CLOSED:
+            return -1;
+
+        case WAS_SIMPLE_POLL_END:
+            return 0;
+        }
+    }
+
     if (nbytes <= 0)
         return -1;
 
@@ -1041,6 +1073,22 @@ was_simple_write(struct was_simple *w, const void *data0, size_t length)
 
     while (length > 0) {
         ssize_t nbytes = write(w->output.fd, data, length);
+        if (nbytes < 0 && errno == EAGAIN) {
+            /* writing blocks: poll for the pipe to become writable
+               again (or for control commands and handle them) */
+            switch (was_simple_output_poll(w, -1)) {
+            case WAS_SIMPLE_POLL_SUCCESS:
+                /* time to try again */
+                continue;
+
+            case WAS_SIMPLE_POLL_ERROR:
+            case WAS_SIMPLE_POLL_TIMEOUT:
+            case WAS_SIMPLE_POLL_CLOSED:
+            case WAS_SIMPLE_POLL_END:
+                return false;
+            }
+        }
+
         if (nbytes <= 0)
             return false;
 
@@ -1075,24 +1123,10 @@ static bool
 discard_all_input(struct was_simple *w)
 {
     while (true) {
-        enum was_simple_poll_result r = was_simple_input_poll(w, -1);
-        switch (r) {
-        case WAS_SIMPLE_POLL_SUCCESS:
-            break;
-
-        case WAS_SIMPLE_POLL_END:
-            return true;
-
-        case WAS_SIMPLE_POLL_ERROR:
-        case WAS_SIMPLE_POLL_TIMEOUT:
-        case WAS_SIMPLE_POLL_CLOSED:
-            return false;
-        }
-
         char buffer[4096];
         ssize_t nbytes = was_simple_read(w, buffer, sizeof(buffer));
         if (nbytes <= 0)
-            return false;
+            return nbytes == 0;
     }
 }
 
