@@ -158,7 +158,7 @@ cgi_query_string(apreq_handle_t *handle)
 static void init_body(apreq_handle_t *handle)
 {
     struct was_handle *req = (struct was_handle *)handle;
-    const char *cl_header = cgi_header_in(req, "Content-Length");
+    const char *cl_header = cgi_header_in(req, "content-length");
     apr_bucket_alloc_t *ba = handle->bucket_alloc;
     apr_pool_t *pool = handle->pool;
     apr_bucket *eos, *pipe;
@@ -186,7 +186,7 @@ static void init_body(apreq_handle_t *handle)
     }
 
     if (req->parser == NULL) {
-        const char *ct_header = cgi_header_in(req, "Content-Type");
+        const char *ct_header = cgi_header_in(req, "content-type");
 
         if (ct_header != NULL) {
             apreq_parser_function_t pf = apreq_parser(ct_header);
@@ -311,7 +311,7 @@ static apr_status_t cgi_jar(apreq_handle_t *handle,
     struct was_handle *req = (struct was_handle *)handle;
 
     if (req->jar_status == APR_EINIT) {
-        const char *cookies = cgi_header_in(req, "Cookie");
+        const char *cookies = cgi_header_in(req, "cookie");
         if (cookies != NULL) {
             req->jar = apr_table_make(handle->pool, APREQ_DEFAULT_NELTS);
             req->jar_status =
