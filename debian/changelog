@@ -5,6 +5,7 @@ libcm4all-was (0.8) unstable; urgency=low
   * xios: check for control commands before reading
   * simple: fix memory leak
   * simple: rename _input_read() to _read()
+  * simple: add _output_poll()
   * convert to shared library
 
  --   

@@ -951,6 +951,52 @@ was_simple_set_response_state_body(struct was_simple *w)
     return true;
 }
 
+enum was_simple_poll_result
+was_simple_output_poll(struct was_simple *w, int timeout_ms)
+{
+    assert(w->response.state != was_simple::Response::State::NONE);
+
+    if (w->output.announced && w->output.sent >= w->output.announced)
+        return WAS_SIMPLE_POLL_END;
+
+    if (!was_simple_control_flush(w) || !was_simple_control_apply_pending(w) ||
+        !was_simple_control_flush(w) ||
+        w->response.state > was_simple::Response::State::BODY)
+        return WAS_SIMPLE_POLL_ERROR;
+
+    assert(!w->output.premature);
+
+    struct pollfd fds[] = {
+        {
+            .fd = w->control.fd,
+            .events = POLLIN,
+        },
+        {
+            .fd = w->output.fd,
+            .events = POLLOUT,
+        },
+    };
+
+    while (true) {
+        int ret = poll(fds, ARRAY_SIZE(fds), timeout_ms);
+        if (ret < 0)
+            return WAS_SIMPLE_POLL_ERROR;
+
+        if (ret == 0)
+            return WAS_SIMPLE_POLL_TIMEOUT;
+
+        if (fds[0].revents & POLLIN) {
+            if (!was_simple_control_fill(w, true) ||
+                !was_simple_control_apply_pending(w) ||
+                w->response.state > was_simple::Response::State::BODY)
+                return WAS_SIMPLE_POLL_ERROR;
+        }
+
+        if (fds[1].revents & POLLOUT)
+            return WAS_SIMPLE_POLL_SUCCESS;
+    }
+}
+
 int
 was_simple_output_fd(struct was_simple *w)
 {

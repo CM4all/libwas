@@ -169,6 +169,16 @@ was_simple_copy_all_headers(struct was_simple *w);
 bool
 was_simple_set_length(struct was_simple *w, uint64_t length);
 
+/**
+ * Wait for the response body pipe to become writable.  Handles
+ * pending control channel commands before returning.
+ *
+ * @param timeout_ms the timeout in milliseconds; 0 means do not block
+ * at all; -1 means wait forever
+ */
+enum was_simple_poll_result
+was_simple_output_poll(struct was_simple *w, int timeout_ms);
+
 int
 was_simple_output_fd(struct was_simple *w);
 
