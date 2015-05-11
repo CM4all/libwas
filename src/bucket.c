@@ -56,7 +56,7 @@ wbucket_read(apr_bucket *b, const char **data_r, apr_size_t *length_r,
         }
     }
 
-    char *buffer = apr_bucket_alloc(*length_r, b->list); /* XXX: check for failure? */
+    char *buffer = apr_bucket_alloc(APR_BUCKET_BUFF_SIZE, b->list); /* XXX: check for failure? */
 
     ssize_t nbytes = was_simple_read(fb->was, buffer, APR_BUCKET_BUFF_SIZE);
     if (nbytes < 0) {
