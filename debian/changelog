@@ -4,6 +4,7 @@ libcm4all-was (0.8) unstable; urgency=low
   * xios: reduce libcore header dependencies
   * xios: check for control commands before reading
   * simple: fix memory leak
+  * simple: rename _input_read() to _read()
   * convert to shared library
 
  --   

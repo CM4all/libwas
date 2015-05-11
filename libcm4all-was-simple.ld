@@ -15,7 +15,7 @@ libcm4all_was_simple_0 {
 		was_simple_input_poll;
 		was_simple_input_fd;
 		was_simple_received;
-		was_simple_input_read;
+		was_simple_read;
 		was_simple_input_close;
 		was_simple_status;
 		was_simple_set_header;

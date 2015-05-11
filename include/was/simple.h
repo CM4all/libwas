@@ -148,7 +148,7 @@ was_simple_received(struct was_simple *w, size_t nbytes);
  * has been reached, -1 on error
  */
 ssize_t
-was_simple_input_read(struct was_simple *w, void *buffer, size_t length);
+was_simple_read(struct was_simple *w, void *buffer, size_t length);
 
 bool
 was_simple_input_close(struct was_simple *w);
