@@ -54,6 +54,40 @@ struct was_simple {
         } output_buffer;
 
         struct was_control_packet packet;
+
+        ssize_t DirectSend(const void *p, size_t length) {
+            return send(fd, p, length, MSG_NOSIGNAL);
+        }
+
+        bool IsPacketComplete() const {
+            return input_position >= sizeof(input_buffer.header) &&
+                input_position >= sizeof(input_buffer.header) +
+                input_buffer.header.length;
+        }
+
+        bool Fill(bool dontwait);
+        void Shift();
+        const struct was_control_packet *Get();
+        const struct was_control_packet *Next();
+        const struct was_control_packet *Read(bool dontwait);
+        const struct was_control_packet *Expect(enum was_command command);
+        bool Flush();
+        void Append(const void *p, size_t length);
+        bool Send(const void *data, size_t length);
+        bool SendHeader(enum was_command command, size_t length);
+
+        bool SendEmpty(enum was_command command) {
+            return SendHeader(command, 0);
+        }
+
+        bool SendPacket(enum was_command command,
+                        const void *payload, size_t length) {
+            return SendHeader(command, length) && Send(payload, length);
+        }
+
+        bool SendUint64(enum was_command command, uint64_t payload) {
+            return SendPacket(command, &payload, sizeof(payload));
+        }
     } control;
 
     /**
@@ -134,6 +168,21 @@ struct was_simple {
          * definition (e.g. 204 No Content).
          */
         bool no_body;
+
+        /**
+         * Did we send all data?
+         */
+        bool IsFull() const {
+            return known_length && sent >= announced;
+        }
+
+        void Sent(size_t nbytes) {
+            assert(!known_length || sent <= announced);
+            assert(!known_length || nbytes <= announced);
+            assert(!known_length || sent + nbytes <= announced);
+
+            sent += nbytes;
+        }
     } output;
 
     /**
@@ -224,197 +273,151 @@ was_simple_free(struct was_simple *w)
     delete w;
 }
 
-static bool
-was_simple_control_fill(struct was_simple *w, bool dontwait)
+bool
+was_simple::Control::Fill(bool dontwait)
 {
-    assert(w->control.input_position < sizeof(w->control.input_buffer));
+    assert(input_position < sizeof(input_buffer));
 
-    ssize_t nbytes = recv(w->control.fd,
-                          w->control.input_buffer.raw + w->control.input_position,
-                          sizeof(w->control.input_buffer) - w->control.input_position,
+    ssize_t nbytes = recv(fd,
+                          input_buffer.raw + input_position,
+                          sizeof(input_buffer) - input_position,
                           dontwait * MSG_DONTWAIT);
     if (nbytes <= 0)
         return false;
 
-    w->control.input_position += nbytes;
+    input_position += nbytes;
     return true;
 }
 
-static bool
-was_simple_control_complete(const struct was_simple *w)
+void
+was_simple::Control::Shift()
 {
-    return w->control.input_position >= sizeof(w->control.input_buffer.header) &&
-        w->control.input_position >= sizeof(w->control.input_buffer.header) +
-        w->control.input_buffer.header.length;
+    assert(IsPacketComplete());
+
+    unsigned full_length = sizeof(input_buffer.header) +
+        input_buffer.header.length;
+
+    input_position -= full_length;
+    memmove(input_buffer.raw, input_buffer.raw + full_length, input_position);
+
+    packet.payload = nullptr;
 }
 
-static void
-was_simple_control_shift(struct was_simple *w)
+const struct was_control_packet *
+was_simple::Control::Get()
 {
-    assert(was_simple_control_complete(w));
-
-    unsigned full_length = sizeof(w->control.input_buffer.header) +
-        w->control.input_buffer.header.length;
-
-    w->control.input_position -= full_length;
-    memmove(w->control.input_buffer.raw, w->control.input_buffer.raw + full_length,
-            w->control.input_position);
-
-    w->control.packet.payload = nullptr;
-}
-
-static const struct was_control_packet *
-was_simple_control_get(struct was_simple *w)
-{
-    if (!was_simple_control_complete(w))
+    if (!IsPacketComplete())
         return nullptr;
 
-    w->control.packet.command = (enum was_command)
-        w->control.input_buffer.header.command;
-    w->control.packet.length = w->control.input_buffer.header.length;
+    packet.command = (enum was_command)input_buffer.header.command;
+    packet.length = input_buffer.header.length;
 
-    if (w->control.packet.length > 0) {
-        w->control.packet.payload = w->control.input_buffer.raw +
-            sizeof(w->control.input_buffer.header);
+    if (packet.length > 0) {
+        packet.payload = input_buffer.raw +
+            sizeof(input_buffer.header);
     } else {
-        w->control.packet.payload = nullptr;
-        was_simple_control_shift(w);
+        packet.payload = nullptr;
+        Shift();
     }
 
-    return &w->control.packet;
+    return &packet;
 }
 
-static const struct was_control_packet *
-was_simple_control_next(struct was_simple *w)
+const struct was_control_packet *
+was_simple::Control::Next()
 {
     /* clean up the previous packet */
-    if (w->control.packet.payload != nullptr)
-        was_simple_control_shift(w);
+    if (packet.payload != nullptr)
+        Shift();
 
-    return was_simple_control_get(w);
+    return Get();
 }
 
-static const struct was_control_packet *
-was_simple_control_read(struct was_simple *w, bool dontwait)
+const struct was_control_packet *
+was_simple::Control::Read(bool dontwait)
 {
     /* clean up the previous packet */
-    if (w->control.packet.payload != nullptr)
-        was_simple_control_shift(w);
+    if (packet.payload != nullptr)
+        Shift();
 
     while (true) {
-        const struct was_control_packet *packet = was_simple_control_get(w);
-        if (packet != nullptr)
-            return packet;
+        const auto *p = Get();
+        if (p != nullptr)
+            return p;
 
         /* XXX check if buffer is full */
 
-        if (!was_simple_control_fill(w, dontwait))
+        if (!Fill(dontwait))
             return nullptr;
     }
 }
 
-static const struct was_control_packet *
-was_simple_control_expect(struct was_simple *w, enum was_command command)
+const struct was_control_packet *
+was_simple::Control::Expect(enum was_command command)
 {
-    const struct was_control_packet *packet =
-        was_simple_control_read(w, false);
-    return packet != nullptr && packet->command == command
-        ? packet
+    const auto *p = Read(false);
+    return p != nullptr && p->command == command
+        ? p
         : nullptr;
 }
 
-static ssize_t
-was_simple_control_direct_send(struct was_simple *w,
-                               const void *p, size_t length)
+bool
+was_simple::Control::Flush()
 {
-    return send(w->control.fd, p, length, MSG_NOSIGNAL);
-}
+    assert(output_buffer.position <= sizeof(output_buffer.data));
 
-static bool
-was_simple_control_flush(struct was_simple *w)
-{
-    assert(w != nullptr);
-    assert(w->control.output_buffer.position <= sizeof(w->control.output_buffer.data));
-
-    if (w->control.output_buffer.position == 0)
+    if (output_buffer.position == 0)
         /* buffer is empty */
         return true;
 
-    ssize_t nbytes =
-        was_simple_control_direct_send(w, w->control.output_buffer.data,
-                                       w->control.output_buffer.position);
+    ssize_t nbytes = DirectSend(output_buffer.data, output_buffer.position);
     if (nbytes <= 0)
         return false;
 
-    w->control.output_buffer.position -= nbytes;
-    memmove(w->control.output_buffer.data + nbytes,
-            w->control.output_buffer.data,
-            w->control.output_buffer.position);
+    output_buffer.position -= nbytes;
+    memmove(output_buffer.data + nbytes,
+            output_buffer.data,
+            output_buffer.position);
     return true;
 }
 
-static void
-was_simple_control_append(struct was_simple *w, const void *p, size_t length)
+void
+was_simple::Control::Append(const void *p, size_t length)
 {
-    assert(w != nullptr);
-    assert(w->control.output_buffer.position <= sizeof(w->control.output_buffer.data));
-    assert(w->control.output_buffer.position + length <= sizeof(w->control.output_buffer.data));
+    assert(output_buffer.position <= sizeof(output_buffer.data));
+    assert(output_buffer.position + length <= sizeof(output_buffer.data));
 
-    memcpy(w->control.output_buffer.data + w->control.output_buffer.position,
-           p, length);
-    w->control.output_buffer.position += length;
+    memcpy(output_buffer.data + output_buffer.position, p, length);
+    output_buffer.position += length;
 }
 
-static bool
-was_simple_control_send(struct was_simple *w, const void *data, size_t length)
+bool
+was_simple::Control::Send(const void *data, size_t length)
 {
-    while (w->control.output_buffer.position + length > sizeof(w->control.output_buffer.data)) {
-        if (w->control.output_buffer.position == 0) {
+    while (output_buffer.position + length > sizeof(output_buffer.data)) {
+        if (output_buffer.position == 0) {
             /* too large for the buffer */
-            ssize_t nbytes = was_simple_control_direct_send(w, data, length);
+            ssize_t nbytes = DirectSend(data, length);
             return nbytes == (ssize_t)length;
         }
 
-        if (!was_simple_control_flush(w))
+        if (!Flush())
             return false;
     }
 
-    was_simple_control_append(w, data, length);
+    Append(data, length);
     return true;
 }
 
-static bool
-was_simple_control_send_header(struct was_simple *w, enum was_command command,
-                               size_t length)
+bool
+was_simple::Control::SendHeader(enum was_command command, size_t length)
 {
     struct was_header header = {
         .command = uint16_t(command),
         .length = uint16_t(length),
     };
 
-    return was_simple_control_send(w, &header, sizeof(header));
-}
-
-static bool
-was_simple_control_send_empty(struct was_simple *w, enum was_command command)
-{
-    return was_simple_control_send_header(w, command, 0);
-}
-
-static bool
-was_simple_control_send_packet(struct was_simple *w, enum was_command command,
-                               const void *payload, size_t length)
-{
-    return was_simple_control_send_header(w, command, length) &&
-        was_simple_control_send(w, payload, length);
-}
-
-static bool
-was_simple_control_send_uint64(struct was_simple *w, enum was_command command,
-                               uint64_t payload)
-{
-    return was_simple_control_send_packet(w, command,
-                                          &payload, sizeof(payload));
+    return Send(&header, sizeof(header));
 }
 
 static void
@@ -558,8 +561,7 @@ was_simple_apply_request_packet(struct was_simple *w,
         w->output.premature = true;
 
         if (w->response.state <= was_simple::Response::State::BODY &&
-            !was_simple_control_send_uint64(w, WAS_COMMAND_PREMATURE,
-                                            w->output.sent))
+            !w->control.SendUint64(WAS_COMMAND_PREMATURE, w->output.sent))
             return false;
 
         if (w->response.state == was_simple::Response::State::BODY)
@@ -589,7 +591,7 @@ static bool
 was_simple_control_apply_pending(struct was_simple *w)
 {
     const struct was_control_packet *packet;
-    while ((packet = was_simple_control_next(w)) != nullptr)
+    while ((packet = w->control.Next()) != nullptr)
         if (!was_simple_apply_request_packet(w, packet))
             return false;
 
@@ -599,8 +601,7 @@ was_simple_control_apply_pending(struct was_simple *w)
 static bool
 was_simple_control_read_and_apply(struct was_simple *w)
 {
-    const struct was_control_packet *packet =
-        was_simple_control_read(w, false);
+    const auto *packet = w->control.Read(false);
     return packet != nullptr &&
         was_simple_apply_request_packet(w, packet);
 }
@@ -614,8 +615,7 @@ was_simple_accept(struct was_simple *w)
 
     assert(w->response.state == was_simple::Response::State::NONE);
 
-    const struct was_control_packet *packet;
-    packet = was_simple_control_expect(w, WAS_COMMAND_REQUEST);
+    const auto *packet = w->control.Expect(WAS_COMMAND_REQUEST);
     if (packet == nullptr)
         return nullptr;
 
@@ -742,8 +742,8 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
     if (w->input.premature && !w->input.ignore_premature)
         return WAS_SIMPLE_POLL_ERROR;
 
-    if (!was_simple_control_flush(w) || !was_simple_control_apply_pending(w) ||
-        !was_simple_control_flush(w))
+    if (!w->control.Flush() || !was_simple_control_apply_pending(w) ||
+        !w->control.Flush())
         return WAS_SIMPLE_POLL_ERROR;
 
     /* check "eof" again, as it may have changed after control packets
@@ -771,7 +771,7 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
             return WAS_SIMPLE_POLL_TIMEOUT;
 
         if (fds[0].revents & POLLIN) {
-            if (!was_simple_control_fill(w, true) ||
+            if (!w->control.Fill(true) ||
                 !was_simple_control_apply_pending(w))
                 return WAS_SIMPLE_POLL_ERROR;
 
@@ -862,7 +862,7 @@ was_simple_input_close(struct was_simple *w)
         was_simple_input_eof(w))
         return true;
 
-    if (!was_simple_control_send_empty(w, WAS_COMMAND_STOP))
+    if (!w->control.SendEmpty(WAS_COMMAND_STOP))
         return false;
 
     w->input.stopped = true;
@@ -878,8 +878,7 @@ was_simple_status(struct was_simple *w, http_status_t status)
         /* too late for sending the status */
         return false;
 
-    if (!was_simple_control_send_packet(w, WAS_COMMAND_STATUS,
-                                        &status, sizeof(status)))
+    if (!w->control.SendPacket(WAS_COMMAND_STATUS, &status, sizeof(status)))
         return false;
 
     w->response.state = was_simple::Response::State::HEADERS;
@@ -905,8 +904,7 @@ was_simple_set_header(struct was_simple *w,
     *q++ = '=';
     q = (char *)mempcpy(q, value, value_length);
 
-    bool success = was_simple_control_send_packet(w, WAS_COMMAND_HEADER,
-                                                  p, q - p);
+    bool success = w->control.SendPacket(WAS_COMMAND_HEADER, p, q - p);
     free(p);
     return success;
 }
@@ -942,7 +940,7 @@ was_simple_set_length(struct was_simple *w, uint64_t length)
         return false;
 
     if (w->response.state == was_simple::Response::State::HEADERS) {
-        if (!was_simple_control_send_empty(w, WAS_COMMAND_DATA))
+        if (!w->control.SendEmpty(WAS_COMMAND_DATA))
             return false;
 
         w->response.state = was_simple::Response::State::BODY;
@@ -950,7 +948,7 @@ was_simple_set_length(struct was_simple *w, uint64_t length)
 
     assert(w->response.state == was_simple::Response::State::BODY);
 
-    if (!was_simple_control_send_uint64(w, WAS_COMMAND_LENGTH, length))
+    if (!w->control.SendUint64(WAS_COMMAND_LENGTH, length))
         return false;
 
     w->output.announced = length;
@@ -974,11 +972,11 @@ was_simple_set_response_state_body(struct was_simple *w)
     if (w->response.state == was_simple::Response::State::HEADERS) {
         if (w->output.no_body) {
             w->response.state = was_simple::Response::State::END;
-            was_simple_control_send_empty(w, WAS_COMMAND_NO_DATA);
+            w->control.SendEmpty(WAS_COMMAND_NO_DATA);
             return false;
         }
 
-        if (!was_simple_control_send_empty(w, WAS_COMMAND_DATA))
+        if (!w->control.SendEmpty(WAS_COMMAND_DATA))
             return false;
 
         w->response.state = was_simple::Response::State::BODY;
@@ -999,11 +997,11 @@ was_simple_output_poll(struct was_simple *w, int timeout_ms)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
-    if (w->output.known_length && w->output.sent >= w->output.announced)
+    if (w->output.IsFull())
         return WAS_SIMPLE_POLL_END;
 
-    if (!was_simple_control_flush(w) || !was_simple_control_apply_pending(w) ||
-        !was_simple_control_flush(w) ||
+    if (!w->control.Flush() || !was_simple_control_apply_pending(w) ||
+        !w->control.Flush() ||
         w->response.state > was_simple::Response::State::BODY)
         return WAS_SIMPLE_POLL_ERROR;
 
@@ -1029,7 +1027,7 @@ was_simple_output_poll(struct was_simple *w, int timeout_ms)
             return WAS_SIMPLE_POLL_TIMEOUT;
 
         if (fds[0].revents & POLLIN) {
-            if (!was_simple_control_fill(w, true) ||
+            if (!w->control.Fill(true) ||
                 !was_simple_control_apply_pending(w) ||
                 w->response.state > was_simple::Response::State::BODY)
                 return WAS_SIMPLE_POLL_ERROR;
@@ -1059,15 +1057,10 @@ was_simple_sent(struct was_simple *w, size_t nbytes)
     if (w->output.no_body)
         return false;
 
-    if (!was_simple_control_flush(w))
+    if (!w->control.Flush())
         return false;
 
-    assert(!w->output.known_length || w->output.sent <= w->output.announced);
-    assert(!w->output.known_length || nbytes <= w->output.announced);
-    assert(!w->output.known_length ||
-           w->output.sent + nbytes <= w->output.announced);
-
-    w->output.sent += nbytes;
+    w->output.Sent(nbytes);
     return true;
 }
 
@@ -1077,7 +1070,7 @@ was_simple_write(struct was_simple *w, const void *data0, size_t length)
     assert(w->response.state != was_simple::Response::State::NONE);
 
     if (!was_simple_set_response_state_body(w) ||
-        !was_simple_control_flush(w))
+        !w->control.Flush())
         return false;
 
     const char *data = (const char *)data0;
@@ -1158,8 +1151,8 @@ was_simple_end(struct was_simple *w)
 
     /* no response body? */
     if (w->response.state == was_simple::Response::State::HEADERS) {
-        if (!was_simple_control_send_empty(w, WAS_COMMAND_NO_DATA) ||
-            !was_simple_control_flush(w))
+        if (!w->control.SendEmpty(WAS_COMMAND_NO_DATA) ||
+            !w->control.Flush())
             return false;
 
         w->response.state = was_simple::Response::State::END;
@@ -1182,7 +1175,7 @@ was_simple_end(struct was_simple *w)
     }
 
     /* finish the control channel? */
-    if (!was_simple_control_flush(w))
+    if (!w->control.Flush())
         return false;
 
     assert(w->response.state == was_simple::Response::State::END);
