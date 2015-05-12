@@ -8,6 +8,7 @@
 #ifndef WAS_SIMPLE_H
 #define WAS_SIMPLE_H
 
+#include <inline/compiler.h>
 #include <http/status.h>
 #include <http/method.h>
 
@@ -80,15 +81,19 @@ was_simple_accept(struct was_simple *w);
 /**
  * Returns the method of the current request.
  */
+gcc_pure
 http_method_t
 was_simple_get_method(const struct was_simple *w);
 
+gcc_pure
 const char *
 was_simple_get_script_name(const struct was_simple *w);
 
+gcc_pure
 const char *
 was_simple_get_path_info(const struct was_simple *w);
 
+gcc_pure
 const char *
 was_simple_get_query_string(const struct was_simple *w);
 
@@ -96,6 +101,7 @@ was_simple_get_query_string(const struct was_simple *w);
  * Returns the value of a request header.  In this library, each
  * header name can not have more than one value.
  */
+gcc_pure
 const char *
 was_simple_get_header(struct was_simple *w, const char *name);
 
@@ -109,6 +115,7 @@ was_simple_get_header_iterator(struct was_simple *w);
 /**
  * Returns the value of a WAS parameter.
  */
+gcc_pure
 const char *
 was_simple_get_parameter(struct was_simple *w, const char *name);
 
@@ -122,6 +129,7 @@ was_simple_get_parameter_iterator(struct was_simple *w);
 /**
  * Is a request body present?  (May be empty, though)
  */
+gcc_pure
 bool
 was_simple_has_body(const struct was_simple *w);
 
@@ -140,6 +148,7 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms);
  * non-blocking mode.  If an operation returns EAGAIN,
  * was_simple_input_poll() can be called to wait for more data.
  */
+gcc_pure
 int
 was_simple_input_fd(const struct was_simple *w);
 
@@ -189,6 +198,7 @@ was_simple_output_poll(struct was_simple *w, int timeout_ms);
  * Obtains the file descriptor for reading the request body.  It is in
  * non-blocking mode.
  */
+gcc_pure
 int
 was_simple_output_fd(struct was_simple *w);
 

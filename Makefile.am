@@ -11,6 +11,8 @@ lib_LTLIBRARIES = \
 libcm4all_was_simple_la_SOURCES = \
 	src/iterator.cxx src/iterator.hxx \
 	src/simple.cxx
+libcm4all_was_simple_la_CPPFLAGS = $(AM_CPPFLAGS) \
+	$(LIBCM4ALL_INLINE_CFLAGS)
 libcm4all_was_simple_la_LDFLAGS = \
 	-no-undefined \
 	-Wl,--version-script=$(srcdir)/libcm4all-was-simple.ld \
@@ -18,7 +20,8 @@ libcm4all_was_simple_la_LDFLAGS = \
 
 libcm4all_was_apreq_la_SOURCES = src/parser.c src/bucket.c
 libcm4all_was_apreq_la_CPPFLAGS = $(AM_CPPFLAGS) \
-	$(LIBAPR_CFLAGS) $(LIBAPR_UTIL_CFLAGS) $(LIBAPREQ2_CFLAGS)
+	$(LIBAPR_CFLAGS) $(LIBAPR_UTIL_CFLAGS) $(LIBAPREQ2_CFLAGS) \
+	$(LIBCM4ALL_INLINE_CFLAGS)
 libcm4all_was_apreq_la_LDFLAGS = \
 	-no-undefined \
 	$(LIBAPR_LIBS) $(LIBAPR_UTIL_LIBS) $(LIBAPREQ2_LIBS)
