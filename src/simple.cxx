@@ -143,7 +143,7 @@ struct was_simple {
         http_method_t method;
         char *uri, *script_name, *path_info, *query_string;
 
-        std::map<std::string, std::string> headers, parameters;
+        std::multimap<std::string, std::string> headers, parameters;
 
         /**
          * True when all request metadata has been received.
@@ -453,7 +453,7 @@ was_simple_apply_string(char **value_r,
 }
 
 static bool
-was_simple_apply_map(std::map<std::string, std::string> &map,
+was_simple_apply_map(std::multimap<std::string, std::string> &map,
                      const void *_payload, size_t length)
 {
     const char *payload = (const char *)_payload;
@@ -683,6 +683,13 @@ was_simple_get_header(struct was_simple *w, const char *name)
     return i != w->request.headers.end()
         ? i->second.c_str()
         : nullptr;
+}
+
+struct was_simple_iterator *
+was_simple_get_multi_header(struct was_simple *w, const char *name)
+{
+    auto x = w->request.headers.equal_range(name);
+    return was_simple_iterator_new(x.first, x.second);
 }
 
 struct was_simple_iterator *

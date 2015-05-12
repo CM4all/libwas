@@ -98,12 +98,24 @@ const char *
 was_simple_get_query_string(const struct was_simple *w);
 
 /**
- * Returns the value of a request header.  In this library, each
- * header name can not have more than one value.
+ * Returns the value of a request header.
+ *
+ * If there are multiple headers with that name, any one of those is
+ * returned.  To get all values, call
+ * was_simple_get_multi_header() instead.
  */
 gcc_pure
 const char *
 was_simple_get_header(struct was_simple *w, const char *name);
+
+/**
+ * Returns an object that can iterate all request headers with the
+ * given name.  It must be freed with was_simple_iterator_free().
+ *
+ * If you need only one value, call was_simple_get_header() instead.
+ */
+struct was_simple_iterator *
+was_simple_get_multi_header(struct was_simple *w, const char *name);
 
 /**
  * Returns an object that can iterate all request headers.  It must be

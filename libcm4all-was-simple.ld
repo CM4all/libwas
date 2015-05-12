@@ -8,6 +8,7 @@ libcm4all_was_simple_0 {
 		was_simple_get_path_info;
 		was_simple_get_query_string;
 		was_simple_get_header;
+		was_simple_get_multi_header;
 		was_simple_get_header_iterator;
 		was_simple_get_parameter;
 		was_simple_get_parameter_iterator;

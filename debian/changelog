@@ -8,6 +8,7 @@ libcm4all-was (0.8) unstable; urgency=low
   * simple: add _output_poll()
   * simple: make file descriptors non-blocking
   * simple: check for control commands when I/O blocks
+  * simple: support duplicate header names
   * apreq: don't use undefined parameter for apr_bucket_alloc()
   * apreq: fix multipart/form-data parser
   * convert to shared library
