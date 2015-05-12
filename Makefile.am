@@ -46,6 +46,7 @@ wasinclude_HEADERS = \
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = \
+	libcm4all-was-protocol.pc \
 	libcm4all-was-simple.pc \
 	libcm4all-was-apreq.pc \
 	libcm4all-was-xios.pc
