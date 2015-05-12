@@ -133,6 +133,14 @@ struct was_simple {
          * True if #WAS_COMMAND_NO_DATA has been received.
          */
         bool no_body;
+
+        bool HasBody() const {
+            return !no_body;
+        }
+
+        bool IsEOF() const {
+            return known_length && received >= announced;
+        }
     } input;
 
     /**
@@ -209,6 +217,12 @@ struct was_simple {
             END,
         } state;
     } response;
+
+    bool HasRequestBody() const {
+        assert(response.state != Response::State::NONE);
+
+        return input.HasBody();
+    }
 };
 
 static void
@@ -720,15 +734,7 @@ was_simple_get_parameter_iterator(struct was_simple *w)
 bool
 was_simple_has_body(const struct was_simple *w)
 {
-    assert(w->response.state != was_simple::Response::State::NONE);
-
-    return !w->input.no_body;
-}
-
-static bool
-was_simple_input_eof(const struct was_simple *w)
-{
-    return w->input.known_length && w->input.received >= w->input.announced;
+    return w->HasRequestBody();
 }
 
 enum was_simple_poll_result
@@ -736,7 +742,7 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
-    if (w->input.no_body || was_simple_input_eof(w))
+    if (w->input.no_body || w->input.IsEOF())
         return WAS_SIMPLE_POLL_END;
 
     if (w->input.premature && !w->input.ignore_premature)
@@ -748,7 +754,7 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
 
     /* check "eof" again, as it may have changed after control packets
        have been handled */
-    if (was_simple_input_eof(w))
+    if (w->input.IsEOF())
         return WAS_SIMPLE_POLL_END;
 
     struct pollfd fds[] = {
@@ -775,7 +781,7 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
                 !was_simple_control_apply_pending(w))
                 return WAS_SIMPLE_POLL_ERROR;
 
-            if (was_simple_input_eof(w))
+            if (w->input.IsEOF())
                 return WAS_SIMPLE_POLL_END;
         }
 
@@ -816,7 +822,7 @@ was_simple_read(struct was_simple *w, void *buffer, size_t length)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
-    if (w->input.no_body || was_simple_input_eof(w))
+    if (w->input.no_body || w->input.IsEOF())
         return 0;
 
     if (w->input.premature && !w->input.ignore_premature)
@@ -859,7 +865,7 @@ was_simple_input_close(struct was_simple *w)
     assert(w->response.state != was_simple::Response::State::NONE);
 
     if (w->input.no_body || w->input.stopped || w->input.premature ||
-        was_simple_input_eof(w))
+        w->input.IsEOF())
         return true;
 
     if (!w->control.SendEmpty(WAS_COMMAND_STOP))
@@ -1185,7 +1191,7 @@ was_simple_end(struct was_simple *w)
         return false;
 
     /* wait for PREMATURE? */
-    if (w->input.stopped && !was_simple_input_eof(w))
+    if (w->input.stopped && !w->input.IsEOF())
         while (!w->input.premature)
             if (!was_simple_control_read_and_apply(w))
                 return false;
