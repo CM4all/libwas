@@ -15,12 +15,13 @@ struct was_simple_iterator {
 };
 
 struct was_simple_iterator *
-was_simple_iterator_new(const std::map<std::string, std::string> &map)
+was_simple_iterator_new(std::map<std::string, std::string>::const_iterator begin,
+                        std::map<std::string, std::string>::const_iterator end)
 {
     auto *i = new was_simple_iterator();
 
-    i->i = map.begin();
-    i->end = map.end();
+    i->i = begin;
+    i->end = end;
 
     return i;
 }

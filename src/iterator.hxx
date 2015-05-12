@@ -8,4 +8,5 @@
 #include <string>
 
 struct was_simple_iterator *
-was_simple_iterator_new(const std::map<std::string, std::string> &map);
+was_simple_iterator_new(std::map<std::string, std::string>::const_iterator begin,
+                        std::map<std::string, std::string>::const_iterator end);
