@@ -15,7 +15,7 @@ struct was_simple_iterator {
 };
 
 struct was_simple_iterator *
-was_simple_new_iterator(const std::map<std::string, std::string> &map)
+was_simple_iterator_new(const std::map<std::string, std::string> &map)
 {
     auto *i = new was_simple_iterator();
 

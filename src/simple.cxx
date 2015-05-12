@@ -688,7 +688,7 @@ was_simple_get_header(struct was_simple *w, const char *name)
 struct was_simple_iterator *
 was_simple_get_header_iterator(struct was_simple *w)
 {
-    return was_simple_new_iterator(w->request.headers);
+    return was_simple_iterator_new(w->request.headers);
 }
 
 const char *
@@ -705,7 +705,7 @@ was_simple_get_parameter(struct was_simple *w, const char *name)
 struct was_simple_iterator *
 was_simple_get_parameter_iterator(struct was_simple *w)
 {
-    return was_simple_new_iterator(w->request.parameters);
+    return was_simple_iterator_new(w->request.parameters);
 }
 
 bool
