@@ -999,7 +999,7 @@ was_simple_output_poll(struct was_simple *w, int timeout_ms)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
-    if (w->output.announced && w->output.sent >= w->output.announced)
+    if (w->output.known_length && w->output.sent >= w->output.announced)
         return WAS_SIMPLE_POLL_END;
 
     if (!was_simple_control_flush(w) || !was_simple_control_apply_pending(w) ||
