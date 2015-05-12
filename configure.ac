@@ -28,7 +28,7 @@ AM_LIBAPR
 AM_LIBAPR_UTIL
 AX_LIBAPREQ2([], [AC_MSG_ERROR([libapreq2 not found])])
 
-PKG_CHECK_MODULES([LIBCM4ALL_INLINE], [libcm4all-inline >= 0.3.4],,
+PKG_CHECK_MODULES([LIBCM4ALL_INLINE], [libcm4all-inline >= 0.3.5],,
 	[AC_MSG_ERROR([libcm4all-inline not found])])
 
 PKG_CHECK_MODULES([LIBHTTP], [libcm4all-http >= 1.2],,
