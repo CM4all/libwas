@@ -47,9 +47,12 @@ wasinclude_HEADERS = \
 	include/was/simple.h \
 	include/was/protocol.h
 
-pkgconfigdir = $(libdir)/pkgconfig
+pkgconfigdir = $(datadir)/pkgconfig
 pkgconfig_DATA = \
-	libcm4all-was-protocol.pc \
+	libcm4all-was-protocol.pc
+
+pkgconfiglibdir = $(libdir)/pkgconfig
+pkgconfiglib_DATA = \
 	libcm4all-was-simple.pc \
 	libcm4all-was-apreq.pc \
 	libcm4all-was-xios.pc
