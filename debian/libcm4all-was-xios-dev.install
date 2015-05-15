@@ -1,3 +1,3 @@
 usr/include/cm4all/libwas-0/was/{istub,ostub}.h
-usr/lib/libcm4all-was-xios.a
+usr/lib/libcm4all-was-xios.{a,so}
 usr/lib/pkgconfig/libcm4all-was-xios.pc
