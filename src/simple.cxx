@@ -1169,8 +1169,8 @@ was_simple_end(struct was_simple *w)
         if (w->output.premature) {
             w->response.state = was_simple::Response::State::END;
         } else if (w->output.known_length) {
-            if (w->output.sent != w->output.announced)
-                // XXX
+            if (w->output.sent != w->output.announced &&
+                !w->control.SendUint64(WAS_COMMAND_PREMATURE, w->output.sent))
                 return false;
 
             w->response.state = was_simple::Response::State::END;
