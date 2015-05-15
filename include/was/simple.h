@@ -85,14 +85,23 @@ gcc_pure
 http_method_t
 was_simple_get_method(const struct was_simple *w);
 
+/**
+ * Returns the SCRIPT_NAME attribute.
+ */
 gcc_pure
 const char *
 was_simple_get_script_name(const struct was_simple *w);
 
+/**
+ * Returns the PATH_INFO attribute.
+ */
 gcc_pure
 const char *
 was_simple_get_path_info(const struct was_simple *w);
 
+/**
+ * Returns the query string.
+ */
 gcc_pure
 const char *
 was_simple_get_query_string(const struct was_simple *w);
@@ -159,11 +168,20 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms);
  * Obtains the file descriptor for reading the request body.  It is in
  * non-blocking mode.  If an operation returns EAGAIN,
  * was_simple_input_poll() can be called to wait for more data.
+ *
+ * After something has been read successfully, call
+ * was_simple_received().
  */
 gcc_pure
 int
 was_simple_input_fd(const struct was_simple *w);
 
+/**
+ * The caller announces that he has read something from the input file
+ * descriptor given by was_simple_input_fd().
+ *
+ * This function must not be called after was_simple_read().
+ */
 bool
 was_simple_received(struct was_simple *w, size_t nbytes);
 
@@ -177,12 +195,30 @@ was_simple_received(struct was_simple *w, size_t nbytes);
 ssize_t
 was_simple_read(struct was_simple *w, void *buffer, size_t length);
 
+/**
+ * The caller announces that he is not interested in any more data
+ * from the request body.  The function will tell the web server to
+ * stop sending any more, and will discard all data that is still
+ * pending.  This needs to be called only if more data is available.
+ */
 bool
 was_simple_input_close(struct was_simple *w);
 
+/**
+ * Set the response status code.  This must be called before sending
+ * headers and response body (or not at all, which results in "200 OK"
+ * or "204 No Content").
+ */
 bool
 was_simple_status(struct was_simple *w, http_status_t status);
 
+/**
+ * Set a response header.
+ *
+ * This function must not be used to set hop-by-hop headers (RFC 2616
+ * 13.5.1) or "Content-Length".  To set the "Content-Length" header,
+ * call was_simple_set_length() instead.
+ */
 bool
 was_simple_set_header(struct was_simple *w,
                       const char *name, const char *value);
@@ -193,6 +229,11 @@ was_simple_set_header(struct was_simple *w,
 bool
 was_simple_copy_all_headers(struct was_simple *w);
 
+/**
+ * Declare the response body length (in bytes).  Calling this function
+ * is optional, but calling it as early as possible may help the web
+ * server reduce overhead.
+ */
 bool
 was_simple_set_length(struct was_simple *w, uint64_t length);
 
@@ -209,11 +250,21 @@ was_simple_output_poll(struct was_simple *w, int timeout_ms);
 /**
  * Obtains the file descriptor for reading the request body.  It is in
  * non-blocking mode.
+ *
+ * After something has been written successfully, call
+ * was_simple_sent().
  */
 gcc_pure
 int
 was_simple_output_fd(struct was_simple *w);
 
+/**
+ * The caller announces that he has written something from the output
+ * file descriptor given by was_simple_output_fd().
+ *
+ * This function must not be called after was_simple_write() or its
+ * siblings.
+ */
 bool
 was_simple_sent(struct was_simple *w, size_t nbytes);
 
