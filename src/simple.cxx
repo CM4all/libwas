@@ -871,6 +871,9 @@ was_simple_input_close(struct was_simple *w)
     if (!w->control.SendEmpty(WAS_COMMAND_STOP))
         return false;
 
+    /* TODO: wait for PREMATURE packet from web server, ackowledging
+       the STOP packet we just sent */
+
     w->input.stopped = true;
     return true;
 }
