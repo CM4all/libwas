@@ -13,6 +13,7 @@ libcm4all-was (1.0) unstable; urgency=low
   * apreq: don't use undefined parameter for apr_bucket_alloc()
   * apreq: fix multipart/form-data parser
   * convert to shared library
+  * debian: Multi-Arch package
 
  --   
 

@@ -27,6 +27,7 @@ Description: Development files for libwas, protocol definition
 
 Package: libcm4all-was-simple1
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: WAS server library, "simple" API
  libwas is a support library for the Web Application Socket protocol.
@@ -36,6 +37,7 @@ Description: WAS server library, "simple" API
 Package: libcm4all-was-simple-dev
 Section: non-free/libdevel
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
  libcm4all-was-simple1 (= ${binary:Version}),
  libcm4all-inline-dev (>= 0.3.5),
@@ -49,6 +51,7 @@ Description: Development files for libwas, "simple" API.
 
 Package: libcm4all-was-apreq1
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: WAS server library, libapreq2 module
  libwas is a support library for the Web Application Socket protocol.
@@ -58,6 +61,7 @@ Description: WAS server library, libapreq2 module
 Package: libcm4all-was-apreq-dev
 Section: non-free/libdevel
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
  libcm4all-was-apreq1 (= ${binary:Version}),
  libcm4all-was-simple-dev (= ${binary:Version}),
@@ -69,6 +73,7 @@ Description: Development files for libwas/apreq2
 
 Package: libcm4all-was-xios1
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: WAS server library, xios implementation
  libwas is a support library for the Web Application Socket protocol.
@@ -78,6 +83,7 @@ Description: WAS server library, xios implementation
 Package: libcm4all-was-xios-dev
 Section: non-free/libdevel
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
  libcm4all-was-xios1 (= ${binary:Version}),
  libcm4all-was-simple-dev (= ${binary:Version}),

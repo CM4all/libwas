@@ -6,6 +6,7 @@
 
 DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null)
 
 CFLAGS = -Wall -g
 
@@ -13,6 +14,25 @@ ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
   CFLAGS += -O0
 else
   CFLAGS += -O2
+endif
+
+ifneq ($(DEB_HOST_MULTIARCH),)
+MULTIARCH_CONFIGURE_FLAGS := \
+	--libdir=/usr/lib/$(DEB_HOST_MULTIARCH)
+endif
+
+INSTALL_FILES = \
+	debian/libcm4all-was-simple-dev.install \
+	debian/libcm4all-was-simple1.install \
+	debian/libcm4all-was-apreq-dev.install \
+	debian/libcm4all-was-apreq1.install \
+	debian/libcm4all-was-xios-dev.install \
+	debian/libcm4all-was-xios1.install
+$(INSTALL_FILES): %: %.in
+ifeq ($(DEB_HOST_MULTIARCH),)
+	cp $< $@
+else
+	sed 's,usr/lib,usr/lib/$(DEB_HOST_MULTIARCH),g' $< >$@
 endif
 
 configure: debian/stamp-configure
@@ -32,6 +52,7 @@ debian/stamp-configure:
 		--prefix=/usr \
 		--sysconfdir=/etc \
 		--includedir=/usr/include/cm4all/libwas-1 \
+		$(MULTIARCH_CONFIGURE_FLAGS) \
 		--enable-debug
 
 	@touch $@
@@ -53,7 +74,7 @@ debian/stamp-check:
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f debian/stamp-*
+	rm -f debian/stamp-* $(INSTALL_FILES)
 
 	[ ! -f Makefile ] || $(MAKE) distclean
 
@@ -74,7 +95,7 @@ debian/stamp-install: debian/stamp-build
 binary-indep:
 
 # Build architecture-dependent files here.
-binary-arch: build check install
+binary-arch: build check install $(INSTALL_FILES)
 	dh_testdir -a
 	dh_testroot -a
 	dh_installdocs -a
