@@ -15,7 +15,7 @@ Vcs-git: git@dev.intern.cm-ag:max/libwas.git
 
 Package: libcm4all-was-protocol-dev
 Section: non-free/libdevel
-Architecture: any
+Architecture: all
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0)
 Replaces: libcm4all-was-dve
 Conflicts: libcm4all-was-dev
