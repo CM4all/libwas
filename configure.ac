@@ -1,12 +1,12 @@
 AC_PREREQ(2.60)
-AC_INIT(CM4all libwas, 0.8, mk@cm4all.com, libcm4all-was)
+AC_INIT(CM4all libwas, 1.0, mk@cm4all.com, libcm4all-was)
 AC_COPYRIGHT(Copyright 2010-2015 Content Management AG)
 AC_CONFIG_SRCDIR(src/simple.cxx)
 AC_CONFIG_AUX_DIR(build)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign 1.11 subdir-objects silent-rules])
 
-LIBWAS_LIBTOOL_VERSION=0:0:0
+LIBWAS_LIBTOOL_VERSION=1:0:0
 AC_SUBST(LIBWAS_LIBTOOL_VERSION)
 
 dnl Checks for programs.

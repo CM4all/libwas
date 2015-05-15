@@ -24,7 +24,7 @@ Description: Development files for libwas, protocol definition
  .
  This package contains development files with protocol definitions.
 
-Package: libcm4all-was-simple0
+Package: libcm4all-was-simple1
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: WAS server library, "simple" API
@@ -36,7 +36,7 @@ Package: libcm4all-was-simple-dev
 Section: non-free/libdevel
 Architecture: any
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
- libcm4all-was-simple0 (= ${binary:Version}),
+ libcm4all-was-simple1 (= ${binary:Version}),
  libcm4all-inline-dev (>= 0.3.5),
  libcm4all-http-dev (>= 1.2)
 Replaces: libcm4all-was-dve
@@ -46,7 +46,7 @@ Description: Development files for libwas, "simple" API.
  .
  This package contains development files for the "simple" API.
 
-Package: libcm4all-was-apreq0
+Package: libcm4all-was-apreq1
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: WAS server library, libapreq2 module
@@ -58,7 +58,7 @@ Package: libcm4all-was-apreq-dev
 Section: non-free/libdevel
 Architecture: any
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
- libcm4all-was-apreq0 (= ${binary:Version}),
+ libcm4all-was-apreq1 (= ${binary:Version}),
  libcm4all-was-simple-dev (= ${binary:Version}),
  libcm4all-thirdparty-apreq2-dev
 Description: Development files for libwas/apreq2
@@ -66,7 +66,7 @@ Description: Development files for libwas/apreq2
  .
  This package contains development files for the libapreq2 module.
 
-Package: libcm4all-was-xios0
+Package: libcm4all-was-xios1
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: WAS server library, xios implementation
@@ -78,7 +78,7 @@ Package: libcm4all-was-xios-dev
 Section: non-free/libdevel
 Architecture: any
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
- libcm4all-was-xios0 (= ${binary:Version}),
+ libcm4all-was-xios1 (= ${binary:Version}),
  libcm4all-was-simple-dev (= ${binary:Version}),
  libcm4all-core-dev (>= 1.20.5)
 Description: Development files for libwas/xios

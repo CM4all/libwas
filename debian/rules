@@ -31,7 +31,7 @@ debian/stamp-configure:
 		--disable-dependency-tracking \
 		--prefix=/usr \
 		--sysconfdir=/etc \
-		--includedir=/usr/include/cm4all/libwas-0 \
+		--includedir=/usr/include/cm4all/libwas-1 \
 		--enable-debug
 
 	@touch $@
