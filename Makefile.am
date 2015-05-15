@@ -24,7 +24,7 @@ libcm4all_was_apreq_la_CPPFLAGS = $(AM_CPPFLAGS) \
 	$(LIBCM4ALL_INLINE_CFLAGS)
 libcm4all_was_apreq_la_LDFLAGS = \
 	-no-undefined \
-	$(LIBAPR_LIBS) $(LIBAPR_UTIL_LIBS) $(LIBAPREQ2_LIBS)
+	$(LIBAPR_LIBS) $(LIBAPR_UTIL_LIBS) $(LIBAPREQ2_LIBS) \
 	-Wl,--version-script=$(srcdir)/libcm4all-was-apreq.ld \
 	-version-info $(LIBWAS_LIBTOOL_VERSION)
 libcm4all_was_apreq_la_LIBADD = libcm4all-was-simple.la
@@ -35,7 +35,7 @@ libcm4all_was_xios_la_CPPFLAGS = $(AM_CPPFLAGS) \
 	$(LIBCM4ALL_INLINE_CFLAGS)
 libcm4all_was_xios_la_LDFLAGS = \
 	-no-undefined \
-	$(LIBCORE_LIBS)
+	$(LIBCORE_LIBS) \
 	-Wl,--version-script=$(srcdir)/libcm4all-was-xios.ld \
 	-version-info $(LIBWAS_LIBTOOL_VERSION)
 libcm4all_was_xios_la_LIBADD = libcm4all-was-simple.la
