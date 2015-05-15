@@ -15,7 +15,7 @@ libcm4all-was (1.0) unstable; urgency=low
   * convert to shared library
   * debian: Multi-Arch package
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Fri, 15 May 2015 08:44:10 -0000
 
 libcm4all-was (0.7) unstable; urgency=low
 
