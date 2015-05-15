@@ -223,9 +223,9 @@ was_simple_write(struct was_simple *w, const void *data, size_t length);
 bool
 was_simple_puts(struct was_simple *w, const char *s);
 
+gcc_printf(2, 3)
 bool
-was_simple_printf(struct was_simple *w, const char *s, ...)
-__attribute__((format(printf, 2, 3)));
+was_simple_printf(struct was_simple *w, const char *s, ...);
 
 /**
  * Mark the end of the current request.  If no status has been set,
