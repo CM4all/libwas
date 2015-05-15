@@ -359,7 +359,7 @@ was_simple::Control::Read(bool dontwait)
         if (p != nullptr)
             return p;
 
-        /* XXX check if buffer is full */
+        /* TODO: check if buffer is full */
 
         if (!Fill(dontwait))
             return nullptr;
@@ -452,7 +452,7 @@ was_simple_finish_request(struct was_simple *w)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
-    // XXX
+    // TODO??
     bool result = was_simple_end(w);
     was_simple_clear_request(w);
     return result;
@@ -553,7 +553,7 @@ was_simple_apply_request_packet(struct was_simple *w,
         break;
 
     case WAS_COMMAND_DATA:
-        /* XXX body? */
+        /* TODO: body? */
         w->input.no_body = false;
         w->request.finished = true;
         break;
@@ -809,11 +809,11 @@ was_simple_received(struct was_simple *w, size_t nbytes)
     w->input.received += nbytes;
 
     if (w->input.known_length && w->input.received > w->input.announced) {
-        // XXX handle error
+        // TODO: handle error
         return false;
     }
 
-    /* XXX */
+    /* TODO??? */
     return true;
 }
 
