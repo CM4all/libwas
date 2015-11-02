@@ -683,6 +683,13 @@ was_simple::Accept()
             return nullptr;
     } while (!request.finished);
 
+    /* after we have received DATA or NO_DATA which allows us to start
+       handling the request, consume all other control packets that
+       may have been received already, just in case it contains
+       helpful data such as LENGTH */
+    if (!ApplyPendingControl())
+        return nullptr;
+
     return request.uri;
 }
 
