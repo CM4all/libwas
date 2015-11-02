@@ -667,6 +667,7 @@ was_simple::Accept()
 
     input.received = 0;
     input.known_length = false;
+    input.stopped = false;
     input.premature = false;
     input.ignore_premature = false;
 
