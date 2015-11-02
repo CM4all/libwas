@@ -1063,6 +1063,11 @@ was_simple::SetResponseStateBody()
         if (!control.SendEmpty(WAS_COMMAND_DATA))
             return false;
 
+        if (output.IsFull()) {
+            response.state = Response::State::END;
+            return false;
+        }
+
         response.state = Response::State::BODY;
     }
 
@@ -1154,6 +1159,12 @@ was_simple_sent(struct was_simple *w, size_t nbytes)
         return false;
 
     w->output.Sent(nbytes);
+
+    if (w->output.IsFull()) {
+        assert(w->response.state == was_simple::Response::State::BODY);
+        w->response.state = was_simple::Response::State::END;
+    }
+
     return true;
 }
 
@@ -1192,6 +1203,12 @@ was_simple::Write(const void *data0, size_t length)
         output.Sent(nbytes);
         data += nbytes;
         length -= nbytes;
+
+        if (output.IsFull()) {
+            response.state = Response::State::END;
+            if (length > 0)
+                return false;
+        }
     }
 
     return true;
@@ -1259,11 +1276,13 @@ was_simple::End()
 
     /* finish the response body? */
     if (response.state == Response::State::BODY) {
-        if (output.premature) {
-            response.state = Response::State::END;
-        } else if (output.known_length) {
-            if (output.sent != output.announced &&
-                !control.SendUint64(WAS_COMMAND_PREMATURE, output.sent))
+        assert(!output.premature);
+        assert(!output.no_body);
+
+        if (output.known_length) {
+            assert(output.sent < output.announced);
+
+            if (!control.SendUint64(WAS_COMMAND_PREMATURE, output.sent))
                 return false;
 
             response.state = Response::State::END;
