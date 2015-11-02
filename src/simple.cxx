@@ -626,7 +626,7 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         input.announced = length;
         input.known_length = true;
         input.premature = true;
-        return false;
+        return true;
     }
 
     return true;

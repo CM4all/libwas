@@ -1,6 +1,7 @@
 libcm4all-was (1.1) unstable; urgency=low
 
   * simple: more consistent STOP handler
+  * simple: fix PREMATURE handler
   * simple: optimize discarding the request body
   * simple: fix was_simple_input_close() heisenbug
 
