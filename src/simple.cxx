@@ -28,6 +28,15 @@
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
+/**
+ * Enables non-blocking mode for the specified file descriptor.
+ */
+static void
+fd_set_nonblock(int fd)
+{
+    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
+}
+
 struct was_control_packet {
     enum was_command command;
     size_t length;
@@ -54,6 +63,10 @@ struct was_simple {
         } output_buffer;
 
         struct was_control_packet packet;
+
+        Control() {
+            packet.payload = nullptr;
+        }
 
         ssize_t DirectSend(const void *p, size_t length) {
             return send(fd, p, length, MSG_NOSIGNAL);
@@ -134,6 +147,10 @@ struct was_simple {
          */
         bool no_body;
 
+        Input() {
+            fd_set_nonblock(fd);
+        }
+
         bool HasBody() const {
             return !no_body;
         }
@@ -176,6 +193,10 @@ struct was_simple {
          * definition (e.g. 204 No Content).
          */
         bool no_body;
+
+        Output() {
+            fd_set_nonblock(fd);
+        }
 
         /**
          * Did we send all data?
@@ -252,26 +273,10 @@ was_simple_free_request(struct was_simple *w)
     w->request.parameters.clear();
 }
 
-/**
- * Enables non-blocking mode for the specified file descriptor.
- */
-static void
-fd_set_nonblock(int fd)
-{
-    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
-}
-
 struct was_simple *
 was_simple_new(void)
 {
-    auto *w = new was_simple();
-
-    w->control.packet.payload = nullptr;
-
-    fd_set_nonblock(w->input.fd);
-    fd_set_nonblock(w->output.fd);
-
-    return w;
+    return new was_simple();
 }
 
 void
