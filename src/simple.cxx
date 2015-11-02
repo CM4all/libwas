@@ -1031,7 +1031,7 @@ was_simple::SetLength(uint64_t length)
     output.announced = length;
     output.known_length = true;
 
-    if (output.announced == output.sent)
+    if (output.IsFull())
         response.state = Response::State::END;
 
     return true;
