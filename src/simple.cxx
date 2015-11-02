@@ -289,6 +289,14 @@ struct was_simple {
      */
     bool FinishRequest();
 
+    /**
+     * @return true if no more control packets can be sent for the
+     * current request
+     */
+    bool IsControlFinished() const {
+        return response.state == Response::State::END;
+    }
+
     bool ApplyRequestPacket(const struct was_control_packet &packet);
     bool ApplyPendingControl();
     bool ReadAndApplyControl();
@@ -925,6 +933,13 @@ bool
 was_simple::CloseInput()
 {
     assert(response.state != Response::State::NONE);
+
+    /* kludge: send STOP for request body only if another control
+       packet will be sent in this function, because otherwise
+       beng-proxy's was_stock may be confused by a control packet on
+       an idle WAS control connection */
+    if (IsControlFinished())
+        return true;
 
     if (input.no_body || input.stopped || input.premature ||
         input.IsEOF())
