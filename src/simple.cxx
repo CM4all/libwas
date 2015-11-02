@@ -46,10 +46,10 @@ struct was_simple {
             struct was_header header;
         } input_buffer;
 
-        size_t input_position;
+        size_t input_position = 0;
 
         struct {
-            unsigned position;
+            unsigned position = 0;
             char data[4096];
         } output_buffer;
 
@@ -215,7 +215,7 @@ struct was_simple {
             HEADERS,
             BODY,
             END,
-        } state;
+        } state = State::NONE;
     } response;
 
     bool HasRequestBody() const {
@@ -266,11 +266,7 @@ was_simple_new(void)
 {
     auto *w = new was_simple();
 
-    w->control.input_position = 0;
-    w->control.output_buffer.position = 0;
     w->control.packet.payload = nullptr;
-
-    w->response.state = was_simple::Response::State::NONE;
 
     fd_set_nonblock(w->input.fd);
     fd_set_nonblock(w->output.fd);
