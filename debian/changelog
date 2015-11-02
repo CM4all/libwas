@@ -5,7 +5,7 @@ libcm4all-was (1.1) unstable; urgency=low
   * simple: optimize discarding the request body
   * simple: fix was_simple_input_close() heisenbug
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Mon, 02 Nov 2015 22:59:42 -0000
 
 libcm4all-was (1.0) unstable; urgency=low
 
