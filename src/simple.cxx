@@ -1185,7 +1185,7 @@ was_simple::Write(const void *data0, size_t length)
         if (nbytes <= 0)
             return false;
 
-        output.sent += nbytes;
+        output.Sent(nbytes);
         data += nbytes;
         length -= nbytes;
     }
