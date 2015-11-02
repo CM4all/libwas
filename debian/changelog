@@ -1,6 +1,6 @@
 libcm4all-was (1.1) unstable; urgency=low
 
-  * 
+  * simple: more consistent STOP handler
 
  --   
 

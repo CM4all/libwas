@@ -603,6 +603,7 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
 
     case WAS_COMMAND_STOP:
         output.premature = true;
+        output.no_body = true;
 
         if (response.state <= Response::State::BODY &&
             !control.SendUint64(WAS_COMMAND_PREMATURE, output.sent))
@@ -1079,6 +1080,9 @@ enum was_simple_poll_result
 was_simple::PollOutput(int timeout_ms)
 {
     assert(response.state != Response::State::NONE);
+
+    if (output.premature)
+        return WAS_SIMPLE_POLL_ERROR;
 
     if (output.IsFull())
         return WAS_SIMPLE_POLL_END;
