@@ -217,7 +217,7 @@ struct was_simple {
     /**
      * Request metadata received from the control channel.
      */
-    struct {
+    struct Request {
         http_method_t method;
         char *uri, *script_name, *path_info, *query_string;
 
@@ -227,6 +227,27 @@ struct was_simple {
          * True when all request metadata has been received.
          */
         bool finished;
+
+        void Init() {
+            method = HTTP_METHOD_GET;
+
+            uri = nullptr;
+            script_name = nullptr;
+            path_info = nullptr;
+            query_string = nullptr;
+
+            finished = false;
+        }
+
+        void Deinit() {
+            free(uri);
+            free(script_name);
+            free(path_info);
+            free(query_string);
+
+            headers.clear();
+            parameters.clear();
+        }
     } request;
 
     struct Response {
@@ -239,39 +260,43 @@ struct was_simple {
         } state = State::NONE;
     } response;
 
+    ~was_simple() {
+        if (response.state != Response::State::NONE)
+            request.Deinit();
+    }
+
     bool HasRequestBody() const {
         assert(response.state != Response::State::NONE);
 
         return input.HasBody();
     }
+
+    void DeinitRequest() {
+        assert(response.state != Response::State::NONE);
+
+        request.Deinit();
+    }
+
+    void ClearRequest() {
+        assert(response.state != Response::State::NONE);
+
+        request.Deinit();
+        response.state = Response::State::NONE;
+    }
+
+    /**
+     * @return true if the connection can be reused
+     */
+    bool FinishRequest();
+
+    bool ApplyRequestPacket(const struct was_control_packet &packet);
+    bool ApplyPendingControl();
+    bool ReadAndApplyControl();
+
+    bool SetResponseStateBody();
+
+    bool DiscardAllInput();
 };
-
-static void
-was_simple_init_request(struct was_simple *w)
-{
-    w->request.method = HTTP_METHOD_GET;
-
-    w->request.uri = nullptr;
-    w->request.script_name = nullptr;
-    w->request.path_info = nullptr;
-    w->request.query_string = nullptr;
-
-    w->request.finished = false;
-}
-
-static void
-was_simple_free_request(struct was_simple *w)
-{
-    assert(w->response.state != was_simple::Response::State::NONE);
-
-    free(w->request.uri);
-    free(w->request.script_name);
-    free(w->request.path_info);
-    free(w->request.query_string);
-
-    w->request.headers.clear();
-    w->request.parameters.clear();
-}
 
 struct was_simple *
 was_simple_new(void)
@@ -282,9 +307,6 @@ was_simple_new(void)
 void
 was_simple_free(struct was_simple *w)
 {
-    if (w->response.state != was_simple::Response::State::NONE)
-        was_simple_free_request(w);
-
     delete w;
 }
 
@@ -435,27 +457,14 @@ was_simple::Control::SendHeader(enum was_command command, size_t length)
     return Send(&header, sizeof(header));
 }
 
-static void
-was_simple_clear_request(struct was_simple *w)
+inline bool
+was_simple::FinishRequest()
 {
-    assert(w->response.state != was_simple::Response::State::NONE);
-
-    was_simple_free_request(w);
-
-    w->response.state = was_simple::Response::State::NONE;
-}
-
-/**
- * @return true if the connection can be reused
- */
-static bool
-was_simple_finish_request(struct was_simple *w)
-{
-    assert(w->response.state != was_simple::Response::State::NONE);
+    assert(response.state != Response::State::NONE);
 
     // TODO??
-    bool result = was_simple_end(w);
-    was_simple_clear_request(w);
+    bool result = was_simple_end(this);
+    ClearRequest();
     return result;
 }
 
@@ -491,13 +500,12 @@ was_simple_apply_map(std::multimap<std::string, std::string> &map,
     return true;
 }
 
-static bool
-was_simple_apply_request_packet(struct was_simple *w,
-                                const struct was_control_packet *packet)
+bool
+was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
 {
-    assert(w->response.state != was_simple::Response::State::NONE);
+    assert(response.state != Response::State::NONE);
 
-    switch (packet->command) {
+    switch (packet.command) {
         http_method_t method;
         uint64_t length;
 
@@ -508,130 +516,129 @@ was_simple_apply_request_packet(struct was_simple *w,
         return false;
 
     case WAS_COMMAND_METHOD:
-        if (packet->length != sizeof(uint32_t))
+        if (packet.length != sizeof(uint32_t))
             return false;
 
-        method = (http_method_t)*(const uint32_t *)packet->payload;
-        if (w->request.method != HTTP_METHOD_GET &&
-            method != w->request.method)
+        method = (http_method_t)*(const uint32_t *)packet.payload;
+        if (request.method != HTTP_METHOD_GET &&
+            method != request.method)
             /* sending that packet twice is illegal */
             return false;
 
         if (!http_method_is_valid(method))
             return false;
 
-        w->request.method = method;
+        request.method = method;
         break;
 
     case WAS_COMMAND_URI:
-        return was_simple_apply_string(&w->request.uri,
-                                       packet->payload, packet->length);
+        return was_simple_apply_string(&request.uri,
+                                       packet.payload, packet.length);
 
     case WAS_COMMAND_SCRIPT_NAME:
-        return was_simple_apply_string(&w->request.script_name,
-                                       packet->payload, packet->length);
+        return was_simple_apply_string(&request.script_name,
+                                       packet.payload, packet.length);
 
     case WAS_COMMAND_PATH_INFO:
-        return was_simple_apply_string(&w->request.path_info,
-                                       packet->payload, packet->length);
+        return was_simple_apply_string(&request.path_info,
+                                       packet.payload, packet.length);
 
     case WAS_COMMAND_QUERY_STRING:
-        return was_simple_apply_string(&w->request.query_string,
-                                       packet->payload, packet->length);
+        return was_simple_apply_string(&request.query_string,
+                                       packet.payload, packet.length);
 
     case WAS_COMMAND_HEADER:
-        was_simple_apply_map(w->request.headers,
-                             packet->payload, packet->length);
+        was_simple_apply_map(request.headers,
+                             packet.payload, packet.length);
         break;
 
     case WAS_COMMAND_PARAMETER:
-        was_simple_apply_map(w->request.parameters,
-                             packet->payload, packet->length);
+        was_simple_apply_map(request.parameters,
+                             packet.payload, packet.length);
         break;
 
     case WAS_COMMAND_STATUS:
         return false;
 
     case WAS_COMMAND_NO_DATA:
-        w->input.announced = 0;
-        w->input.known_length = true;
-        w->input.no_body = true;
-        w->request.finished = true;
+        input.announced = 0;
+        input.known_length = true;
+        input.no_body = true;
+        request.finished = true;
         break;
 
     case WAS_COMMAND_DATA:
         /* TODO: body? */
-        w->input.no_body = false;
-        w->request.finished = true;
+        input.no_body = false;
+        request.finished = true;
         break;
 
     case WAS_COMMAND_LENGTH:
-        if (packet->length != sizeof(length))
+        if (packet.length != sizeof(length))
             return false;
 
-        length = *(const uint64_t *)packet->payload;
-        if (length < w->input.received ||
-            (w->input.known_length && length != w->input.announced))
+        length = *(const uint64_t *)packet.payload;
+        if (length < input.received ||
+            (input.known_length && length != input.announced))
             return false;
 
-        w->input.announced = length;
-        w->input.known_length = true;
+        input.announced = length;
+        input.known_length = true;
         break;
 
     case WAS_COMMAND_STOP:
-        w->output.premature = true;
+        output.premature = true;
 
-        if (w->response.state <= was_simple::Response::State::BODY &&
-            !w->control.SendUint64(WAS_COMMAND_PREMATURE, w->output.sent))
+        if (response.state <= Response::State::BODY &&
+            !control.SendUint64(WAS_COMMAND_PREMATURE, output.sent))
             return false;
 
-        if (w->response.state == was_simple::Response::State::BODY)
-            w->response.state = was_simple::Response::State::END;
+        if (response.state == Response::State::BODY)
+            response.state = Response::State::END;
 
         break;
 
     case WAS_COMMAND_PREMATURE:
-        if (packet->length != sizeof(length))
+        if (packet.length != sizeof(length))
             return false;
 
-        length = *(const uint64_t *)packet->payload;
-        if (length < w->input.received ||
-            (w->input.known_length && length > w->input.announced))
+        length = *(const uint64_t *)packet.payload;
+        if (length < input.received ||
+            (input.known_length && length > input.announced))
             return false;
 
-        w->input.announced = length;
-        w->input.known_length = true;
-        w->input.premature = true;
+        input.announced = length;
+        input.known_length = true;
+        input.premature = true;
         return false;
     }
 
     return true;
 }
 
-static bool
-was_simple_control_apply_pending(struct was_simple *w)
+bool
+was_simple::ApplyPendingControl()
 {
     const struct was_control_packet *packet;
-    while ((packet = w->control.Next()) != nullptr)
-        if (!was_simple_apply_request_packet(w, packet))
+    while ((packet = control.Next()) != nullptr)
+        if (!ApplyRequestPacket(*packet))
             return false;
 
     return true;
 }
 
-static bool
-was_simple_control_read_and_apply(struct was_simple *w)
+bool
+was_simple::ReadAndApplyControl()
 {
-    const auto *packet = w->control.Read(false);
-    return packet != nullptr &&
-        was_simple_apply_request_packet(w, packet);
+    const auto *packet = control.Read(false);
+    return packet != nullptr && ApplyRequestPacket(*packet);
 }
 
 const char *
 was_simple_accept(struct was_simple *w)
 {
     if (w->response.state != was_simple::Response::State::NONE &&
-        !was_simple_finish_request(w))
+        !w->FinishRequest())
         return nullptr;
 
     assert(w->response.state == was_simple::Response::State::NONE);
@@ -653,10 +660,10 @@ was_simple_accept(struct was_simple *w)
 
     w->response.state = was_simple::Response::State::STATUS;
 
-    was_simple_init_request(w);
+    w->request.Init();
 
     do {
-        if (!was_simple_control_read_and_apply(w))
+        if (!w->ReadAndApplyControl())
             return nullptr;
     } while (!w->request.finished);
 
@@ -755,7 +762,7 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
     if (w->input.premature && !w->input.ignore_premature)
         return WAS_SIMPLE_POLL_ERROR;
 
-    if (!w->control.Flush() || !was_simple_control_apply_pending(w) ||
+    if (!w->control.Flush() || !w->ApplyPendingControl() ||
         !w->control.Flush())
         return WAS_SIMPLE_POLL_ERROR;
 
@@ -785,7 +792,7 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms)
 
         if (fds[0].revents & POLLIN) {
             if (!w->control.Fill(true) ||
-                !was_simple_control_apply_pending(w))
+                !w->ApplyPendingControl())
                 return WAS_SIMPLE_POLL_ERROR;
 
             if (w->input.IsEOF())
@@ -973,32 +980,32 @@ was_simple_set_length(struct was_simple *w, uint64_t length)
     return true;
 }
 
-static bool
-was_simple_set_response_state_body(struct was_simple *w)
+bool
+was_simple::SetResponseStateBody()
 {
-    assert(w->response.state != was_simple::Response::State::NONE);
+    assert(response.state != Response::State::NONE);
 
-    if (w->response.state == was_simple::Response::State::STATUS &&
-        !was_simple_status(w, HTTP_STATUS_OK))
+    if (response.state == Response::State::STATUS &&
+        !was_simple_status(this, HTTP_STATUS_OK))
         return false;
 
-    if (w->response.state == was_simple::Response::State::HEADERS) {
-        if (w->output.no_body) {
-            w->response.state = was_simple::Response::State::END;
-            w->control.SendEmpty(WAS_COMMAND_NO_DATA);
+    if (response.state == Response::State::HEADERS) {
+        if (output.no_body) {
+            response.state = Response::State::END;
+            control.SendEmpty(WAS_COMMAND_NO_DATA);
             return false;
         }
 
-        if (!w->control.SendEmpty(WAS_COMMAND_DATA))
+        if (!control.SendEmpty(WAS_COMMAND_DATA))
             return false;
 
-        w->response.state = was_simple::Response::State::BODY;
+        response.state = Response::State::BODY;
     }
 
-    assert(w->response.state == was_simple::Response::State::BODY);
+    assert(response.state == Response::State::BODY);
 
-    if (w->output.premature) {
-        w->response.state = was_simple::Response::State::END;
+    if (output.premature) {
+        response.state = Response::State::END;
         return false;
     }
 
@@ -1013,7 +1020,7 @@ was_simple_output_poll(struct was_simple *w, int timeout_ms)
     if (w->output.IsFull())
         return WAS_SIMPLE_POLL_END;
 
-    if (!w->control.Flush() || !was_simple_control_apply_pending(w) ||
+    if (!w->control.Flush() || !w->ApplyPendingControl() ||
         !w->control.Flush() ||
         w->response.state > was_simple::Response::State::BODY)
         return WAS_SIMPLE_POLL_ERROR;
@@ -1041,7 +1048,7 @@ was_simple_output_poll(struct was_simple *w, int timeout_ms)
 
         if (fds[0].revents & POLLIN) {
             if (!w->control.Fill(true) ||
-                !was_simple_control_apply_pending(w) ||
+                !w->ApplyPendingControl() ||
                 w->response.state > was_simple::Response::State::BODY)
                 return WAS_SIMPLE_POLL_ERROR;
         }
@@ -1056,7 +1063,7 @@ was_simple_output_fd(struct was_simple *w)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
-    if (!was_simple_set_response_state_body(w))
+    if (!w->SetResponseStateBody())
         return -1;
 
     return w->output.fd;
@@ -1082,7 +1089,7 @@ was_simple_write(struct was_simple *w, const void *data0, size_t length)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
-    if (!was_simple_set_response_state_body(w) ||
+    if (!w->SetResponseStateBody() ||
         !w->control.Flush())
         return false;
 
@@ -1136,12 +1143,12 @@ was_simple_printf(struct was_simple *w, const char *fmt, ...)
     return was_simple_puts(w, buffer);
 }
 
-static bool
-discard_all_input(struct was_simple *w)
+inline bool
+was_simple::DiscardAllInput()
 {
     while (true) {
         char buffer[4096];
-        ssize_t nbytes = was_simple_read(w, buffer, sizeof(buffer));
+        ssize_t nbytes = was_simple_read(this, buffer, sizeof(buffer));
         if (nbytes <= 0)
             return nbytes == 0;
     }
@@ -1194,13 +1201,13 @@ was_simple_end(struct was_simple *w)
     assert(w->response.state == was_simple::Response::State::END);
 
     /* discard the request body? */
-    if (!discard_all_input(w))
+    if (!w->DiscardAllInput())
         return false;
 
     /* wait for PREMATURE? */
     if (w->input.stopped && !w->input.IsEOF())
         while (!w->input.premature)
-            if (!was_simple_control_read_and_apply(w))
+            if (!w->ReadAndApplyControl())
                 return false;
 
     /* connection is ready to be reused */
