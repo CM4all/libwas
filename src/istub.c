@@ -61,11 +61,25 @@ xios_was_input_read(xiostub *stub, xioexec *exec, void *ctxt)
     return (int)value;
 }
 
+static int
+xios_was_input_close(xiostub *stub, gcc_unused xioexec *exec, void *ctxt)
+{
+    struct was_simple *w = ctxt;
+
+    if (!was_simple_input_close(w)) {
+        xios_iostub_seterror(stub, SYSX_R_ILLEGALSTATE);
+        return -2;
+    }
+
+    return 0;
+}
+
 static const xiodriver xios_was_input_driver = {
     .in = {
         .read = xios_was_input_read,
         .readn = xios_was_input_readn,
     },
+    .close = xios_was_input_close,
 };
 
 xresult
