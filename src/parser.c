@@ -59,7 +59,6 @@ struct was_handle {
     struct apreq_handle_t       handle;
 
     struct was_simple *was;
-    const char *uri;
 
     apr_table_t                 *jar, *args, *body;
     apr_status_t                 jar_status,
@@ -658,6 +657,9 @@ parse_size_t(const char *string, size_t *value_r)
 APREQ_DECLARE(apreq_handle_t *)
 apreq_handle_was(apr_pool_t *pool, struct was_simple *was, const char *uri)
 {
+    /* obsolete parameter */
+    (void)uri;
+
     apr_bucket_alloc_t *ba;
     struct was_handle *req;
     void *data;
@@ -677,7 +679,6 @@ apreq_handle_was(apr_pool_t *pool, struct was_simple *was, const char *uri)
     req->handle.bucket_alloc  = ba;
 
     req->was = was;
-    req->uri = uri;
 
     req->read_limit           = (apr_uint64_t) -1;
 
