@@ -5,7 +5,7 @@ libcm4all-was (1.2) unstable; urgency=low
   * apreq: implement the query string parser
   * istub: implement close()
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Mon, 16 Nov 2015 22:44:52 -0000
 
 libcm4all-was (1.1) unstable; urgency=low
 
