@@ -146,13 +146,8 @@ static void cgi_log_error(const char *file, int line, int level,
 static const char *
 cgi_query_string(apreq_handle_t *handle)
 {
-    /* XXX
     struct was_handle *req = (struct was_handle *)handle;
-
-    return FCGX_GetParam("QUERY_STRING", req->envp);
-    */
-    (void)handle;
-    return NULL;
+    return was_simple_get_query_string(req->was);
 }
 
 static void init_body(apreq_handle_t *handle)
