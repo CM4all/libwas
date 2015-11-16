@@ -1,6 +1,6 @@
 libcm4all-was (1.2) unstable; urgency=low
 
-  * 
+  * simple: fix assertion failure after receiving STOP from web server
 
  --   
 

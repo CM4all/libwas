@@ -975,7 +975,9 @@ was_simple::SetHeader(const char *name, const char *value)
         !SetStatus(HTTP_STATUS_OK))
         return false;
 
-    assert(response.state == Response::State::HEADERS);
+    if (response.state != Response::State::HEADERS)
+        /* too late for sending headers */
+        return false;
 
     const size_t name_length = strlen(name), value_length = strlen(value);
     char *p = (char *)malloc(name_length + 1 + value_length);
