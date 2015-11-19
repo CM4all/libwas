@@ -268,12 +268,25 @@ was_simple_output_fd(struct was_simple *w);
 bool
 was_simple_sent(struct was_simple *w, size_t nbytes);
 
+/**
+ * Write response body data.  If necessary, this function blocks until
+ * all data has been written (or until an error occurs).
+ *
+ * @return true if all data has been written sucessfully, false if
+ * there was an error
+ */
 bool
 was_simple_write(struct was_simple *w, const void *data, size_t length);
 
+/**
+ * Write a NULL-terminated string.
+ */
 bool
 was_simple_puts(struct was_simple *w, const char *s);
 
+/**
+ * Write a formatted string.
+ */
 gcc_printf(2, 3)
 bool
 was_simple_printf(struct was_simple *w, const char *s, ...);
