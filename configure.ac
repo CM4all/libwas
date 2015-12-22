@@ -31,7 +31,7 @@ AX_LIBAPREQ2([], [AC_MSG_ERROR([libapreq2 not found])])
 PKG_CHECK_MODULES([LIBCM4ALL_INLINE], [libcm4all-inline >= 0.3.5],,
 	[AC_MSG_ERROR([libcm4all-inline not found])])
 
-PKG_CHECK_MODULES([LIBHTTP], [libcm4all-http >= 1.2],,
+PKG_CHECK_MODULES([LIBHTTP], [libcm4all-http >= 1.2.5],,
 	[AC_MSG_ERROR([libcm4all-http is required])])
 
 PKG_CHECK_MODULES([LIBCORE], [libcore >= 1.20.5],,

@@ -10,7 +10,7 @@ Build-Depends: debhelper (>= 8.1.3),
  libcm4all-thirdparty-apreq2-dev,
  libcm4all-core-dev (>= 1.20.5),
  libcm4all-inline-dev (>= 0.3.5),
- libcm4all-http-dev (>= 1.2)
+ libcm4all-http-dev (>= 1.2.5)
 Build-Conflicts: libcm4all-was-dev
 Standards-Version: 3.9.1
 Vcs-git: git@dev.intern.cm-ag:max/libwas.git
