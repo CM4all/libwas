@@ -1,4 +1,4 @@
-AC_PREREQ(2.60)
+AC_PREREQ(2.67)
 AC_INIT(CM4all libwas, 1.3, mk@cm4all.com, libcm4all-was)
 AC_COPYRIGHT(Copyright 2010-2015 Content Management AG)
 AC_CONFIG_SRCDIR(src/simple.cxx)
