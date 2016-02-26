@@ -72,20 +72,4 @@ struct was_header {
     uint16_t command;
 };
 
-struct was_packet_data {
-    uint64_t length;
-};
-
-struct was_packet_request {
-    uint32_t id;
-    uint8_t method;
-    uint8_t reserved[3];
-};
-
-struct was_packet_response {
-    uint32_t id;
-    uint16_t status;
-    uint8_t reserved[2];
-};
-
 #endif
