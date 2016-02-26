@@ -1,6 +1,6 @@
 libcm4all-was (1.3) unstable; urgency=low
 
-  * 
+  * parser: adapt to libapreq 2.10
 
  --   
 
