@@ -194,6 +194,20 @@ struct was_simple {
                 ? int64_t(announced - received)
                 : -1;
         }
+
+        /**
+         * Clamp the given size to the number of remaining bytes, if
+         * that is known.
+         */
+        size_t ClampRemaining(size_t size) const {
+            if (known_length) {
+                uint64_t remaining = announced - received;
+                if (size > remaining)
+                    return remaining;
+            }
+
+            return size;
+        }
     } input;
 
     /**
@@ -951,6 +965,10 @@ was_simple::Read(void *buffer, size_t length)
     if (input.premature && !input.ignore_premature)
         return -2;
 
+    length = input.ClampRemaining(length);
+    if (length == 0)
+        return 0;
+
     ssize_t nbytes = read(input.fd, buffer, length);
     if (nbytes < 0 && errno == EAGAIN) {
         /* reading blocks: poll for data (or for control commands and
@@ -958,6 +976,10 @@ was_simple::Read(void *buffer, size_t length)
         switch (PollInput(-1)) {
         case WAS_SIMPLE_POLL_SUCCESS:
             /* time to try again */
+
+            length = input.ClampRemaining(length);
+            assert(length > 0);
+
             nbytes = read(input.fd, buffer, length);
             break;
 
