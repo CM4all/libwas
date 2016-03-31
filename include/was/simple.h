@@ -196,6 +196,14 @@ ssize_t
 was_simple_read(struct was_simple *w, void *buffer, size_t length);
 
 /**
+ * Determine how much request body data is remaining to be read.
+ * Returns -1 if the total size of the request body is unknown.
+ */
+gcc_pure
+int64_t
+was_simple_input_remaining(const struct was_simple *w);
+
+/**
  * The caller announces that he is not interested in any more data
  * from the request body.  The function will tell the web server to
  * stop sending any more, and will discard all data that is still

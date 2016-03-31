@@ -158,6 +158,14 @@ struct was_simple {
         bool IsEOF() const {
             return known_length && received >= announced;
         }
+
+        int64_t GetRemaining() const {
+            assert(!stopped);
+
+            return known_length
+                ? int64_t(announced - received)
+                : -1;
+        }
     } input;
 
     /**
@@ -306,6 +314,11 @@ struct was_simple {
 
     bool Received(size_t nbytes);
     ssize_t Read(void *buffer, size_t length);
+
+    int64_t GetInputRemaining() const {
+        return input.GetRemaining();
+    }
+
     bool CloseInput();
     bool SetStatus(http_status_t status);
     bool SetHeader(const char *name, const char *value);
@@ -927,6 +940,12 @@ ssize_t
 was_simple_read(struct was_simple *w, void *buffer, size_t length)
 {
     return w->Read(buffer, length);
+}
+
+int64_t
+was_simple_input_remaining(const struct was_simple *w)
+{
+    return w->GetInputRemaining();
 }
 
 bool

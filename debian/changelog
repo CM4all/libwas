@@ -1,5 +1,6 @@
 libcm4all-was (1.3) unstable; urgency=low
 
+  * simple: add _input_remaining()
   * apreq: adapt to libapreq 2.10
 
  --   
