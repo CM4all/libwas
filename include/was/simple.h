@@ -200,6 +200,9 @@ was_simple_read(struct was_simple *w, void *buffer, size_t length);
  * from the request body.  The function will tell the web server to
  * stop sending any more, and will discard all data that is still
  * pending.  This needs to be called only if more data is available.
+ *
+ * @return true if all request body has been closed sucessfully, false
+ * if there was an error
  */
 bool
 was_simple_input_close(struct was_simple *w);
