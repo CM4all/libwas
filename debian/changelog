@@ -5,7 +5,7 @@ libcm4all-was (1.4) unstable; urgency=low
   * simple: eliminate unnecessary last read on request body
   * simple: poll control channel after partial read
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Wed, 27 Apr 2016 20:16:01 -0000
 
 libcm4all-was (1.3) unstable; urgency=low
 
