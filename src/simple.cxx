@@ -80,10 +80,30 @@ struct was_simple {
             return send(fd, p, length, MSG_NOSIGNAL);
         }
 
+        bool IsInputBufferFull() const {
+            return input_position >= sizeof(input_buffer);
+        }
+
         bool IsPacketComplete() const {
             return input_position >= sizeof(input_buffer.header) &&
                 input_position >= sizeof(input_buffer.header) +
                 input_buffer.header.length;
+        }
+
+        /**
+         * Can this control packet be ignored if it's too large for
+         * the buffer?
+         */
+        static bool CanDiscardLargePacket(enum was_command cmd) {
+            switch (cmd) {
+            case WAS_COMMAND_HEADER:
+                /* yup, just ignore large headers */
+                return true;
+
+            default:
+                /* nope, this may be fatal - bail out */
+                return false;
+            }
         }
 
         bool Fill(bool dontwait);
@@ -433,7 +453,18 @@ was_simple::Control::Read(bool dontwait)
         if (p != nullptr)
             return p;
 
-        /* TODO: check if buffer is full */
+        if (IsInputBufferFull()) {
+            /* input buffer is full */
+            if (!CanDiscardLargePacket((enum was_command)input_buffer.header.command))
+                /* error out */
+                return nullptr;
+
+            /* discard this packet */
+            const size_t total_size = sizeof(input_buffer.header) +
+                input_buffer.header.length;
+            discard_input = total_size - input_position;
+            input_position = 0;
+        }
 
         if (!Fill(dontwait))
             return nullptr;
