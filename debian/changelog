@@ -3,6 +3,7 @@ libcm4all-was (1.4) unstable; urgency=low
   * simple: fix assertion failure after receiving STOP
   * simple: fix assertion failure on large control packet
   * simple: eliminate unnecessary last read on request body
+  * simple: poll control channel after partial read
 
  --   
 

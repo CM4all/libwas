@@ -310,6 +310,23 @@ struct was_simple {
         } state = State::NONE;
     } response;
 
+    /**
+     * This variable keeps track of a micro-optimization: after the
+     * first partial read, poll the control channel to see if the peer
+     * has sent #WAS_COMMAND_LENGTH or #WAS_COMMAND_STOP meanwhile.
+     */
+    enum class PartialReadState {
+        INITIAL,
+
+        /**
+         * The last read was partial.  Before trying again, poll the
+         * control channel.
+         */
+        PARTIAL,
+
+        FINISHED,
+    } partial_read_state = PartialReadState::INITIAL;
+
     ~was_simple() {
         if (response.state != Response::State::NONE)
             request.Deinit();
@@ -332,6 +349,7 @@ struct was_simple {
 
         request.Deinit();
         response.state = Response::State::NONE;
+        partial_read_state = PartialReadState::INITIAL;
     }
 
     /**
@@ -969,6 +987,25 @@ was_simple::Read(void *buffer, size_t length)
     if (length == 0)
         return 0;
 
+    if (partial_read_state == PartialReadState::PARTIAL) {
+        partial_read_state = PartialReadState::FINISHED;
+
+        switch (PollInput(-1)) {
+        case WAS_SIMPLE_POLL_SUCCESS:
+            break;
+
+        case WAS_SIMPLE_POLL_ERROR:
+            return -1;
+
+        case WAS_SIMPLE_POLL_TIMEOUT:
+        case WAS_SIMPLE_POLL_CLOSED:
+            return -2;
+
+        case WAS_SIMPLE_POLL_END:
+            return 0;
+        }
+    }
+
     ssize_t nbytes = read(input.fd, buffer, length);
     if (nbytes < 0 && errno == EAGAIN) {
         /* reading blocks: poll for data (or for control commands and
@@ -1000,6 +1037,10 @@ was_simple::Read(void *buffer, size_t length)
 
     if (!Received(nbytes))
         return -2;
+
+    if (size_t(nbytes) < length &&
+        partial_read_state == PartialReadState::INITIAL)
+        partial_read_state = PartialReadState::PARTIAL;
 
     return nbytes;
 }
