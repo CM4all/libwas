@@ -1115,12 +1115,12 @@ was_simple::SetResponseStateBody()
         response.state = Response::State::BODY;
     }
 
-    assert(response.state == Response::State::BODY);
-
     if (output.premature) {
         response.state = Response::State::END;
         return false;
     }
+
+    assert(response.state == Response::State::BODY);
 
     return true;
 }
