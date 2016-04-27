@@ -57,6 +57,14 @@ struct was_simple {
 
         size_t input_position = 0;
 
+        /**
+         * The number of bytes to ignore from the input pipe.  This is
+         * used to recover from packets that are too large.  If this
+         * is non-zero, then #input_position must be zero, and the
+         * #input_buffer will be used to discard data.
+         */
+        size_t discard_input = 0;
+
         struct {
             unsigned position = 0;
             char data[4096];
@@ -351,14 +359,21 @@ was_simple::Control::Fill(bool dontwait)
 {
     assert(input_position < sizeof(input_buffer));
 
+    size_t max_read = sizeof(input_buffer) - input_position;
+    if (discard_input > 0 && discard_input < max_read)
+        max_read = discard_input;
+
     ssize_t nbytes = recv(fd,
                           input_buffer.raw + input_position,
-                          sizeof(input_buffer) - input_position,
+                          max_read,
                           dontwait * MSG_DONTWAIT);
     if (nbytes <= 0)
         return false;
 
-    input_position += nbytes;
+    if (discard_input > 0)
+        discard_input -= nbytes;
+    else
+        input_position += nbytes;
     return true;
 }
 
