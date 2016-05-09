@@ -2,7 +2,7 @@ libcm4all-was (1.5) unstable; urgency=low
 
   * simple: fix bogus EAGAIN from was_simple_read()
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Mon, 09 May 2016 09:49:01 -0000
 
 libcm4all-was (1.4) unstable; urgency=low
 
