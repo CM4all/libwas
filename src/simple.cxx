@@ -995,8 +995,6 @@ was_simple::Read(void *buffer, size_t length)
             break;
 
         case WAS_SIMPLE_POLL_ERROR:
-            return -1;
-
         case WAS_SIMPLE_POLL_TIMEOUT:
         case WAS_SIMPLE_POLL_CLOSED:
             return -2;
@@ -1021,8 +1019,6 @@ was_simple::Read(void *buffer, size_t length)
             break;
 
         case WAS_SIMPLE_POLL_ERROR:
-            return -1;
-
         case WAS_SIMPLE_POLL_TIMEOUT:
         case WAS_SIMPLE_POLL_CLOSED:
             return -2;
