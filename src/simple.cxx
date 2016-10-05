@@ -255,6 +255,13 @@ struct was_simple {
             return known_length && sent >= announced;
         }
 
+        /**
+         * Can this much data be sent?
+         */
+        bool CanSend(size_t nbytes) const {
+            return !no_body && (!known_length || sent + nbytes > announced);
+        }
+
         void Sent(size_t nbytes) {
             assert(!known_length || sent <= announced);
             assert(!known_length || nbytes <= announced);
@@ -307,6 +314,12 @@ struct was_simple {
             HEADERS,
             BODY,
             END,
+
+            /**
+             * An unrecoverable error has occurred, and the WAS
+             * connection cannot be reused.
+             */
+            ERROR,
         } state = State::NONE;
     } response;
 
@@ -576,6 +589,10 @@ was_simple::FinishRequest()
 {
     assert(response.state != Response::State::NONE);
 
+    if (response.state == Response::State::ERROR)
+        /* cannot reuse this WAS connection */
+        return false;
+
     // TODO??
     bool result = End();
     ClearRequest();
@@ -746,7 +763,12 @@ bool
 was_simple::ReadAndApplyControl()
 {
     const auto *packet = control.Read(false);
-    return packet != nullptr && ApplyRequestPacket(*packet);
+    if (packet == nullptr) {
+        response.state = Response::State::ERROR;
+        return false;
+    }
+
+    return ApplyRequestPacket(*packet);
 }
 
 inline const char *
@@ -913,8 +935,10 @@ was_simple::PollInput(int timeout_ms)
 
     while (true) {
         int ret = poll(fds, ARRAY_SIZE(fds), timeout_ms);
-        if (ret < 0)
+        if (ret < 0) {
+            response.state = Response::State::ERROR;
             return WAS_SIMPLE_POLL_ERROR;
+        }
 
         if (ret == 0)
             return WAS_SIMPLE_POLL_TIMEOUT;
@@ -944,6 +968,9 @@ was_simple_input_fd(const struct was_simple *w)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
+    if (w->response.state == was_simple::Response::State::ERROR)
+        return -1;
+
     return w->input.fd;
 }
 
@@ -958,7 +985,7 @@ was_simple::Received(size_t nbytes)
     input.received += nbytes;
 
     if (input.known_length && input.received > input.announced) {
-        // TODO: handle error
+        response.state = Response::State::ERROR;
         return false;
     }
 
@@ -976,6 +1003,9 @@ ssize_t
 was_simple::Read(void *buffer, size_t length)
 {
     assert(response.state != Response::State::NONE);
+
+    if (response.state == Response::State::ERROR)
+        return -2;
 
     if (input.no_body || input.IsEOF())
         return 0;
@@ -1028,8 +1058,10 @@ was_simple::Read(void *buffer, size_t length)
         }
     }
 
-    if (nbytes <= 0)
+    if (nbytes <= 0) {
+        response.state = Response::State::ERROR;
         return nbytes < 0 ? -1 : -2;
+    }
 
     if (!Received(nbytes))
         return -2;
@@ -1198,6 +1230,9 @@ was_simple::SetResponseStateBody()
 {
     assert(response.state != Response::State::NONE);
 
+    if (response.state == Response::State::ERROR)
+        return false;
+
     if (response.state == Response::State::STATUS &&
         !SetStatus(HTTP_STATUS_OK))
         return false;
@@ -1259,8 +1294,10 @@ was_simple::PollOutput(int timeout_ms)
 
     while (true) {
         int ret = poll(fds, ARRAY_SIZE(fds), timeout_ms);
-        if (ret < 0)
+        if (ret < 0) {
+            response.state = Response::State::ERROR;
             return WAS_SIMPLE_POLL_ERROR;
+        }
 
         if (ret == 0)
             return WAS_SIMPLE_POLL_TIMEOUT;
@@ -1299,8 +1336,13 @@ was_simple_sent(struct was_simple *w, size_t nbytes)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
-    if (w->output.no_body)
+    if (w->response.state == was_simple::Response::State::ERROR)
         return false;
+
+    if (!w->output.CanSend(nbytes)) {
+        w->response.state = was_simple::Response::State::ERROR;
+        return false;
+    }
 
     if (!w->control.Flush())
         return false;
@@ -1321,6 +1363,7 @@ was_simple::Write(const void *data0, size_t length)
     assert(response.state != Response::State::NONE);
 
     if (!SetResponseStateBody() ||
+        !output.CanSend(length) ||
         !control.Flush())
         return false;
 
@@ -1344,8 +1387,10 @@ was_simple::Write(const void *data0, size_t length)
             }
         }
 
-        if (nbytes <= 0)
+        if (nbytes <= 0) {
+            response.state = Response::State::ERROR;
             return false;
+        }
 
         output.Sent(nbytes);
         data += nbytes;

@@ -1,6 +1,7 @@
 libcm4all-was (1.6) unstable; urgency=low
 
   * simple: convert assertion to runtime check
+  * simple: abandon connection after unrecoverable error
 
  --   
 
