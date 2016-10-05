@@ -1225,9 +1225,7 @@ was_simple::SetResponseStateBody()
         return false;
     }
 
-    assert(response.state == Response::State::BODY);
-
-    return true;
+    return response.state == Response::State::BODY;
 }
 
 enum was_simple_poll_result
