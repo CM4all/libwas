@@ -3,7 +3,7 @@ libcm4all-was (1.6) unstable; urgency=low
   * simple: convert assertion to runtime check
   * simple: abandon connection after unrecoverable error
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Wed, 05 Oct 2016 12:47:08 -0000
 
 libcm4all-was (1.5) unstable; urgency=low
 
