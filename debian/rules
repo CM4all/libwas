@@ -92,7 +92,7 @@ debian/stamp-install: debian/stamp-build
 	@touch $@
 
 # Build architecture-independent files here.
-binary-indep:
+binary-arch: build check install
 	dh_testdir -i
 	dh_testroot -i
 	dh_installdocs -i
