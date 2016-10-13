@@ -259,7 +259,7 @@ struct was_simple {
          * Can this much data be sent?
          */
         bool CanSend(size_t nbytes) const {
-            return !no_body && (!known_length || sent + nbytes > announced);
+            return !no_body && (!known_length || sent + nbytes <= announced);
         }
 
         void Sent(size_t nbytes) {
