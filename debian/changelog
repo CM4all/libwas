@@ -3,7 +3,7 @@ libcm4all-was (1.7) unstable; urgency=low
   * simple: fix assertion failure due to missing error check
   * simple: fix inverted length check
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Thu, 13 Oct 2016 16:23:18 -0000
 
 libcm4all-was (1.6) unstable; urgency=low
 
