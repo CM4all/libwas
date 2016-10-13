@@ -1090,6 +1090,9 @@ was_simple::CloseInput()
 {
     assert(response.state != Response::State::NONE);
 
+    if (response.state == Response::State::ERROR)
+        return false;
+
     /* kludge: send STOP for request body only if another control
        packet will be sent in this function, because otherwise
        beng-proxy's was_stock may be confused by a control packet on
