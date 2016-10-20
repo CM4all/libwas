@@ -1268,6 +1268,12 @@ was_simple::SetResponseStateBody()
     return response.state == Response::State::BODY;
 }
 
+bool
+was_simple_output_begin(struct was_simple *w)
+{
+    return w->SetResponseStateBody();
+}
+
 enum was_simple_poll_result
 was_simple::PollOutput(int timeout_ms)
 {

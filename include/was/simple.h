@@ -249,6 +249,15 @@ bool
 was_simple_set_length(struct was_simple *w, uint64_t length);
 
 /**
+ * Finalize the response headers and announce that a response body
+ * will be sent (though it may turn out to be empty).  This allows the
+ * client (i.e. the calling web server) to start evaluating the
+ * response, even if you don't have any data yet.
+ */
+bool
+was_simple_output_begin(struct was_simple *w);
+
+/**
  * Wait for the response body pipe to become writable.  Handles
  * pending control channel commands before returning.
  *
