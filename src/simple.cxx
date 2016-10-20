@@ -577,8 +577,8 @@ bool
 was_simple::Control::SendHeader(enum was_command command, size_t length)
 {
     struct was_header header = {
-        .command = uint16_t(command),
         .length = uint16_t(length),
+        .command = uint16_t(command),
     };
 
     return Send(&header, sizeof(header));
@@ -926,10 +926,12 @@ was_simple::PollInput(int timeout_ms)
         {
             .fd = control.fd,
             .events = POLLIN,
+            .revents = 0,
         },
         {
             .fd = input.fd,
             .events = POLLIN,
+            .revents = 0,
         },
     };
 
@@ -1288,10 +1290,12 @@ was_simple::PollOutput(int timeout_ms)
         {
             .fd = control.fd,
             .events = POLLIN,
+            .revents = 0,
         },
         {
             .fd = output.fd,
             .events = POLLOUT,
+            .revents = 0,
         },
     };
 
