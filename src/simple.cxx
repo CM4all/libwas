@@ -1472,8 +1472,7 @@ was_simple::End()
 
     /* no response body? */
     if (response.state == Response::State::HEADERS) {
-        if (!control.SendEmpty(WAS_COMMAND_NO_DATA) ||
-            !control.Flush())
+        if (!control.SendEmpty(WAS_COMMAND_NO_DATA))
             return false;
 
         response.state = Response::State::END;
