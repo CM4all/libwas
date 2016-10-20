@@ -404,6 +404,7 @@ struct was_simple {
     bool DiscardAllInput();
 
     bool End();
+    bool Abort();
 };
 
 struct was_simple *
@@ -1571,4 +1572,49 @@ bool
 was_simple_end(struct was_simple *w)
 {
     return w->End();
+}
+
+inline bool
+was_simple::Abort()
+{
+    switch (response.state) {
+    case Response::State::NONE:
+    case Response::State::END:
+        return true;
+
+    case Response::State::STATUS:
+        return SetStatus(HTTP_STATUS_INTERNAL_SERVER_ERROR) && End();
+
+    case Response::State::HEADERS:
+        response.state = Response::State::BODY;
+        /* fall through */
+
+    case Response::State::BODY:
+        if (!output.no_body && !output.premature && !output.IsFull()) {
+            output.premature = true;
+            output.no_body = true;
+
+            if (!control.SendUint64(WAS_COMMAND_PREMATURE, output.sent) ||
+                !control.Flush()) {
+                response.state = Response::State::ERROR;
+                return false;
+            }
+
+            response.state = Response::State::END;
+        }
+
+        return true;
+
+    case Response::State::ERROR:
+        return false;
+    }
+
+    assert(false);
+    gcc_unreachable();
+}
+
+bool
+was_simple_abort(struct was_simple *w)
+{
+    return w->Abort();
 }

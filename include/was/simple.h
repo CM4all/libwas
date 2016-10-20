@@ -319,6 +319,14 @@ was_simple_printf(struct was_simple *w, const char *s, ...);
 bool
 was_simple_end(struct was_simple *w);
 
+/**
+ * Abort the current request by sending an error condition to the
+ * client (i.e. the web server).  This is useful when an error is
+ * found after the status has been sent already.
+ */
+bool
+was_simple_abort(struct was_simple *w);
+
 void
 was_simple_iterator_free(struct was_simple_iterator *i);
 
