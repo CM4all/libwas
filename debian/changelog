@@ -1,6 +1,7 @@
 libcm4all-was (1.8) unstable; urgency=low
 
   * simple: add _output_begin()
+  * simple: flush PREMATURE packets
 
  --   
 

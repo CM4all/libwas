@@ -721,8 +721,8 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         output.premature = true;
         output.no_body = true;
 
-        if (response.state <= Response::State::BODY &&
-            !control.SendUint64(WAS_COMMAND_PREMATURE, output.sent))
+        if (!control.SendUint64(WAS_COMMAND_PREMATURE, output.sent) ||
+            !control.Flush())
             return false;
 
         if (response.state == Response::State::BODY)
