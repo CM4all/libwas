@@ -111,7 +111,6 @@ struct was_simple {
         const struct was_control_packet *Get();
         const struct was_control_packet *Next();
         const struct was_control_packet *Read(bool dontwait);
-        const struct was_control_packet *Expect(enum was_command command);
         bool Flush();
         void Append(const void *p, size_t length);
         bool Send(const void *data, size_t length);
@@ -514,15 +513,6 @@ was_simple::Control::Read(bool dontwait)
         if (!Fill(dontwait))
             return nullptr;
     }
-}
-
-const struct was_control_packet *
-was_simple::Control::Expect(enum was_command command)
-{
-    const auto *p = Read(false);
-    return p != nullptr && p->command == command
-        ? p
-        : nullptr;
 }
 
 bool
