@@ -780,9 +780,26 @@ was_simple::Accept()
 
     assert(response.state == Response::State::NONE);
 
-    const auto *packet = control.Expect(WAS_COMMAND_REQUEST);
-    if (packet == nullptr)
-        return nullptr;
+    while (true) {
+        const auto *packet = control.Read(false);
+        if (packet == nullptr)
+            return nullptr;
+
+        if (packet->command == WAS_COMMAND_REQUEST)
+            /* we got another request: break out of this "while" loop
+               and handle it */
+            break;
+        else if (packet->command == WAS_COMMAND_STOP) {
+            /* this is late, we're already finished sending the
+               response body, but we're doing our best to handle it
+               gracefully */
+            if (!control.SendUint64(WAS_COMMAND_PREMATURE, output.sent) ||
+                !control.Flush())
+                return nullptr;
+        } else
+            /* unexpected packet */
+            return nullptr;
+    }
 
     assert(response.state == Response::State::NONE);
 

@@ -2,6 +2,7 @@ libcm4all-was (1.8) unstable; urgency=low
 
   * simple: add _output_begin()
   * simple: flush PREMATURE packets
+  * simple: handle STOP even after response is finished
 
  --   
 
