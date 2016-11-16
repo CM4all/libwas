@@ -4,7 +4,7 @@ libcm4all-was (1.8) unstable; urgency=low
   * simple: flush PREMATURE packets
   * simple: handle STOP even after response is finished
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Wed, 16 Nov 2016 14:46:02 -0000
 
 libcm4all-was (1.7) unstable; urgency=low
 
