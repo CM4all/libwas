@@ -46,7 +46,6 @@ debian/stamp-configure:
 	autoconf
 
 	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
-		CC=clang CXX=clang++ \
 		CFLAGS="$(CFLAGS)" CXXFLAGS="$(CFLAGS)" \
 		--disable-dependency-tracking \
 		--prefix=/usr \
