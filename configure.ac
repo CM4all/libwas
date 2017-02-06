@@ -46,7 +46,7 @@ AC_SUBST(AM_CXXFLAGS)
 AC_SUBST(AM_CPPFLAGS)
 
 AM_CFLAGS="-Wall -Wextra"
-AM_CXXFLAGS="-std=c++11"
+AM_CXXFLAGS="-std=c++14"
 AM_CPPFLAGS="-D_REENTRANT -D_GNU_SOURCE"
 
 AM_CFLAGS="$AM_CFLAGS -Wmissing-prototypes -Wwrite-strings -Wcast-qual -Wfloat-equal -Wshadow -Wpointer-arith -Wbad-function-cast -Wsign-compare -Waggregate-return -Wmissing-declarations -Wmissing-noreturn -Wpacked -Wredundant-decls -Wnested-externs -Winline -Wdisabled-optimization -Wno-long-long -Wstrict-prototypes -Wundef -pedantic"
