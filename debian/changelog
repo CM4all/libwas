@@ -4,7 +4,7 @@ libcm4all-was (1.9) unstable; urgency=low
   * simple: add _abort()
   * require Debian Jessie or newer
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Mon, 06 Feb 2017 17:05:00 -0000
 
 libcm4all-was (1.8) unstable; urgency=low
 
