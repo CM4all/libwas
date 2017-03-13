@@ -1,6 +1,6 @@
 libcm4all-was (1.10) unstable; urgency=low
 
-  * 
+  * simple: fix double free bug
 
  --   
 

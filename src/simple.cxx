@@ -789,6 +789,12 @@ was_simple::Accept()
             if (!control.SendUint64(WAS_COMMAND_PREMATURE, output.sent) ||
                 !control.Flush()) {
                 response.state = Response::State::ERROR;
+
+                /* need to clear request's attributes or else our
+                   destructor will call Deinit() which will
+                   double-free obsolete string pointers */
+                request.Init();
+
                 return nullptr;
             }
         } else
