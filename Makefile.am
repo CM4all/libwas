@@ -14,6 +14,7 @@ libcm4all_was_simple_la_SOURCES = \
 libcm4all_was_simple_la_CPPFLAGS = $(AM_CPPFLAGS) \
 	$(LIBCM4ALL_INLINE_CFLAGS)
 libcm4all_was_simple_la_LDFLAGS = \
+	$(LIBHTTP_LIBS) \
 	-no-undefined \
 	-Wl,--version-script=$(srcdir)/libcm4all-was-simple.ld \
 	-version-info $(LIBWAS_LIBTOOL_VERSION)

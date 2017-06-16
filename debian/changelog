@@ -1,6 +1,6 @@
 libcm4all-was (1.12) unstable; urgency=low
 
-  * 
+  * simple: link with libcm4all-http
 
  --   
 
