@@ -1,3 +1,9 @@
+libcm4all-was (1.12) unstable; urgency=low
+
+  * 
+
+ --   
+
 libcm4all-was (1.11) unstable; urgency=low
 
   * debian: fix the build of package libcm4all-was-protocol-dev
