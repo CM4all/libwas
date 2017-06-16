@@ -1326,11 +1326,17 @@ was_simple::PollOutput(int timeout_ms)
         return WAS_SIMPLE_POLL_END;
 
     if (!control.Flush() || !ApplyPendingControl() ||
-        !control.Flush() ||
-        response.state > Response::State::BODY) {
+        !control.Flush()) {
         response.state = Response::State::ERROR;
         return WAS_SIMPLE_POLL_ERROR;
     }
+
+    if (response.state > Response::State::BODY)
+        /* throw WAS_SIMPLE_POLL_ERROR even if state==END, which may
+           have been caused by STOP; in that case, the current request
+           must be aborted by the application, but this object may be
+           reused, so don't set state=ERROR */
+        return WAS_SIMPLE_POLL_ERROR;
 
     assert(!output.premature);
 
@@ -1359,11 +1365,18 @@ was_simple::PollOutput(int timeout_ms)
 
         if (fds[0].revents & POLLIN) {
             if (!control.Fill(true) ||
-                !ApplyPendingControl() ||
-                response.state > Response::State::BODY) {
+                !ApplyPendingControl()) {
                 response.state = Response::State::ERROR;
                 return WAS_SIMPLE_POLL_ERROR;
             }
+
+            if (response.state > Response::State::BODY)
+                /* throw WAS_SIMPLE_POLL_ERROR even if state==END,
+                   which may have been caused by STOP; in that case,
+                   the current request must be aborted by the
+                   application, but this object may be reused, so
+                   don't set state=ERROR */
+                return WAS_SIMPLE_POLL_ERROR;
         }
 
         if (fds[1].revents & POLLOUT)
