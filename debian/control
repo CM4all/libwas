@@ -94,3 +94,12 @@ Description: Development files for libwas/xios
  .
  This package contains development files for the libcm4all-core xios
  implementation.
+
+Package: cm4all-was-examples
+Section: non-free/web
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Example programs demonstrating libwas and the WAS protocol
+ libwas is a support library for the Web Application Socket protocol.
+ .
+ This package contains a few example applications.

@@ -45,3 +45,7 @@ tags
 *.out
 *.pdf
 *.toc
+
+/hello
+/random
+/mirror

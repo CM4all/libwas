@@ -58,6 +58,26 @@ pkgconfiglib_DATA = \
 	libcm4all-was-apreq.pc \
 	libcm4all-was-xios.pc
 
+# Examples
+
+wasdir = $(pkglibdir)/was-bin
+was_PROGRAMS = \
+	hello \
+	random \
+	mirror
+
+hello_SOURCES = examples/hello.c
+hello_LDADD = libcm4all-was-simple.la
+hello_CPPFLAGS = $(AM_CPPFLAGS) $(LIBCM4ALL_INLINE_CFLAGS)
+
+random_SOURCES = examples/random.c
+random_LDADD = libcm4all-was-simple.la
+random_CPPFLAGS = $(AM_CPPFLAGS) $(LIBCM4ALL_INLINE_CFLAGS)
+
+mirror_SOURCES = examples/mirror.c
+mirror_LDADD = libcm4all-was-simple.la
+mirror_CPPFLAGS = $(AM_CPPFLAGS) $(LIBCM4ALL_INLINE_CFLAGS)
+
 # Documentation
 
 doc_DATA = doc/was.pdf
