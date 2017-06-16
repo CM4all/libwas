@@ -941,6 +941,10 @@ was_simple::PollInput(int timeout_ms)
         return WAS_SIMPLE_POLL_ERROR;
     }
 
+    if (response.state == Response::State::END)
+        /* this may have been caused by STOP */
+        return WAS_SIMPLE_POLL_ERROR;
+
     /* check "eof" again, as it may have changed after control packets
        have been handled */
     if (input.IsEOF())
@@ -975,6 +979,10 @@ was_simple::PollInput(int timeout_ms)
                 response.state = Response::State::ERROR;
                 return WAS_SIMPLE_POLL_ERROR;
             }
+
+            if (response.state == Response::State::END)
+                /* this may have been caused by STOP */
+                return WAS_SIMPLE_POLL_ERROR;
 
             if (input.IsEOF())
                 return WAS_SIMPLE_POLL_END;
