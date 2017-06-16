@@ -14,7 +14,6 @@ libcm4all_was_simple_la_SOURCES = \
 libcm4all_was_simple_la_CPPFLAGS = $(AM_CPPFLAGS) \
 	$(LIBCM4ALL_INLINE_CFLAGS)
 libcm4all_was_simple_la_LDFLAGS = \
-	$(LIBHTTP_LIBS) \
 	-no-undefined \
 	-Wl,--version-script=$(srcdir)/libcm4all-was-simple.ld \
 	-version-info $(LIBWAS_LIBTOOL_VERSION)
@@ -68,14 +67,17 @@ was_PROGRAMS = \
 
 hello_SOURCES = examples/hello.c
 hello_LDADD = libcm4all-was-simple.la
+hello_LDFLAGS = $(AM_LDFLAGS) $(LIBHTTP_LIBS)
 hello_CPPFLAGS = $(AM_CPPFLAGS) $(LIBCM4ALL_INLINE_CFLAGS)
 
 random_SOURCES = examples/random.c
 random_LDADD = libcm4all-was-simple.la
+random_LDFLAGS = $(AM_LDFLAGS) $(LIBHTTP_LIBS)
 random_CPPFLAGS = $(AM_CPPFLAGS) $(LIBCM4ALL_INLINE_CFLAGS)
 
 mirror_SOURCES = examples/mirror.c
 mirror_LDADD = libcm4all-was-simple.la
+mirror_LDFLAGS = $(AM_LDFLAGS) $(LIBHTTP_LIBS)
 mirror_CPPFLAGS = $(AM_CPPFLAGS) $(LIBCM4ALL_INLINE_CFLAGS)
 
 # Documentation
