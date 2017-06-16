@@ -96,7 +96,7 @@ binary-indep: build check install
 	dh_testroot -i
 	dh_installdocs -i
 	dh_installchangelogs -i
-	dh_install -i --sourcedir=debian/tmp
+	dh_install -i
 	dh_link -i
 	dh_strip -i
 	dh_compress -i -X.pdf
@@ -114,7 +114,7 @@ binary-arch: build check install $(INSTALL_FILES)
 	dh_installdocs -a
 	dh_installman -a
 	dh_installchangelogs -a
-	dh_install -a --sourcedir=debian/tmp
+	dh_install -a
 	dh_link -a
 	#dh_strip -a
 	dh_compress -a
