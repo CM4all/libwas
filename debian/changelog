@@ -4,7 +4,7 @@ libcm4all-was (1.12) unstable; urgency=low
   * examples: new package with example programs
   * debian: require Multi-Arch (Debian Jessie or newer)
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Fri, 16 Jun 2017 21:16:04 -0000
 
 libcm4all-was (1.11) unstable; urgency=low
 
