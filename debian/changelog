@@ -1,6 +1,6 @@
 libcm4all-was (1.13) unstable; urgency=low
 
-  * 
+  * simple: fix dying process after discarding request body
 
  --   
 

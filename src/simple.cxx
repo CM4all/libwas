@@ -941,7 +941,7 @@ was_simple::PollInput(int timeout_ms)
         return WAS_SIMPLE_POLL_ERROR;
     }
 
-    if (response.state == Response::State::END)
+    if (output.premature && response.state == Response::State::END)
         /* this may have been caused by STOP */
         return WAS_SIMPLE_POLL_ERROR;
 
@@ -980,7 +980,7 @@ was_simple::PollInput(int timeout_ms)
                 return WAS_SIMPLE_POLL_ERROR;
             }
 
-            if (response.state == Response::State::END)
+            if (output.premature && response.state == Response::State::END)
                 /* this may have been caused by STOP */
                 return WAS_SIMPLE_POLL_ERROR;
 
