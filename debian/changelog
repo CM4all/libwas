@@ -2,7 +2,7 @@ libcm4all-was (1.13) unstable; urgency=low
 
   * simple: fix dying process after discarding request body
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Tue, 20 Jun 2017 11:33:30 -0000
 
 libcm4all-was (1.12) unstable; urgency=low
 
