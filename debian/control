@@ -19,7 +19,7 @@ Package: libcm4all-was-protocol-dev
 Section: non-free/libdevel
 Architecture: all
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0)
-Replaces: libcm4all-was-dve
+Replaces: libcm4all-was-dev
 Conflicts: libcm4all-was-dev
 Description: Development files for libwas, protocol definition
  libwas is a support library for the Web Application Socket protocol.
