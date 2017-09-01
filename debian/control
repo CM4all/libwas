@@ -1,5 +1,5 @@
 Source: libcm4all-was
-Section: non-free/libs
+Section: libs
 Priority: optional
 Maintainer: Max Kellermann <mk@cm4all.com>
 Build-Depends: debhelper (>= 9),
@@ -16,7 +16,7 @@ Standards-Version: 3.9.1
 Vcs-git: git@dev.intern.cm-ag:max/libwas.git
 
 Package: libcm4all-was-protocol-dev
-Section: non-free/libdevel
+Section: libdevel
 Architecture: all
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0)
 Replaces: libcm4all-was-dev
@@ -36,7 +36,7 @@ Description: WAS server library, "simple" API
  This package contains the "simple" API.
 
 Package: libcm4all-was-simple-dev
-Section: non-free/libdevel
+Section: libdevel
 Architecture: any
 Multi-Arch: same
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
@@ -60,7 +60,7 @@ Description: WAS server library, libapreq2 module
  This package contains the libapreq2 module.
 
 Package: libcm4all-was-apreq-dev
-Section: non-free/libdevel
+Section: libdevel
 Architecture: any
 Multi-Arch: same
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
@@ -82,7 +82,7 @@ Description: WAS server library, xios implementation
  This package contains the libcm4all-core xios implementation.
 
 Package: libcm4all-was-xios-dev
-Section: non-free/libdevel
+Section: libdevel
 Architecture: any
 Multi-Arch: same
 Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
@@ -96,7 +96,7 @@ Description: Development files for libwas/xios
  implementation.
 
 Package: cm4all-was-examples
-Section: non-free/web
+Section: web
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: Example programs demonstrating libwas and the WAS protocol
