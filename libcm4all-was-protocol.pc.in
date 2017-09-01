@@ -1,9 +1,0 @@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-libdir=@libdir@
-includedir=@includedir@
-
-Name: libcm4all-was-protocol
-Description: CM4all WAS protocol library
-Version: @VERSION@
-Cflags: -I${includedir}

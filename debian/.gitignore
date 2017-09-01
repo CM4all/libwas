@@ -1,7 +1,9 @@
 /*.substvars
 /*.debhelper
 /*.log
+/*-stamp
 /files
+/build/
 /tmp/
 /libcm4all-was*-dev/
 /libcm4all-was-*1/

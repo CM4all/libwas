@@ -1,5 +1,6 @@
 libcm4all-was (1.14) unstable; urgency=low
 
+  * build with Meson and Ninja
   * all code is now covered by the Simplified BSD License (BSD-2-Clause)
   * doc: migrate from LaTeX to Sphinx/reStructuredText
 

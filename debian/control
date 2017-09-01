@@ -3,7 +3,7 @@ Section: libs
 Priority: optional
 Maintainer: Max Kellermann <mk@cm4all.com>
 Build-Depends: debhelper (>= 9),
- autoconf (>= 2.67), automake (>= 1.11),
+ meson (>= 0.37),
  g++ (>= 4:4.9),
  doxygen (>= 1.2),
  python3-sphinx,

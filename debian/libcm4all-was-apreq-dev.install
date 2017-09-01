@@ -1,3 +1,3 @@
 usr/include/cm4all/libwas-1/was/apreq.h
-usr/lib/x86_64-linux-gnu/libcm4all-was-apreq.{a,so}
-usr/lib/x86_64-linux-gnu/pkgconfig/libcm4all-was-apreq.pc
+usr/lib/*/libcm4all-was-apreq.so
+usr/lib/*/pkgconfig/libcm4all-was-apreq.pc
