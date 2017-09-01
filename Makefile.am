@@ -82,10 +82,8 @@ mirror_CPPFLAGS = $(AM_CPPFLAGS) $(LIBCM4ALL_INLINE_CFLAGS)
 
 # Documentation
 
-doc_DATA = doc/was.pdf
-doc/was.pdf: $(srcdir)/doc/was.tex
-	@mkdir -p $(@D)
-	pdflatex -output-directory $(@D) $<
-	pdflatex -output-directory $(@D) $<
+doc/_build/html/index.html: doc/index.rst
+	cd doc && sphinx-build -q -b html -d _build/doctrees $(abs_srcdir)/doc _build/html
 
-CLEANFILES = doc/was.pdf
+clean-local:
+	rm -rf doc/_build

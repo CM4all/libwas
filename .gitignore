@@ -40,12 +40,6 @@ tags
 \#*#
 *.pc
 
-*.aux
-*.log
-*.out
-*.pdf
-*.toc
-
 /hello
 /random
 /mirror
