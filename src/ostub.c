@@ -36,8 +36,7 @@
 
 #include <was/ostub.h>
 #include <was/simple.h>
-
-#include <inline/compiler.h>
+#include <was/compiler.h>
 
 #include <xios/iostub.h>
 #include <sysx/result.h>
@@ -47,7 +46,7 @@
 #include <errno.h>
 
 static int
-xios_was_output_write_internal(xiostub *stub, gcc_unused xioexec *exec,
+xios_was_output_write_internal(xiostub *stub, was_gcc_unused xioexec *exec,
                                struct was_simple *w, int fd,
                                const void *buff, size_t size)
 {
@@ -99,7 +98,7 @@ xios_was_output_write_internal(xiostub *stub, gcc_unused xioexec *exec,
 }
 
 static int
-xios_was_output_write(xiostub *stub, gcc_unused xioexec *exec, void *ctxt,
+xios_was_output_write(xiostub *stub, was_gcc_unused xioexec *exec, void *ctxt,
                       int byte)
 {
     struct was_simple *w = ctxt;
@@ -121,7 +120,7 @@ xios_was_output_write(xiostub *stub, gcc_unused xioexec *exec, void *ctxt,
 }
 
 static int
-xios_was_output_writen(xiostub *stub, gcc_unused xioexec *exec, void *ctxt,
+xios_was_output_writen(xiostub *stub, was_gcc_unused xioexec *exec, void *ctxt,
                        const char *buff, xoffs size)
 {
     struct was_simple *w = ctxt;

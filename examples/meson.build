@@ -3,7 +3,6 @@ executable('hello',
   install: true,
   include_directories: inc,
   dependencies: [
-    libinline,
     libhttp,
     libwas_simple_dep
   ])
@@ -13,7 +12,6 @@ executable('random',
   install: true,
   include_directories: inc,
   dependencies: [
-    libinline,
     libhttp,
     libwas_simple_dep
   ])
@@ -23,7 +21,6 @@ executable('mirror',
   install: true,
   include_directories: inc,
   dependencies: [
-    libinline,
     libhttp,
     libwas_simple_dep
   ])

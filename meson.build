@@ -36,7 +36,6 @@ endif
 libapreq2 = declare_dependency(compile_args: '-I' + apreq2_includedir.stdout().strip(),
                                link_args: apreq2_linkld.stdout().strip().split())
 
-libinline = dependency('libcm4all-inline', version: '>= 0.3.5')
 libhttp = dependency('libcm4all-http', version: '>= 1.2.5')
 libcore = dependency('libcore', version: '>= 1.20.5')
 
@@ -84,7 +83,6 @@ libwas_simple = library('cm4all-was-simple',
   ],
   include_directories: inc,
   dependencies: [
-    libinline,
     libhttp,
   ],
   link_args: [
@@ -112,7 +110,6 @@ libwas_apreq = library('cm4all-was-apreq',
   ],
   include_directories: inc,
   dependencies: [
-    libinline,
     libhttp,
     libapr, libapr_util, libapreq2,
     libwas_simple_dep,
@@ -145,7 +142,6 @@ libwas_xios = library('cm4all-was-xios',
   ],
   include_directories: inc,
   dependencies: [
-    libinline,
     libhttp,
     libcore,
     libwas_simple_dep,

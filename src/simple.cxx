@@ -1667,7 +1667,7 @@ was_simple::Abort()
     }
 
     assert(false);
-    gcc_unreachable();
+    was_gcc_unreachable();
 }
 
 bool

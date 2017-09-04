@@ -38,7 +38,7 @@
 #ifndef WAS_SIMPLE_H
 #define WAS_SIMPLE_H
 
-#include <inline/compiler.h>
+#include "compiler.h"
 #include <http/status.h>
 #include <http/method.h>
 
@@ -111,28 +111,28 @@ was_simple_accept(struct was_simple *w);
 /**
  * Returns the method of the current request.
  */
-gcc_pure
+was_gcc_pure
 http_method_t
 was_simple_get_method(const struct was_simple *w);
 
 /**
  * Returns the SCRIPT_NAME attribute.
  */
-gcc_pure
+was_gcc_pure
 const char *
 was_simple_get_script_name(const struct was_simple *w);
 
 /**
  * Returns the PATH_INFO attribute.
  */
-gcc_pure
+was_gcc_pure
 const char *
 was_simple_get_path_info(const struct was_simple *w);
 
 /**
  * Returns the query string.
  */
-gcc_pure
+was_gcc_pure
 const char *
 was_simple_get_query_string(const struct was_simple *w);
 
@@ -143,7 +143,7 @@ was_simple_get_query_string(const struct was_simple *w);
  * returned.  To get all values, call
  * was_simple_get_multi_header() instead.
  */
-gcc_pure
+was_gcc_pure
 const char *
 was_simple_get_header(struct was_simple *w, const char *name);
 
@@ -166,7 +166,7 @@ was_simple_get_header_iterator(struct was_simple *w);
 /**
  * Returns the value of a WAS parameter.
  */
-gcc_pure
+was_gcc_pure
 const char *
 was_simple_get_parameter(struct was_simple *w, const char *name);
 
@@ -180,7 +180,7 @@ was_simple_get_parameter_iterator(struct was_simple *w);
 /**
  * Is a request body present?  (May be empty, though)
  */
-gcc_pure
+was_gcc_pure
 bool
 was_simple_has_body(const struct was_simple *w);
 
@@ -202,7 +202,7 @@ was_simple_input_poll(struct was_simple *w, int timeout_ms);
  * After something has been read successfully, call
  * was_simple_received().
  */
-gcc_pure
+was_gcc_pure
 int
 was_simple_input_fd(const struct was_simple *w);
 
@@ -229,7 +229,7 @@ was_simple_read(struct was_simple *w, void *buffer, size_t length);
  * Determine how much request body data is remaining to be read.
  * Returns -1 if the total size of the request body is unknown.
  */
-gcc_pure
+was_gcc_pure
 int64_t
 was_simple_input_remaining(const struct was_simple *w);
 
@@ -304,7 +304,7 @@ was_simple_output_poll(struct was_simple *w, int timeout_ms);
  * After something has been written successfully, call
  * was_simple_sent().
  */
-gcc_pure
+was_gcc_pure
 int
 was_simple_output_fd(struct was_simple *w);
 
@@ -337,7 +337,7 @@ was_simple_puts(struct was_simple *w, const char *s);
 /**
  * Write a formatted string.
  */
-gcc_printf(2, 3)
+was_gcc_printf(2, 3)
 bool
 was_simple_printf(struct was_simple *w, const char *s, ...);
 
