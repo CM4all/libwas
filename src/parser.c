@@ -27,7 +27,6 @@
 #include <was/apreq.h>
 #include "bucket.h"
 
-#include <inline/compiler.h>
 #include <was/simple.h>
 
 #include <apreq_module.h>
@@ -222,19 +221,8 @@ static void init_body(apreq_handle_t *handle)
     pipe = apr_bucket_was_create(req->was, ba);
     eos = apr_bucket_eos_create(ba);
 
-#if CLANG_OR_GCC_VERSION(4,8)
-#pragma GCC diagnostic push
-    /* work around "cast from 'struct apr_bucket *volatile *' to 'char
-       *' drops volatile qualifier" */
-#pragma GCC diagnostic ignored "-Wcast-qual"
-#endif
-
     APR_BRIGADE_INSERT_HEAD(req->in, pipe);
     APR_BRIGADE_INSERT_TAIL(req->in, eos);
-
-#if CLANG_OR_GCC_VERSION(4,8)
-#pragma GCC diagnostic pop
-#endif
 
     req->body_status = APR_INCOMPLETE;
 
