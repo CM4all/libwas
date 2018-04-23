@@ -436,6 +436,7 @@ static apreq_param_t *cgi_body_get(apreq_handle_t *handle,
             return NULL;
         cgi_read(handle, APREQ_DEFAULT_READ_BLOCK_SIZE);
 
+        /* fall through */
 
     case APR_INCOMPLETE:
 
