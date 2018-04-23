@@ -41,15 +41,15 @@
 
 enum was_command {
     WAS_COMMAND_NOP = 0,
-    WAS_COMMAND_REQUEST,
-    WAS_COMMAND_METHOD,
-    WAS_COMMAND_URI,
-    WAS_COMMAND_SCRIPT_NAME,
-    WAS_COMMAND_PATH_INFO,
-    WAS_COMMAND_QUERY_STRING,
-    WAS_COMMAND_HEADER,
-    WAS_COMMAND_PARAMETER,
-    WAS_COMMAND_STATUS,
+    WAS_COMMAND_REQUEST = 1,
+    WAS_COMMAND_METHOD = 2,
+    WAS_COMMAND_URI = 3,
+    WAS_COMMAND_SCRIPT_NAME = 4,
+    WAS_COMMAND_PATH_INFO = 5,
+    WAS_COMMAND_QUERY_STRING = 6,
+    WAS_COMMAND_HEADER = 7,
+    WAS_COMMAND_PARAMETER = 8,
+    WAS_COMMAND_STATUS = 9,
 
     /**
      * The sender announces that it will not send any body data on the
@@ -57,7 +57,7 @@ enum was_command {
      *
      * Payload: empty.
      */
-    WAS_COMMAND_NO_DATA,
+    WAS_COMMAND_NO_DATA = 10,
 
     /**
      * The sender announces that it will send body data on the pipe.
@@ -67,7 +67,7 @@ enum was_command {
      *
      * Payload: empty.
      */
-    WAS_COMMAND_DATA,
+    WAS_COMMAND_DATA = 11,
 
     /**
      * Follows #WAS_COMMAND_DATA.  This is sent as soon as the sender
@@ -77,13 +77,13 @@ enum was_command {
      *
      * Payload: a 64 bit integer specifying the total body length.
      */
-    WAS_COMMAND_LENGTH,
+    WAS_COMMAND_LENGTH = 12,
 
     /**
      * The recipient is asked to stop sending data on the pipe.  The
      * recipient will reply with a #WAS_COMMAND_PREMATURE.
      */
-    WAS_COMMAND_STOP,
+    WAS_COMMAND_STOP = 13,
 
     /**
      * Reply to #WAS_COMMAND_STOP or generated when an error has
@@ -94,7 +94,7 @@ enum was_command {
      * that has been written to the pipe.  The recipient may use this
      * number to recover, to empty the pipe.
      */
-    WAS_COMMAND_PREMATURE,
+    WAS_COMMAND_PREMATURE = 14,
 };
 
 struct was_header {
