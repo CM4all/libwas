@@ -1444,6 +1444,9 @@ was_simple_sent(struct was_simple *w, size_t nbytes)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
+    if (w->output.premature)
+        return false;
+
     if (w->response.state == was_simple::Response::State::ERROR)
         return false;
 
@@ -1471,6 +1474,9 @@ bool
 was_simple::Write(const void *data0, size_t length)
 {
     assert(response.state != Response::State::NONE);
+
+    if (output.premature)
+        return false;
 
     if (!SetResponseStateBody() ||
         !output.CanSend(length) ||
