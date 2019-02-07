@@ -169,6 +169,7 @@ install_headers(
   'include/was/ostub.h',
   'include/was/protocol.h',
   'include/was/simple.h',
+  'include/was/compiler.h',
   subdir: 'was')
 
 subdir('examples')
