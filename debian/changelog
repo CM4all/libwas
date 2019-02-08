@@ -7,7 +7,7 @@ libcm4all-was (1.14) unstable; urgency=low
   * simple: improved recovery after receiving STOP
   * doc: migrate from LaTeX to Sphinx/reStructuredText
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Fri, 08 Feb 2019 09:17:29 +0100
 
 libcm4all-was (1.13) unstable; urgency=low
 
