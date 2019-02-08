@@ -3,6 +3,7 @@ libcm4all-was (1.14) unstable; urgency=low
   * build with Meson and Ninja
   * all code is now covered by the Simplified BSD License (BSD-2-Clause)
   * eliminate libinline dependency
+  * require libhttp 1.2.6 (-fPIC)
   * simple: improved recovery after receiving STOP
   * doc: migrate from LaTeX to Sphinx/reStructuredText
 

@@ -9,7 +9,7 @@ Build-Depends: debhelper (>= 10~),
  python3-sphinx,
  libcm4all-thirdparty-apreq2-dev,
  libcm4all-core-dev (>= 1.20.5),
- libcm4all-http-dev (>= 1.2.5)
+ libcm4all-http-dev (>= 1.2.6)
 Build-Conflicts: libcm4all-was-dev
 Standards-Version: 3.9.1
 Vcs-git: https://github.com/CM4all/libwas/
