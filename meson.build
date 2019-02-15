@@ -1,4 +1,4 @@
-project('libwas', ['c', 'cpp'], version: '1.14',
+project('libwas', ['c', 'cpp'], version: '1.15',
   default_options: [
     'c_std=c99',
     'cpp_std=c++14'
