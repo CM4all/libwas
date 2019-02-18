@@ -690,6 +690,9 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         return false;
 
     case WAS_COMMAND_METHOD:
+        if (request.finished)
+            return false;
+
         if (packet.length != sizeof(uint32_t))
             return false;
 
@@ -706,27 +709,45 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         break;
 
     case WAS_COMMAND_URI:
+        if (request.finished)
+            return false;
+
         return was_simple_apply_string(&request.uri,
                                        packet.payload, packet.length);
 
     case WAS_COMMAND_SCRIPT_NAME:
+        if (request.finished)
+            return false;
+
         return was_simple_apply_string(&request.script_name,
                                        packet.payload, packet.length);
 
     case WAS_COMMAND_PATH_INFO:
+        if (request.finished)
+            return false;
+
         return was_simple_apply_string(&request.path_info,
                                        packet.payload, packet.length);
 
     case WAS_COMMAND_QUERY_STRING:
+        if (request.finished)
+            return false;
+
         return was_simple_apply_string(&request.query_string,
                                        packet.payload, packet.length);
 
     case WAS_COMMAND_HEADER:
+        if (request.finished)
+            return false;
+
         was_simple_apply_map(request.headers,
                              packet.payload, packet.length);
         break;
 
     case WAS_COMMAND_PARAMETER:
+        if (request.finished)
+            return false;
+
         was_simple_apply_map(request.parameters,
                              packet.payload, packet.length);
         break;
@@ -735,6 +756,9 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         return false;
 
     case WAS_COMMAND_NO_DATA:
+        if (request.finished)
+            return false;
+
         input.announced = 0;
         input.known_length = true;
         input.no_body = true;
@@ -742,12 +766,18 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         break;
 
     case WAS_COMMAND_DATA:
+        if (request.finished)
+            return false;
+
         /* TODO: body? */
         input.no_body = false;
         request.finished = true;
         break;
 
     case WAS_COMMAND_LENGTH:
+        if (!request.finished || input.no_body || input.premature)
+            return false;
+
         if (packet.length != sizeof(length))
             return false;
 
@@ -761,6 +791,9 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         break;
 
     case WAS_COMMAND_STOP:
+        if (!request.finished)
+            return false;
+
         output.no_body = true;
 
         if (!control.SendUint64(WAS_COMMAND_PREMATURE, output.sent) ||
@@ -771,6 +804,9 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         break;
 
     case WAS_COMMAND_PREMATURE:
+        if (!request.finished)
+            return false;
+
         if (packet.length != sizeof(length))
             return false;
 
