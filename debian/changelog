@@ -4,6 +4,7 @@ libcm4all-was (1.15) unstable; urgency=low
   * simple: fix _input_poll() return value after PREMATURE
   * simple: auto-flush after _set_length()
   * enable compiler optimization
+  * unit test
 
  --   
 

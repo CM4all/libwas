@@ -172,5 +172,6 @@ install_headers(
   'include/was/compiler.h',
   subdir: 'was')
 
+subdir('test')
 subdir('examples')
 subdir('doc')
