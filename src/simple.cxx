@@ -764,10 +764,8 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         output.no_body = true;
 
         if (!control.SendUint64(WAS_COMMAND_PREMATURE, output.sent) ||
-            !control.Flush()) {
-            response.state = Response::State::ERROR;
+            !control.Flush())
             return false;
-        }
 
         response.state = Response::State::STOP;
         break;
