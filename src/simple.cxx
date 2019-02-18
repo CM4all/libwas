@@ -1026,6 +1026,9 @@ was_simple::PollInput(int timeout_ms)
                 return WAS_SIMPLE_POLL_ERROR;
             }
 
+            if (input.premature && !input.ignore_premature)
+                return WAS_SIMPLE_POLL_CLOSED;
+
             if (output.premature && response.state == Response::State::END)
                 /* this may have been caused by STOP */
                 return WAS_SIMPLE_POLL_ERROR;
