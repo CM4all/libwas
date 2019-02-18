@@ -767,9 +767,7 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
             return false;
         }
 
-        if (response.state == Response::State::BODY)
-            response.state = Response::State::END;
-
+        response.state = Response::State::END;
         break;
 
     case WAS_COMMAND_PREMATURE:
@@ -990,7 +988,7 @@ was_simple::PollInput(int timeout_ms)
         return WAS_SIMPLE_POLL_ERROR;
     }
 
-    if (output.premature && response.state == Response::State::END)
+    if (output.premature)
         /* this may have been caused by STOP */
         return WAS_SIMPLE_POLL_ERROR;
 
@@ -1032,7 +1030,7 @@ was_simple::PollInput(int timeout_ms)
             if (input.premature && !input.ignore_premature)
                 return WAS_SIMPLE_POLL_CLOSED;
 
-            if (output.premature && response.state == Response::State::END)
+            if (output.premature)
                 /* this may have been caused by STOP */
                 return WAS_SIMPLE_POLL_ERROR;
 
@@ -1195,12 +1193,6 @@ was_simple::CloseInput()
         input.IsEOF())
         return true;
 
-    if (output.premature)
-        /* bail out because we can't send WAS_COMMAND_STOP; this
-           shouldn't happen because our client should always send
-           PREMATURE before STOP, but just to be sure... */
-        return false;
-
     if (!control.SendEmpty(WAS_COMMAND_STOP)) {
         response.state = Response::State::ERROR;
         return false;
@@ -1220,9 +1212,6 @@ bool
 was_simple::SetStatus(http_status_t status)
 {
     assert(response.state != Response::State::NONE);
-
-    if (output.premature)
-        return false;
 
     if (response.state != Response::State::STATUS)
         /* too late for sending the status */
@@ -1248,9 +1237,6 @@ bool
 was_simple::SetHeader(const char *name, const char *value)
 {
     assert(response.state != Response::State::NONE);
-
-    if (output.premature)
-        return false;
 
     if (response.state == Response::State::STATUS &&
         !SetStatus(HTTP_STATUS_OK))
@@ -1374,11 +1360,6 @@ was_simple::SetResponseStateBody()
         }
 
         response.state = Response::State::BODY;
-    }
-
-    if (output.premature) {
-        response.state = Response::State::END;
-        return false;
     }
 
     return response.state == Response::State::BODY;
@@ -1512,9 +1493,6 @@ bool
 was_simple::Write(const void *data0, size_t length)
 {
     assert(response.state != Response::State::NONE);
-
-    if (output.premature)
-        return false;
 
     if (!SetResponseStateBody() ||
         !output.CanSend(length))
@@ -1693,7 +1671,7 @@ was_simple::Abort()
         /* fall through */
 
     case Response::State::BODY:
-        if (!output.no_body && !output.premature && !output.IsFull()) {
+        if (!output.no_body && !output.IsFull()) {
             output.premature = true;
             output.no_body = true;
 
