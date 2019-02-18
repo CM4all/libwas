@@ -338,7 +338,10 @@ TestPrematureDiscardedRequestBody(FakeWasClient &client, struct was_simple *s)
 
     was_simple_end(s);
 
-    client.ExpectControl(WAS_COMMAND_STOP); // TODO: remove
+    /* the library sent WAS_COMMAND_STOP because it didn't yet process
+       the client's WAS_COMMAND_PREMATURE yet */
+    client.ExpectControl(WAS_COMMAND_STOP);
+
     client.ExpectStatus(HTTP_STATUS_NO_CONTENT);
     client.ExpectControl(WAS_COMMAND_NO_DATA);
     client.ExpectControlEmpty();
