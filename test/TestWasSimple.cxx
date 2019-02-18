@@ -319,7 +319,8 @@ TestDiscardedRequestBody(FakeWasClient &client, struct was_simple *s)
 }
 
 static void
-TestPrematureDiscardedRequestBody(FakeWasClient &client, struct was_simple *s)
+TestPrematureDiscardedRequestBody(FakeWasClient &client, struct was_simple *s,
+                                  bool poll)
 {
     client.SendControl(WAS_COMMAND_REQUEST);
     client.SendControl(WAS_COMMAND_URI, __func__);
@@ -336,11 +337,19 @@ TestPrematureDiscardedRequestBody(FakeWasClient &client, struct was_simple *s)
     client.SendOutput("hello");
     client.SendPremature(5);
 
+    if (poll) {
+        auto poll_result = was_simple_input_poll(s, 0);
+        if (poll_result != WAS_SIMPLE_POLL_CLOSED)
+            abort();
+    }
+
     was_simple_end(s);
 
-    /* the library sent WAS_COMMAND_STOP because it didn't yet process
-       the client's WAS_COMMAND_PREMATURE yet */
-    client.ExpectControl(WAS_COMMAND_STOP);
+    if (!poll) {
+        /* the library sent WAS_COMMAND_STOP because it didn't yet
+           process the client's WAS_COMMAND_PREMATURE */
+        client.ExpectControl(WAS_COMMAND_STOP);
+    }
 
     client.ExpectStatus(HTTP_STATUS_NO_CONTENT);
     client.ExpectControl(WAS_COMMAND_NO_DATA);
@@ -617,7 +626,8 @@ TestAll()
     TestEmpty(client, s);
     TestSimple(client, s);
     TestDiscardedRequestBody(client, s);
-    TestPrematureDiscardedRequestBody(client, s);
+    TestPrematureDiscardedRequestBody(client, s, false);
+    TestPrematureDiscardedRequestBody(client, s, true);
     TestPrematureConsumedRequestBody(client, s, false);
     TestPrematureConsumedRequestBody(client, s, true);
     TestStopEarly(client, s);
