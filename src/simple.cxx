@@ -263,11 +263,6 @@ struct was_simple {
         bool known_length;
 
         /**
-         * Was this stream aborted prematurely by the peer?
-         */
-        bool premature;
-
-        /**
          * True if a HTTP status was used that has no response body by
          * definition (e.g. 204 No Content).
          */
@@ -367,6 +362,13 @@ struct was_simple {
             END,
 
             /**
+             * Received #WAS_COMMAND_STOP.  All further calls for the
+             * current request shall be denied.  This will turn into
+             * #NONE and then #STATUS in the next Accept() call.
+             */
+            STOP,
+
+            /**
              * An unrecoverable error has occurred, and the WAS
              * connection cannot be reused.
              */
@@ -426,7 +428,8 @@ struct was_simple {
      * current request
      */
     bool IsControlFinished() const {
-        return response.state == Response::State::END;
+        return response.state == Response::State::END ||
+            response.state == Response::State::STOP;
     }
 
     bool ApplyRequestPacket(const struct was_control_packet &packet);
@@ -758,7 +761,6 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         break;
 
     case WAS_COMMAND_STOP:
-        output.premature = true;
         output.no_body = true;
 
         if (!control.SendUint64(WAS_COMMAND_PREMATURE, output.sent) ||
@@ -767,7 +769,7 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
             return false;
         }
 
-        response.state = Response::State::END;
+        response.state = Response::State::STOP;
         break;
 
     case WAS_COMMAND_PREMATURE:
@@ -859,7 +861,6 @@ was_simple::Accept()
 
     output.sent = 0;
     output.known_length = false;
-    output.premature = false;
 
     response.state = Response::State::STATUS;
 
@@ -988,7 +989,7 @@ was_simple::PollInput(int timeout_ms)
         return WAS_SIMPLE_POLL_ERROR;
     }
 
-    if (output.premature)
+    if (response.state == Response::State::STOP)
         /* this may have been caused by STOP */
         return WAS_SIMPLE_POLL_ERROR;
 
@@ -1030,7 +1031,7 @@ was_simple::PollInput(int timeout_ms)
             if (input.premature && !input.ignore_premature)
                 return WAS_SIMPLE_POLL_CLOSED;
 
-            if (output.premature)
+            if (response.state == Response::State::STOP)
                 /* this may have been caused by STOP */
                 return WAS_SIMPLE_POLL_ERROR;
 
@@ -1376,7 +1377,7 @@ was_simple::PollOutput(int timeout_ms)
 {
     assert(response.state != Response::State::NONE);
 
-    if (output.premature)
+    if (response.state == Response::State::STOP)
         return WAS_SIMPLE_POLL_ERROR;
 
     if (output.IsFull())
@@ -1394,8 +1395,6 @@ was_simple::PollOutput(int timeout_ms)
            must be aborted by the application, but this object may be
            reused, so don't set state=ERROR */
         return WAS_SIMPLE_POLL_ERROR;
-
-    assert(!output.premature);
 
     struct pollfd fds[] = {
         {
@@ -1463,10 +1462,7 @@ was_simple_sent(struct was_simple *w, size_t nbytes)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
-    if (w->output.premature)
-        return false;
-
-    if (w->response.state == was_simple::Response::State::ERROR)
+    if (w->response.state > was_simple::Response::State::BODY)
         return false;
 
     if (!w->output.CanSend(nbytes)) {
@@ -1605,7 +1601,6 @@ was_simple::End()
 
     /* finish the response body? */
     if (response.state == Response::State::BODY) {
-        assert(!output.premature);
         assert(!output.no_body);
 
         if (output.known_length) {
@@ -1629,7 +1624,8 @@ was_simple::End()
         return false;
     }
 
-    assert(response.state == Response::State::END);
+    assert(response.state == Response::State::END ||
+           response.state == Response::State::STOP);
 
     /* discard the request body? */
     if (!DiscardAllInput())
@@ -1660,6 +1656,7 @@ was_simple::Abort()
 {
     switch (response.state) {
     case Response::State::NONE:
+    case Response::State::STOP:
     case Response::State::END:
         return true;
 
@@ -1672,7 +1669,6 @@ was_simple::Abort()
 
     case Response::State::BODY:
         if (!output.no_body && !output.IsFull()) {
-            output.premature = true;
             output.no_body = true;
 
             if (!control.SendUint64(WAS_COMMAND_PREMATURE, output.sent) ||
@@ -1681,7 +1677,7 @@ was_simple::Abort()
                 return false;
             }
 
-            response.state = Response::State::END;
+            response.state = Response::State::STOP;
         }
 
         return true;
