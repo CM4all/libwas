@@ -1028,6 +1028,9 @@ was_simple_input_fd(const struct was_simple *w)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
+    if (w->input.premature && !w->input.ignore_premature)
+        return -1;
+
     if (w->response.state == was_simple::Response::State::ERROR)
         return -1;
 
