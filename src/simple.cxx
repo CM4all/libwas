@@ -1516,8 +1516,10 @@ was_simple::Write(const void *data0, size_t length)
         return false;
 
     if (!SetResponseStateBody() ||
-        !output.CanSend(length) ||
-        !control.Flush()) {
+        !output.CanSend(length))
+        return false;
+
+    if (!control.Flush()) {
         response.state = Response::State::ERROR;
         return false;
     }
