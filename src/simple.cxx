@@ -641,14 +641,8 @@ was_simple_apply_map(std::multimap<std::string, std::string> &map,
     if (p == nullptr || p == payload)
         return false;
 
-#if 0
-    /* doesn't work with libstdc++ < 4.8 */
     map.emplace(std::string(payload, p),
                 std::string(p + 1, payload + length));
-#else
-    map.insert(std::make_pair(std::string(payload, p),
-                              std::string(p + 1, payload + length)));
-#endif
     return true;
 }
 
