@@ -338,10 +338,32 @@ struct was_simple {
 
     struct Response {
         enum class State {
+            /**
+             * No request (yet) in progress.  This will turn into
+             * #STATUS as soon as the next request begins by calling
+             * Accept().
+             */
             NONE,
+
+            /**
+             * The response status is about to be sent.
+             */
             STATUS,
+
+            /**
+             * The response headers are being sent.
+             */
             HEADERS,
+
+            /**
+             * The response body is being sent.
+             */
             BODY,
+
+            /**
+             * The response (body) has ended.  This will turn into
+             * #NONE and then #STATUS in the next Accept() call.
+             */
             END,
 
             /**
