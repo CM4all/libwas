@@ -551,6 +551,60 @@ TestAbort(FakeWasClient &client, struct was_simple *s, bool length)
 }
 
 static void
+TestStopTooLate(FakeWasClient &client, struct was_simple *s)
+{
+    client.SendControl(WAS_COMMAND_REQUEST);
+    client.SendControl(WAS_COMMAND_URI, __func__);
+    client.SendControl(WAS_COMMAND_NO_DATA);
+
+    const char *uri = was_simple_accept(s);
+    if (uri == nullptr || strcmp(uri, __func__) != 0)
+        abort();
+
+    if (was_simple_has_body(s))
+        abort();
+
+    client.ExpectControlEmpty();
+
+    bool success = was_simple_puts(s, "foo");
+    if (!success)
+        abort();
+
+    if (!was_simple_set_length(s, 3))
+        abort();
+
+    client.ExpectStatus(HTTP_STATUS_OK);
+    client.ExpectControl(WAS_COMMAND_DATA);
+    client.ExpectLength(3);
+
+    client.ExpectControlEmpty();
+    client.DiscardAllInput(3);
+
+    client.SendControl(WAS_COMMAND_STOP);
+
+    /* send another request and see if we receive the
+       WAS_COMMAND_PREMATURE from inside was_simple_accept() */
+
+    client.SendControl(WAS_COMMAND_REQUEST);
+    client.SendControl(WAS_COMMAND_URI, __func__);
+    client.SendControl(WAS_COMMAND_NO_DATA);
+
+    uri = was_simple_accept(s);
+    if (uri == nullptr || strcmp(uri, __func__) != 0)
+        abort();
+
+    client.ExpectPremature(3);
+    client.ExpectControlEmpty();
+
+    was_simple_end(s);
+
+    client.ExpectStatus(HTTP_STATUS_NO_CONTENT);
+    client.ExpectControl(WAS_COMMAND_NO_DATA);
+    client.ExpectControlEmpty();
+    client.DiscardAllInput(0);
+}
+
+static void
 TestAll()
 {
     FakeWasClient client;
@@ -568,6 +622,7 @@ TestAll()
     TestStopLate(client, s, true);
     TestAbort(client, s, false);
     TestAbort(client, s, true);
+    TestStopTooLate(client, s);
 
     /* invoke TestEmpty() again just to be sure the WAS connection is
        still alive */
