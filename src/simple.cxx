@@ -1190,6 +1190,9 @@ was_simple::SetStatus(http_status_t status)
 {
     assert(response.state != Response::State::NONE);
 
+    if (output.premature)
+        return false;
+
     if (response.state != Response::State::STATUS)
         /* too late for sending the status */
         return false;
@@ -1214,6 +1217,9 @@ bool
 was_simple::SetHeader(const char *name, const char *value)
 {
     assert(response.state != Response::State::NONE);
+
+    if (output.premature)
+        return false;
 
     if (response.state == Response::State::STATUS &&
         !SetStatus(HTTP_STATUS_OK))
