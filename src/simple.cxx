@@ -1167,6 +1167,12 @@ was_simple::CloseInput()
         input.IsEOF())
         return true;
 
+    if (output.premature)
+        /* bail out because we can't send WAS_COMMAND_STOP; this
+           shouldn't happen because our client should always send
+           PREMATURE before STOP, but just to be sure... */
+        return false;
+
     if (!control.SendEmpty(WAS_COMMAND_STOP)) {
         response.state = Response::State::ERROR;
         return false;
