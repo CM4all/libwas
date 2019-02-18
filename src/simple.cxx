@@ -979,7 +979,7 @@ was_simple::PollInput(int timeout_ms)
         return WAS_SIMPLE_POLL_END;
 
     if (input.premature && !input.ignore_premature)
-        return WAS_SIMPLE_POLL_ERROR;
+        return WAS_SIMPLE_POLL_CLOSED;
 
     if (!control.Flush() || !ApplyPendingControl() ||
         !control.Flush()) {
