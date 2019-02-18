@@ -975,11 +975,11 @@ was_simple::PollInput(int timeout_ms)
 {
     assert(response.state != Response::State::NONE);
 
-    if (input.no_body || input.IsEOF())
-        return WAS_SIMPLE_POLL_END;
-
     if (input.premature && !input.ignore_premature)
         return WAS_SIMPLE_POLL_CLOSED;
+
+    if (input.no_body || input.IsEOF())
+        return WAS_SIMPLE_POLL_END;
 
     if (!control.Flush() || !ApplyPendingControl() ||
         !control.Flush()) {
@@ -1095,11 +1095,11 @@ was_simple::Read(void *buffer, size_t length)
     if (response.state == Response::State::ERROR)
         return -2;
 
-    if (input.no_body || input.IsEOF())
-        return 0;
-
     if (input.premature && !input.ignore_premature)
         return -2;
+
+    if (input.no_body || input.IsEOF())
+        return 0;
 
     length = input.ClampRemaining(length);
     if (length == 0)
