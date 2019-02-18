@@ -440,6 +440,9 @@ struct was_simple {
     ssize_t Read(void *buffer, size_t length);
 
     int64_t GetInputRemaining() const {
+        if (input.premature)
+            return -1;
+
         return input.GetRemaining();
     }
 
