@@ -846,7 +846,7 @@ was_simple::Accept()
 
                 return nullptr;
             }
-        } else
+        } else if (packet->command != WAS_COMMAND_NOP)
             /* unexpected packet */
             return nullptr;
     }
