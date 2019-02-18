@@ -7,7 +7,7 @@ libcm4all-was (1.15) unstable; urgency=low
   * enable compiler optimization
   * unit test
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Mon, 18 Feb 2019 23:55:29 +0100
 
 libcm4all-was (1.14) unstable; urgency=low
 
