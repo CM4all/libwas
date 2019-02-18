@@ -95,7 +95,7 @@ libwas_simple = library('cm4all-was-simple',
 libwas_simple_dep = declare_dependency(link_with: libwas_simple)
 
 pkg_mod.generate(
-  libwas_simple,
+  libraries: libwas_simple,
   version: meson.project_version(),
   name: 'libcm4all-was-simple',
   description: 'CM4all simple WAS server library',
