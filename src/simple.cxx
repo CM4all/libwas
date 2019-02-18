@@ -794,6 +794,15 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         if (!request.finished)
             return false;
 
+        if (response.state == Response::State::STOP) {
+            /* if we're already at this state, then probably because
+               was_simple_abort() was called - and
+               WAS_COMMAND_PREMATURE has already been sent, so we can
+               silently ignore this control packet */
+            assert(output.no_body);
+            return true;
+        }
+
         output.no_body = true;
 
         if (!control.SendUint64(WAS_COMMAND_PREMATURE, output.sent) ||
