@@ -1322,7 +1322,8 @@ was_simple::SetLength(uint64_t length)
 
     assert(response.state == Response::State::BODY);
 
-    if (!control.SendUint64(WAS_COMMAND_LENGTH, length)) {
+    if (!control.SendUint64(WAS_COMMAND_LENGTH, length) ||
+        !control.Flush()) {
         response.state = Response::State::ERROR;
         return false;
     }
