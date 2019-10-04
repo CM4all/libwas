@@ -10,6 +10,7 @@ MESON_OPTIONS = \
 	--buildtype $(MESON_BUILDTYPE) \
 	--prefix=/usr \
 	--includedir=include/cm4all/libwas-1 \
+	-Ddocumentation=enabled \
 	--werror
 
 %:
