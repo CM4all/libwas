@@ -99,7 +99,7 @@ pkg_mod.generate(
   version: meson.project_version(),
   name: 'libcm4all-was-simple',
   description: 'CM4all simple WAS server library',
-  requires: ['libcm4all-http >= 1.2.5'],
+  requires: [libhttp],
 )
 
 libwas_apreq = library('cm4all-was-apreq',
@@ -131,7 +131,7 @@ pkg_mod.generate(
   version: meson.project_version(),
   name: 'libcm4all-was-apreq',
   description: 'CM4all WAS server library, request parser',
-  requires: ['libcm4all-was-simple'],
+  requires: [libwas_simple],
 )
 
 libwas_xios = library('cm4all-was-xios',
@@ -160,7 +160,7 @@ pkg_mod.generate(
   version: meson.project_version(),
   name: 'libcm4all-was-xios',
   description: 'CM4all WAS server library, libcore xios implementation',
-  requires: ['libcm4all-was-simple', 'libcore'],
+  requires: [libwas_simple, libcore],
 )
 
 install_headers(
