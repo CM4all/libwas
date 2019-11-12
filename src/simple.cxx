@@ -465,18 +465,6 @@ struct was_simple {
     bool Abort();
 };
 
-struct was_simple *
-was_simple_new(void)
-{
-    return new was_simple();
-}
-
-void
-was_simple_free(struct was_simple *w)
-{
-    delete w;
-}
-
 bool
 was_simple::Control::Fill(bool dontwait)
 {
@@ -928,6 +916,580 @@ was_simple::Accept()
     return request.uri;
 }
 
+enum was_simple_poll_result
+was_simple::PollInput(int timeout_ms)
+{
+    assert(response.state != Response::State::NONE);
+
+    if (input.premature && !input.ignore_premature)
+        return WAS_SIMPLE_POLL_CLOSED;
+
+    if (input.no_body || input.IsEOF())
+        return WAS_SIMPLE_POLL_END;
+
+    if (!control.Flush() || !ApplyPendingControl() ||
+        !control.Flush()) {
+        response.state = Response::State::ERROR;
+        return WAS_SIMPLE_POLL_ERROR;
+    }
+
+    if (response.state == Response::State::STOP)
+        /* this may have been caused by STOP */
+        return WAS_SIMPLE_POLL_ERROR;
+
+    /* check "eof" again, as it may have changed after control packets
+       have been handled */
+    if (input.IsEOF())
+        return WAS_SIMPLE_POLL_END;
+
+    struct pollfd fds[] = {
+        {
+            .fd = control.fd,
+            .events = POLLIN,
+            .revents = 0,
+        },
+        {
+            .fd = input.fd,
+            .events = POLLIN,
+            .revents = 0,
+        },
+    };
+
+    while (true) {
+        int ret = poll(fds, ARRAY_SIZE(fds), timeout_ms);
+        if (ret < 0) {
+            response.state = Response::State::ERROR;
+            return WAS_SIMPLE_POLL_ERROR;
+        }
+
+        if (ret == 0)
+            return WAS_SIMPLE_POLL_TIMEOUT;
+
+        if (fds[0].revents & POLLIN) {
+            if (!control.Fill(true) ||
+                !ApplyPendingControl()) {
+                response.state = Response::State::ERROR;
+                return WAS_SIMPLE_POLL_ERROR;
+            }
+
+            if (input.premature && !input.ignore_premature)
+                return WAS_SIMPLE_POLL_CLOSED;
+
+            if (response.state == Response::State::STOP)
+                /* this may have been caused by STOP */
+                return WAS_SIMPLE_POLL_ERROR;
+
+            if (input.IsEOF())
+                return WAS_SIMPLE_POLL_END;
+        }
+
+        if (fds[1].revents & POLLIN)
+            return WAS_SIMPLE_POLL_SUCCESS;
+    }
+}
+
+bool
+was_simple::Received(size_t nbytes)
+{
+    assert(response.state != Response::State::NONE);
+
+    if (input.premature && !input.ignore_premature)
+        return false;
+
+    input.received += nbytes;
+
+    if (input.known_length && input.received > input.announced) {
+        response.state = Response::State::ERROR;
+        return false;
+    }
+
+    /* TODO??? */
+    return true;
+}
+
+ssize_t
+was_simple::Read(void *buffer, size_t length)
+{
+    assert(response.state != Response::State::NONE);
+
+    if (response.state == Response::State::ERROR)
+        return -2;
+
+    if (input.premature && !input.ignore_premature)
+        return -2;
+
+    if (input.no_body || input.IsEOF())
+        return 0;
+
+    length = input.ClampRemaining(length);
+    if (length == 0)
+        return 0;
+
+    if (partial_read_state == PartialReadState::PARTIAL) {
+        partial_read_state = PartialReadState::FINISHED;
+
+        switch (PollInput(-1)) {
+        case WAS_SIMPLE_POLL_SUCCESS:
+            break;
+
+        case WAS_SIMPLE_POLL_ERROR:
+        case WAS_SIMPLE_POLL_TIMEOUT:
+        case WAS_SIMPLE_POLL_CLOSED:
+            return -2;
+
+        case WAS_SIMPLE_POLL_END:
+            return 0;
+        }
+    }
+
+    ssize_t nbytes = read(input.fd, buffer, length);
+    if (nbytes < 0 && errno == EAGAIN) {
+        /* reading blocks: poll for data (or for control commands and
+           handle them) */
+        switch (PollInput(-1)) {
+        case WAS_SIMPLE_POLL_SUCCESS:
+            /* time to try again */
+
+            length = input.ClampRemaining(length);
+            assert(length > 0);
+
+            nbytes = read(input.fd, buffer, length);
+            break;
+
+        case WAS_SIMPLE_POLL_ERROR:
+        case WAS_SIMPLE_POLL_TIMEOUT:
+        case WAS_SIMPLE_POLL_CLOSED:
+            return -2;
+
+        case WAS_SIMPLE_POLL_END:
+            return 0;
+        }
+    }
+
+    if (nbytes <= 0) {
+        response.state = Response::State::ERROR;
+        return nbytes < 0 ? -1 : -2;
+    }
+
+    if (!Received(nbytes))
+        return -2;
+
+    if (size_t(nbytes) < length &&
+        partial_read_state == PartialReadState::INITIAL)
+        partial_read_state = PartialReadState::PARTIAL;
+
+    return nbytes;
+}
+
+bool
+was_simple::CloseInput()
+{
+    assert(response.state != Response::State::NONE);
+
+    if (response.state == Response::State::ERROR)
+        return false;
+
+    /* kludge: send STOP for request body only if another control
+       packet will be sent in this function, because otherwise
+       beng-proxy's was_stock may be confused by a control packet on
+       an idle WAS control connection */
+    if (IsControlFinished())
+        return true;
+
+    if (input.no_body || input.stopped || input.premature ||
+        input.IsEOF())
+        return true;
+
+    if (!control.SendEmpty(WAS_COMMAND_STOP)) {
+        response.state = Response::State::ERROR;
+        return false;
+    }
+
+    input.stopped = true;
+    return true;
+}
+
+bool
+was_simple::SetStatus(http_status_t status)
+{
+    assert(response.state != Response::State::NONE);
+
+    if (response.state != Response::State::STATUS)
+        /* too late for sending the status */
+        return false;
+
+    if (!control.SendPacket(WAS_COMMAND_STATUS, &status, sizeof(status))) {
+        response.state = Response::State::ERROR;
+        return false;
+    }
+
+    response.state = Response::State::HEADERS;
+    output.no_body = http_status_is_empty(status);
+    return true;
+}
+
+inline bool
+was_simple::SetHeader(const char *name, const char *value)
+{
+    assert(response.state != Response::State::NONE);
+
+    if (response.state == Response::State::STATUS &&
+        !SetStatus(HTTP_STATUS_OK))
+        return false;
+
+    if (response.state != Response::State::HEADERS)
+        /* too late for sending headers */
+        return false;
+
+    const size_t name_length = strlen(name), value_length = strlen(value);
+    char *p = (char *)malloc(name_length + 1 + value_length);
+    char *q = (char *)mempcpy(p, name, name_length);
+    *q++ = '=';
+    q = (char *)mempcpy(q, value, value_length);
+
+    bool success = control.SendPacket(WAS_COMMAND_HEADER, p, q - p);
+    if (!success)
+        response.state = Response::State::ERROR;
+
+    free(p);
+    return success;
+}
+
+bool
+was_simple::SetLength(uint64_t length)
+{
+    assert(response.state != Response::State::NONE);
+
+    if (output.no_body)
+        return false;
+
+    assert(length >= output.sent);
+
+    if (output.known_length) {
+        assert(length == output.known_length);
+        return true;
+    }
+
+    if (response.state == Response::State::STATUS &&
+        !SetStatus(HTTP_STATUS_OK))
+        return false;
+
+    if (response.state == Response::State::HEADERS) {
+        if (!control.SendEmpty(WAS_COMMAND_DATA)) {
+            response.state = Response::State::ERROR;
+            return false;
+        }
+
+        response.state = Response::State::BODY;
+    }
+
+    assert(response.state == Response::State::BODY);
+
+    if (!control.SendUint64(WAS_COMMAND_LENGTH, length) ||
+        !control.Flush()) {
+        response.state = Response::State::ERROR;
+        return false;
+    }
+
+    output.announced = length;
+    output.known_length = true;
+
+    if (output.IsFull())
+        response.state = Response::State::END;
+
+    return true;
+}
+
+bool
+was_simple::SetResponseStateBody()
+{
+    assert(response.state != Response::State::NONE);
+
+    if (response.state == Response::State::ERROR)
+        return false;
+
+    if (response.state == Response::State::STATUS &&
+        !SetStatus(HTTP_STATUS_OK))
+        return false;
+
+    if (response.state == Response::State::HEADERS) {
+        if (output.no_body) {
+            response.state = Response::State::END;
+            if (!control.SendEmpty(WAS_COMMAND_NO_DATA))
+                response.state = Response::State::ERROR;
+            return false;
+        }
+
+        if (!control.SendEmpty(WAS_COMMAND_DATA)) {
+            response.state = Response::State::ERROR;
+            return false;
+        }
+
+        if (output.IsFull()) {
+            response.state = Response::State::END;
+            return false;
+        }
+
+        response.state = Response::State::BODY;
+    }
+
+    return response.state == Response::State::BODY;
+}
+
+enum was_simple_poll_result
+was_simple::PollOutput(int timeout_ms)
+{
+    assert(response.state != Response::State::NONE);
+
+    if (response.state == Response::State::STOP)
+        return WAS_SIMPLE_POLL_ERROR;
+
+    if (output.IsFull())
+        return WAS_SIMPLE_POLL_END;
+
+    if (!control.Flush() || !ApplyPendingControl() ||
+        !control.Flush()) {
+        response.state = Response::State::ERROR;
+        return WAS_SIMPLE_POLL_ERROR;
+    }
+
+    if (response.state > Response::State::BODY)
+        /* throw WAS_SIMPLE_POLL_ERROR even if state==END, which may
+           have been caused by STOP; in that case, the current request
+           must be aborted by the application, but this object may be
+           reused, so don't set state=ERROR */
+        return WAS_SIMPLE_POLL_ERROR;
+
+    struct pollfd fds[] = {
+        {
+            .fd = control.fd,
+            .events = POLLIN,
+            .revents = 0,
+        },
+        {
+            .fd = output.fd,
+            .events = POLLOUT,
+            .revents = 0,
+        },
+    };
+
+    while (true) {
+        int ret = poll(fds, ARRAY_SIZE(fds), timeout_ms);
+        if (ret < 0) {
+            response.state = Response::State::ERROR;
+            return WAS_SIMPLE_POLL_ERROR;
+        }
+
+        if (ret == 0)
+            return WAS_SIMPLE_POLL_TIMEOUT;
+
+        if (fds[0].revents & POLLIN) {
+            if (!control.Fill(true) ||
+                !ApplyPendingControl()) {
+                response.state = Response::State::ERROR;
+                return WAS_SIMPLE_POLL_ERROR;
+            }
+
+            if (response.state > Response::State::BODY)
+                /* throw WAS_SIMPLE_POLL_ERROR even if state==END,
+                   which may have been caused by STOP; in that case,
+                   the current request must be aborted by the
+                   application, but this object may be reused, so
+                   don't set state=ERROR */
+                return WAS_SIMPLE_POLL_ERROR;
+        }
+
+        if (fds[1].revents & POLLOUT)
+            return WAS_SIMPLE_POLL_SUCCESS;
+    }
+}
+
+inline bool
+was_simple::Write(const void *data0, size_t length)
+{
+    assert(response.state != Response::State::NONE);
+
+    if (!SetResponseStateBody() ||
+        !output.CanSend(length))
+        return false;
+
+    if (!control.Flush()) {
+        response.state = Response::State::ERROR;
+        return false;
+    }
+
+    const char *data = (const char *)data0;
+
+    while (length > 0) {
+        ssize_t nbytes = write(output.fd, data, length);
+        if (nbytes < 0 && errno == EAGAIN) {
+            /* writing blocks: poll for the pipe to become writable
+               again (or for control commands and handle them) */
+            switch (PollOutput(-1)) {
+            case WAS_SIMPLE_POLL_SUCCESS:
+                /* time to try again */
+                continue;
+
+            case WAS_SIMPLE_POLL_ERROR:
+            case WAS_SIMPLE_POLL_TIMEOUT:
+            case WAS_SIMPLE_POLL_CLOSED:
+            case WAS_SIMPLE_POLL_END:
+                return false;
+            }
+        }
+
+        if (nbytes <= 0) {
+            response.state = Response::State::ERROR;
+            return false;
+        }
+
+        output.Sent(nbytes);
+        data += nbytes;
+        length -= nbytes;
+
+        if (output.IsFull()) {
+            response.state = Response::State::END;
+            if (length > 0)
+                return false;
+        }
+    }
+
+    return true;
+}
+
+inline bool
+was_simple::DiscardAllInput()
+{
+    while (true) {
+        char buffer[4096];
+        ssize_t nbytes = Read(buffer, sizeof(buffer));
+        if (nbytes <= 0)
+            return nbytes == 0;
+    }
+}
+
+bool
+was_simple::End()
+{
+    assert(response.state != Response::State::NONE);
+
+    input.ignore_premature = true;
+
+    if (!CloseInput())
+        return false;
+
+    /* generate a status code? */
+    if (response.state == Response::State::STATUS &&
+        !SetStatus(HTTP_STATUS_NO_CONTENT))
+        return false;
+
+    /* no response body? */
+    if (response.state == Response::State::HEADERS) {
+        if (!control.SendEmpty(WAS_COMMAND_NO_DATA)) {
+            response.state = Response::State::ERROR;
+            return false;
+        }
+
+        response.state = Response::State::END;
+    }
+
+    /* finish the response body? */
+    if (response.state == Response::State::BODY) {
+        assert(!output.no_body);
+
+        if (output.known_length) {
+            assert(output.sent < output.announced);
+
+            if (!control.SendUint64(WAS_COMMAND_PREMATURE, output.sent)) {
+                response.state = Response::State::ERROR;
+                return false;
+            }
+
+            response.state = Response::State::END;
+        } else {
+            if (!SetLength(output.sent))
+                return false;
+        }
+    }
+
+    /* finish the control channel? */
+    if (!control.Flush()) {
+        response.state = Response::State::ERROR;
+        return false;
+    }
+
+    assert(response.state == Response::State::END ||
+           response.state == Response::State::STOP);
+
+    /* discard the request body? */
+    if (!DiscardAllInput())
+        return false;
+
+    /* wait for PREMATURE? */
+    if (input.stopped && !input.IsEOF()) {
+        while (!input.premature) {
+            if (!ReadAndApplyControl()) {
+                response.state = Response::State::ERROR;
+                return false;
+            }
+        }
+    }
+
+    /* connection is ready to be reused */
+    return true;
+}
+
+inline bool
+was_simple::Abort()
+{
+    switch (response.state) {
+    case Response::State::NONE:
+    case Response::State::STOP:
+    case Response::State::END:
+        return true;
+
+    case Response::State::STATUS:
+        return SetStatus(HTTP_STATUS_INTERNAL_SERVER_ERROR) && End();
+
+    case Response::State::HEADERS:
+        response.state = Response::State::BODY;
+        /* fall through */
+
+    case Response::State::BODY:
+        if (!output.no_body && !output.IsFull()) {
+            output.no_body = true;
+
+            if (!control.SendUint64(WAS_COMMAND_PREMATURE, output.sent) ||
+                !control.Flush()) {
+                response.state = Response::State::ERROR;
+                return false;
+            }
+
+            response.state = Response::State::STOP;
+        }
+
+        return true;
+
+    case Response::State::ERROR:
+        return false;
+    }
+
+    assert(false);
+    was_gcc_unreachable();
+}
+
+struct was_simple *
+was_simple_new(void)
+{
+    return new was_simple();
+}
+
+void
+was_simple_free(struct was_simple *w)
+{
+    delete w;
+}
+
 const char *
 was_simple_accept(struct was_simple *w)
 {
@@ -1016,78 +1578,6 @@ was_simple_has_body(const struct was_simple *w)
 }
 
 enum was_simple_poll_result
-was_simple::PollInput(int timeout_ms)
-{
-    assert(response.state != Response::State::NONE);
-
-    if (input.premature && !input.ignore_premature)
-        return WAS_SIMPLE_POLL_CLOSED;
-
-    if (input.no_body || input.IsEOF())
-        return WAS_SIMPLE_POLL_END;
-
-    if (!control.Flush() || !ApplyPendingControl() ||
-        !control.Flush()) {
-        response.state = Response::State::ERROR;
-        return WAS_SIMPLE_POLL_ERROR;
-    }
-
-    if (response.state == Response::State::STOP)
-        /* this may have been caused by STOP */
-        return WAS_SIMPLE_POLL_ERROR;
-
-    /* check "eof" again, as it may have changed after control packets
-       have been handled */
-    if (input.IsEOF())
-        return WAS_SIMPLE_POLL_END;
-
-    struct pollfd fds[] = {
-        {
-            .fd = control.fd,
-            .events = POLLIN,
-            .revents = 0,
-        },
-        {
-            .fd = input.fd,
-            .events = POLLIN,
-            .revents = 0,
-        },
-    };
-
-    while (true) {
-        int ret = poll(fds, ARRAY_SIZE(fds), timeout_ms);
-        if (ret < 0) {
-            response.state = Response::State::ERROR;
-            return WAS_SIMPLE_POLL_ERROR;
-        }
-
-        if (ret == 0)
-            return WAS_SIMPLE_POLL_TIMEOUT;
-
-        if (fds[0].revents & POLLIN) {
-            if (!control.Fill(true) ||
-                !ApplyPendingControl()) {
-                response.state = Response::State::ERROR;
-                return WAS_SIMPLE_POLL_ERROR;
-            }
-
-            if (input.premature && !input.ignore_premature)
-                return WAS_SIMPLE_POLL_CLOSED;
-
-            if (response.state == Response::State::STOP)
-                /* this may have been caused by STOP */
-                return WAS_SIMPLE_POLL_ERROR;
-
-            if (input.IsEOF())
-                return WAS_SIMPLE_POLL_END;
-        }
-
-        if (fds[1].revents & POLLIN)
-            return WAS_SIMPLE_POLL_SUCCESS;
-    }
-}
-
-enum was_simple_poll_result
 was_simple_input_poll(struct was_simple *w, int timeout_ms)
 {
     return w->PollInput(timeout_ms);
@@ -1108,102 +1598,9 @@ was_simple_input_fd(const struct was_simple *w)
 }
 
 bool
-was_simple::Received(size_t nbytes)
-{
-    assert(response.state != Response::State::NONE);
-
-    if (input.premature && !input.ignore_premature)
-        return false;
-
-    input.received += nbytes;
-
-    if (input.known_length && input.received > input.announced) {
-        response.state = Response::State::ERROR;
-        return false;
-    }
-
-    /* TODO??? */
-    return true;
-}
-
-bool
 was_simple_received(struct was_simple *w, size_t nbytes)
 {
     return w->Received(nbytes);
-}
-
-ssize_t
-was_simple::Read(void *buffer, size_t length)
-{
-    assert(response.state != Response::State::NONE);
-
-    if (response.state == Response::State::ERROR)
-        return -2;
-
-    if (input.premature && !input.ignore_premature)
-        return -2;
-
-    if (input.no_body || input.IsEOF())
-        return 0;
-
-    length = input.ClampRemaining(length);
-    if (length == 0)
-        return 0;
-
-    if (partial_read_state == PartialReadState::PARTIAL) {
-        partial_read_state = PartialReadState::FINISHED;
-
-        switch (PollInput(-1)) {
-        case WAS_SIMPLE_POLL_SUCCESS:
-            break;
-
-        case WAS_SIMPLE_POLL_ERROR:
-        case WAS_SIMPLE_POLL_TIMEOUT:
-        case WAS_SIMPLE_POLL_CLOSED:
-            return -2;
-
-        case WAS_SIMPLE_POLL_END:
-            return 0;
-        }
-    }
-
-    ssize_t nbytes = read(input.fd, buffer, length);
-    if (nbytes < 0 && errno == EAGAIN) {
-        /* reading blocks: poll for data (or for control commands and
-           handle them) */
-        switch (PollInput(-1)) {
-        case WAS_SIMPLE_POLL_SUCCESS:
-            /* time to try again */
-
-            length = input.ClampRemaining(length);
-            assert(length > 0);
-
-            nbytes = read(input.fd, buffer, length);
-            break;
-
-        case WAS_SIMPLE_POLL_ERROR:
-        case WAS_SIMPLE_POLL_TIMEOUT:
-        case WAS_SIMPLE_POLL_CLOSED:
-            return -2;
-
-        case WAS_SIMPLE_POLL_END:
-            return 0;
-        }
-    }
-
-    if (nbytes <= 0) {
-        response.state = Response::State::ERROR;
-        return nbytes < 0 ? -1 : -2;
-    }
-
-    if (!Received(nbytes))
-        return -2;
-
-    if (size_t(nbytes) < length &&
-        partial_read_state == PartialReadState::INITIAL)
-        partial_read_state = PartialReadState::PARTIAL;
-
-    return nbytes;
 }
 
 ssize_t
@@ -1219,89 +1616,15 @@ was_simple_input_remaining(const struct was_simple *w)
 }
 
 bool
-was_simple::CloseInput()
-{
-    assert(response.state != Response::State::NONE);
-
-    if (response.state == Response::State::ERROR)
-        return false;
-
-    /* kludge: send STOP for request body only if another control
-       packet will be sent in this function, because otherwise
-       beng-proxy's was_stock may be confused by a control packet on
-       an idle WAS control connection */
-    if (IsControlFinished())
-        return true;
-
-    if (input.no_body || input.stopped || input.premature ||
-        input.IsEOF())
-        return true;
-
-    if (!control.SendEmpty(WAS_COMMAND_STOP)) {
-        response.state = Response::State::ERROR;
-        return false;
-    }
-
-    input.stopped = true;
-    return true;
-}
-
-bool
 was_simple_input_close(struct was_simple *w)
 {
     return w->CloseInput();
 }
 
 bool
-was_simple::SetStatus(http_status_t status)
-{
-    assert(response.state != Response::State::NONE);
-
-    if (response.state != Response::State::STATUS)
-        /* too late for sending the status */
-        return false;
-
-    if (!control.SendPacket(WAS_COMMAND_STATUS, &status, sizeof(status))) {
-        response.state = Response::State::ERROR;
-        return false;
-    }
-
-    response.state = Response::State::HEADERS;
-    output.no_body = http_status_is_empty(status);
-    return true;
-}
-
-bool
 was_simple_status(struct was_simple *w, http_status_t status)
 {
     return w->SetStatus(status);
-}
-
-inline bool
-was_simple::SetHeader(const char *name, const char *value)
-{
-    assert(response.state != Response::State::NONE);
-
-    if (response.state == Response::State::STATUS &&
-        !SetStatus(HTTP_STATUS_OK))
-        return false;
-
-    if (response.state != Response::State::HEADERS)
-        /* too late for sending headers */
-        return false;
-
-    const size_t name_length = strlen(name), value_length = strlen(value);
-    char *p = (char *)malloc(name_length + 1 + value_length);
-    char *q = (char *)mempcpy(p, name, name_length);
-    *q++ = '=';
-    q = (char *)mempcpy(q, value, value_length);
-
-    bool success = control.SendPacket(WAS_COMMAND_HEADER, p, q - p);
-    if (!success)
-        response.state = Response::State::ERROR;
-
-    free(p);
-    return success;
 }
 
 bool
@@ -1323,164 +1646,15 @@ was_simple_copy_all_headers(struct was_simple *w)
 }
 
 bool
-was_simple::SetLength(uint64_t length)
-{
-    assert(response.state != Response::State::NONE);
-
-    if (output.no_body)
-        return false;
-
-    assert(length >= output.sent);
-
-    if (output.known_length) {
-        assert(length == output.known_length);
-        return true;
-    }
-
-    if (response.state == Response::State::STATUS &&
-        !SetStatus(HTTP_STATUS_OK))
-        return false;
-
-    if (response.state == Response::State::HEADERS) {
-        if (!control.SendEmpty(WAS_COMMAND_DATA)) {
-            response.state = Response::State::ERROR;
-            return false;
-        }
-
-        response.state = Response::State::BODY;
-    }
-
-    assert(response.state == Response::State::BODY);
-
-    if (!control.SendUint64(WAS_COMMAND_LENGTH, length) ||
-        !control.Flush()) {
-        response.state = Response::State::ERROR;
-        return false;
-    }
-
-    output.announced = length;
-    output.known_length = true;
-
-    if (output.IsFull())
-        response.state = Response::State::END;
-
-    return true;
-}
-
-bool
 was_simple_set_length(struct was_simple *w, uint64_t length)
 {
     return w->SetLength(length);
 }
 
 bool
-was_simple::SetResponseStateBody()
-{
-    assert(response.state != Response::State::NONE);
-
-    if (response.state == Response::State::ERROR)
-        return false;
-
-    if (response.state == Response::State::STATUS &&
-        !SetStatus(HTTP_STATUS_OK))
-        return false;
-
-    if (response.state == Response::State::HEADERS) {
-        if (output.no_body) {
-            response.state = Response::State::END;
-            if (!control.SendEmpty(WAS_COMMAND_NO_DATA))
-                response.state = Response::State::ERROR;
-            return false;
-        }
-
-        if (!control.SendEmpty(WAS_COMMAND_DATA)) {
-            response.state = Response::State::ERROR;
-            return false;
-        }
-
-        if (output.IsFull()) {
-            response.state = Response::State::END;
-            return false;
-        }
-
-        response.state = Response::State::BODY;
-    }
-
-    return response.state == Response::State::BODY;
-}
-
-bool
 was_simple_output_begin(struct was_simple *w)
 {
     return w->SetResponseStateBody();
-}
-
-enum was_simple_poll_result
-was_simple::PollOutput(int timeout_ms)
-{
-    assert(response.state != Response::State::NONE);
-
-    if (response.state == Response::State::STOP)
-        return WAS_SIMPLE_POLL_ERROR;
-
-    if (output.IsFull())
-        return WAS_SIMPLE_POLL_END;
-
-    if (!control.Flush() || !ApplyPendingControl() ||
-        !control.Flush()) {
-        response.state = Response::State::ERROR;
-        return WAS_SIMPLE_POLL_ERROR;
-    }
-
-    if (response.state > Response::State::BODY)
-        /* throw WAS_SIMPLE_POLL_ERROR even if state==END, which may
-           have been caused by STOP; in that case, the current request
-           must be aborted by the application, but this object may be
-           reused, so don't set state=ERROR */
-        return WAS_SIMPLE_POLL_ERROR;
-
-    struct pollfd fds[] = {
-        {
-            .fd = control.fd,
-            .events = POLLIN,
-            .revents = 0,
-        },
-        {
-            .fd = output.fd,
-            .events = POLLOUT,
-            .revents = 0,
-        },
-    };
-
-    while (true) {
-        int ret = poll(fds, ARRAY_SIZE(fds), timeout_ms);
-        if (ret < 0) {
-            response.state = Response::State::ERROR;
-            return WAS_SIMPLE_POLL_ERROR;
-        }
-
-        if (ret == 0)
-            return WAS_SIMPLE_POLL_TIMEOUT;
-
-        if (fds[0].revents & POLLIN) {
-            if (!control.Fill(true) ||
-                !ApplyPendingControl()) {
-                response.state = Response::State::ERROR;
-                return WAS_SIMPLE_POLL_ERROR;
-            }
-
-            if (response.state > Response::State::BODY)
-                /* throw WAS_SIMPLE_POLL_ERROR even if state==END,
-                   which may have been caused by STOP; in that case,
-                   the current request must be aborted by the
-                   application, but this object may be reused, so
-                   don't set state=ERROR */
-                return WAS_SIMPLE_POLL_ERROR;
-        }
-
-        if (fds[1].revents & POLLOUT)
-            return WAS_SIMPLE_POLL_SUCCESS;
-    }
 }
 
 enum was_simple_poll_result
@@ -1528,59 +1702,6 @@ was_simple_sent(struct was_simple *w, size_t nbytes)
     return true;
 }
 
-inline bool
-was_simple::Write(const void *data0, size_t length)
-{
-    assert(response.state != Response::State::NONE);
-
-    if (!SetResponseStateBody() ||
-        !output.CanSend(length))
-        return false;
-
-    if (!control.Flush()) {
-        response.state = Response::State::ERROR;
-        return false;
-    }
-
-    const char *data = (const char *)data0;
-
-    while (length > 0) {
-        ssize_t nbytes = write(output.fd, data, length);
-        if (nbytes < 0 && errno == EAGAIN) {
-            /* writing blocks: poll for the pipe to become writable
-               again (or for control commands and handle them) */
-            switch (PollOutput(-1)) {
-            case WAS_SIMPLE_POLL_SUCCESS:
-                /* time to try again */
-                continue;
-
-            case WAS_SIMPLE_POLL_ERROR:
-            case WAS_SIMPLE_POLL_TIMEOUT:
-            case WAS_SIMPLE_POLL_CLOSED:
-            case WAS_SIMPLE_POLL_END:
-                return false;
-            }
-        }
-
-        if (nbytes <= 0) {
-            response.state = Response::State::ERROR;
-            return false;
-        }
-
-        output.Sent(nbytes);
-        data += nbytes;
-        length -= nbytes;
-
-        if (output.IsFull()) {
-            response.state = Response::State::END;
-            if (length > 0)
-                return false;
-        }
-    }
-
-    return true;
-}
-
 bool
 was_simple_write(struct was_simple *w, const void *data, size_t length)
 {
@@ -1606,131 +1727,10 @@ was_simple_printf(struct was_simple *w, const char *fmt, ...)
     return was_simple_puts(w, buffer);
 }
 
-inline bool
-was_simple::DiscardAllInput()
-{
-    while (true) {
-        char buffer[4096];
-        ssize_t nbytes = Read(buffer, sizeof(buffer));
-        if (nbytes <= 0)
-            return nbytes == 0;
-    }
-}
-
-bool
-was_simple::End()
-{
-    assert(response.state != Response::State::NONE);
-
-    input.ignore_premature = true;
-
-    if (!CloseInput())
-        return false;
-
-    /* generate a status code? */
-    if (response.state == Response::State::STATUS &&
-        !SetStatus(HTTP_STATUS_NO_CONTENT))
-        return false;
-
-    /* no response body? */
-    if (response.state == Response::State::HEADERS) {
-        if (!control.SendEmpty(WAS_COMMAND_NO_DATA)) {
-            response.state = Response::State::ERROR;
-            return false;
-        }
-
-        response.state = Response::State::END;
-    }
-
-    /* finish the response body? */
-    if (response.state == Response::State::BODY) {
-        assert(!output.no_body);
-
-        if (output.known_length) {
-            assert(output.sent < output.announced);
-
-            if (!control.SendUint64(WAS_COMMAND_PREMATURE, output.sent)) {
-                response.state = Response::State::ERROR;
-                return false;
-            }
-
-            response.state = Response::State::END;
-        } else {
-            if (!SetLength(output.sent))
-                return false;
-        }
-    }
-
-    /* finish the control channel? */
-    if (!control.Flush()) {
-        response.state = Response::State::ERROR;
-        return false;
-    }
-
-    assert(response.state == Response::State::END ||
-           response.state == Response::State::STOP);
-
-    /* discard the request body? */
-    if (!DiscardAllInput())
-        return false;
-
-    /* wait for PREMATURE? */
-    if (input.stopped && !input.IsEOF()) {
-        while (!input.premature) {
-            if (!ReadAndApplyControl()) {
-                response.state = Response::State::ERROR;
-                return false;
-            }
-        }
-    }
-
-    /* connection is ready to be reused */
-    return true;
-}
-
 bool
 was_simple_end(struct was_simple *w)
 {
     return w->End();
-}
-
-inline bool
-was_simple::Abort()
-{
-    switch (response.state) {
-    case Response::State::NONE:
-    case Response::State::STOP:
-    case Response::State::END:
-        return true;
-
-    case Response::State::STATUS:
-        return SetStatus(HTTP_STATUS_INTERNAL_SERVER_ERROR) && End();
-
-    case Response::State::HEADERS:
-        response.state = Response::State::BODY;
-        /* fall through */
-
-    case Response::State::BODY:
-        if (!output.no_body && !output.IsFull()) {
-            output.no_body = true;
-
-            if (!control.SendUint64(WAS_COMMAND_PREMATURE, output.sent) ||
-                !control.Flush()) {
-                response.state = Response::State::ERROR;
-                return false;
-            }
-
-            response.state = Response::State::STOP;
-        }
-
-        return true;
-
-    case Response::State::ERROR:
-        return false;
-    }
-
-    assert(false);
-    was_gcc_unreachable();
 }
 
 bool
