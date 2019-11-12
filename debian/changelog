@@ -3,7 +3,7 @@ libcm4all-was (1.16) unstable; urgency=low
   * simple: non-blocking accept, allows polling on the control socket
   * debian: remove the obsolete libinline dependency
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Tue, 12 Nov 2019 13:05:14 +0100
 
 libcm4all-was (1.15) unstable; urgency=low
 
