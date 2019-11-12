@@ -54,6 +54,29 @@ common_flags = [
 test_common_flags = [
 ]
 
+if not debug
+  test_common_flags += [
+    '-ffunction-sections',
+    '-fdata-sections',
+  ]
+
+  add_global_link_arguments(
+    compiler.get_supported_link_arguments(
+      '-Wl,--gc-sections',
+      '-Wl,--icf=all',
+    ),
+    language: 'cpp'
+  )
+
+  add_global_link_arguments(
+    c_compiler.get_supported_link_arguments(
+      '-Wl,--gc-sections',
+      '-Wl,--icf=all',
+    ),
+    language: 'c'
+  )
+endif
+
 test_cxxflags = test_common_flags + [
   '-fno-exceptions', '-fno-rtti',
   '-fno-threadsafe-statics',
