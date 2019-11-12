@@ -109,6 +109,25 @@ const char *
 was_simple_accept(struct was_simple *w);
 
 /**
+ * Like was_simple_accept(), but don't block if the connection is idle
+ * and no request is being received.  This allows the caller to poll()
+ * on the control socket obtained via was_simple_control_fd().
+ *
+ * @param would_block a special "magic" pointer which is returned to
+ * indicate that this function would block
+ */
+const char *
+was_simple_accept_non_block(struct was_simple *w, const char *would_block);
+
+/**
+ * Obtains the socket descriptor of the control channel.  It can be
+ * used for poll() after was_simple_accept_non_block().
+ */
+was_gcc_pure
+int
+was_simple_control_fd(struct was_simple *w);
+
+/**
  * Returns the method of the current request.
  */
 was_gcc_pure

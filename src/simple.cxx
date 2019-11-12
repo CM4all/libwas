@@ -436,7 +436,7 @@ struct was_simple {
     bool ApplyPendingControl();
     bool ReadAndApplyControl();
 
-    const char *Accept();
+    const char *Accept(const char *would_block=nullptr);
     enum was_simple_poll_result PollInput(int timeout_ms);
 
     bool Received(size_t nbytes);
@@ -844,8 +844,8 @@ was_simple::ReadAndApplyControl()
     return ApplyRequestPacket(*packet);
 }
 
-inline const char *
-was_simple::Accept()
+const char *
+was_simple::Accept(const char *would_block)
 {
     if (response.state != Response::State::NONE &&
         !FinishRequest())
@@ -854,9 +854,9 @@ was_simple::Accept()
     assert(response.state == Response::State::NONE);
 
     while (true) {
-        const auto *packet = control.Read(false);
+        const auto *packet = control.Read(would_block != nullptr);
         if (packet == nullptr)
-            return nullptr;
+            return errno == EAGAIN ? would_block : nullptr;
 
         if (packet->command == WAS_COMMAND_REQUEST)
             /* we got another request: break out of this "while" loop
@@ -1494,6 +1494,18 @@ const char *
 was_simple_accept(struct was_simple *w)
 {
     return w->Accept();
+}
+
+const char *
+was_simple_accept_non_block(struct was_simple *w, const char *would_block)
+{
+    return w->Accept(would_block);
+}
+
+int
+was_simple_control_fd(struct was_simple *w)
+{
+    return w->control.fd;
 }
 
 http_method_t

@@ -3,6 +3,8 @@ libcm4all_was_simple_0 {
 		was_simple_new;
 		was_simple_free;
 		was_simple_accept;
+		was_simple_accept_non_block;
+		was_simple_control_fd;
 		was_simple_get_method;
 		was_simple_get_script_name;
 		was_simple_get_path_info;
