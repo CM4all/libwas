@@ -534,7 +534,7 @@ was_simple::Control::Get()
     return &packet;
 }
 
-const struct was_control_packet *
+inline const struct was_control_packet *
 was_simple::Control::Next()
 {
     /* clean up the previous packet */
@@ -594,7 +594,7 @@ was_simple::Control::Flush()
     return true;
 }
 
-void
+inline void
 was_simple::Control::Append(const void *p, size_t length)
 {
     assert(output_buffer.position <= sizeof(output_buffer.data));
@@ -1277,7 +1277,7 @@ was_simple_status(struct was_simple *w, http_status_t status)
     return w->SetStatus(status);
 }
 
-bool
+inline bool
 was_simple::SetHeader(const char *name, const char *value)
 {
     assert(response.state != Response::State::NONE);
@@ -1528,7 +1528,7 @@ was_simple_sent(struct was_simple *w, size_t nbytes)
     return true;
 }
 
-bool
+inline bool
 was_simple::Write(const void *data0, size_t length)
 {
     assert(response.state != Response::State::NONE);
