@@ -1,6 +1,6 @@
 libcm4all-was (1.16) unstable; urgency=low
 
-  * 
+  * debian: remove the obsolete libinline dependency
 
  --   
 

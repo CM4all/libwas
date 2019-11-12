@@ -99,7 +99,7 @@ pkg_mod.generate(
   version: meson.project_version(),
   name: 'libcm4all-was-simple',
   description: 'CM4all simple WAS server library',
-  requires: ['libcm4all-http >= 1.2.5', 'libcm4all-inline >= 0.3.5'],
+  requires: ['libcm4all-http >= 1.2.5'],
 )
 
 libwas_apreq = library('cm4all-was-apreq',
