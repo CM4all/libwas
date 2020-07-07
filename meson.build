@@ -1,7 +1,8 @@
 project('libwas', ['c', 'cpp'], version: '1.17',
   default_options: [
     'c_std=c99',
-    'cpp_std=c++14'
+    'cpp_std=c++14',
+    'warning_level=3',
   ],
 )
 
@@ -41,8 +42,6 @@ libcore = dependency('libcore', version: '>= 1.20.5')
 
 common_flags = [
   '-D_REENTRANT', '-D_GNU_SOURCE',
-  '-Wall',
-  '-Wextra',
   '-Wwrite-strings', '-Wcast-qual', '-Wcast-align', '-Wfloat-equal',
   '-Wshadow', '-Wpointer-arith', '-Wsign-compare',
   '-Wmissing-declarations', '-Wmissing-noreturn', '-Wmissing-format-attribute',
