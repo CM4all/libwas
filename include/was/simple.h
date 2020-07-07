@@ -284,6 +284,15 @@ was_simple_set_header(struct was_simple *w,
                       const char *name, const char *value);
 
 /**
+ * Like was_simple_set_header(), but with string lengths.  The
+ * parameters do not need to be null-terminated.
+ */
+bool
+was_simple_set_header_n(struct was_simple *w,
+                        const char *name, size_t name_length,
+                        const char *value, size_t value_length);
+
+/**
  * Copies all request headers to the response.
  */
 bool

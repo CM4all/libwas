@@ -452,6 +452,8 @@ struct was_simple {
     bool CloseInput();
     bool SetStatus(http_status_t status);
     bool SetHeader(const char *name, const char *value);
+    bool SetHeader(const char *name, size_t name_length,
+                   const char *value, size_t value_length) noexcept;
     bool SetLength(uint64_t length);
 
     enum was_simple_poll_result PollOutput(int timeout_ms);
@@ -1135,7 +1137,8 @@ was_simple::SetStatus(http_status_t status)
 }
 
 inline bool
-was_simple::SetHeader(const char *name, const char *value)
+was_simple::SetHeader(const char *name, size_t name_length,
+                      const char *value, size_t value_length) noexcept
 {
     assert(response.state != Response::State::NONE);
 
@@ -1147,7 +1150,6 @@ was_simple::SetHeader(const char *name, const char *value)
         /* too late for sending headers */
         return false;
 
-    const size_t name_length = strlen(name), value_length = strlen(value);
     char *p = (char *)malloc(name_length + 1 + value_length);
     char *q = (char *)mempcpy(p, name, name_length);
     *q++ = '=';
@@ -1641,7 +1643,16 @@ bool
 was_simple_set_header(struct was_simple *w,
                       const char *name, const char *value)
 {
-    return w->SetHeader(name, value);
+    return w->SetHeader(name, strlen(name),
+                        value, strlen(value));
+}
+
+bool
+was_simple_set_header_n(struct was_simple *w,
+                        const char *name, size_t name_length,
+                        const char *value, size_t value_length)
+{
+    return w->SetHeader(name, name_length, value, value_length);
 }
 
 bool

@@ -23,6 +23,7 @@ libcm4all_was_simple_0 {
 		was_simple_input_close;
 		was_simple_status;
 		was_simple_set_header;
+		was_simple_set_header_n;
 		was_simple_copy_all_headers;
 		was_simple_set_length;
 		was_simple_output_begin;
