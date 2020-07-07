@@ -29,6 +29,11 @@
 
 #include <was/simple.h>
 
+#ifdef __GNUC__
+/* suppress APR / libapreq warnings */
+#pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+
 #include <apreq_module.h>
 #include <apreq_error.h>
 #include <apr_strings.h>
