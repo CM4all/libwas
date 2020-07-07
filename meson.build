@@ -1,4 +1,5 @@
 project('libwas', ['c', 'cpp'], version: '1.17',
+  meson_version: '>= 0.49',
   default_options: [
     'c_std=c99',
     'cpp_std=c++14',
@@ -15,7 +16,8 @@ endif
 
 splitted_version = meson.project_version().split('.')
 
-cc = meson.get_compiler('c')
+compiler = meson.get_compiler('cpp')
+c_compiler = meson.get_compiler('c')
 
 pkg_mod = import('pkgconfig')
 
@@ -49,21 +51,29 @@ common_flags = [
   '-Wunused',
 ]
 
-add_global_arguments(common_flags,
+test_common_flags = [
+]
+
+test_cxxflags = test_common_flags + [
+  '-fno-exceptions', '-fno-rtti',
+  '-fno-threadsafe-statics',
+  '-fmerge-all-constants',
+  '-Wno-missing-field-initializers',
+  '-Wno-non-virtual-dtor',
+]
+
+test_cflags = test_common_flags + [
   '-Wmissing-prototypes', '-Wstrict-prototypes',
   '-Wbad-function-cast',
   '-Waggregate-return',
-  '-Wredundant-decls', '-Wno-long-long', '-Wundef',
   '-Wnested-externs',
-  '-pedantic',
-  language: 'c')
+]
 
-add_global_arguments(common_flags,
-  '-fno-exceptions', '-fno-rtti',
-  '-fno-threadsafe-statics', '-fmerge-all-constants',
-  '-Wno-missing-field-initializers',
-  '-Wno-non-virtual-dtor',
-  language: 'cpp')
+add_global_arguments(common_flags, language: 'c')
+add_global_arguments(common_flags, language: 'cpp')
+
+add_global_arguments(compiler.get_supported_arguments(test_cxxflags), language: 'cpp')
+add_global_arguments(c_compiler.get_supported_arguments(test_cflags), language: 'c')
 
 inc = include_directories('src', 'include')
 
