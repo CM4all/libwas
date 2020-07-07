@@ -610,14 +610,19 @@ was_simple::Control::Send(const void *data, size_t length)
     return true;
 }
 
+static constexpr struct was_header
+MakeHeader(enum was_command command, size_t length) noexcept
+{
+    struct was_header h{};
+    h.length = uint16_t(length);
+    h.command = uint16_t(command);
+    return h;
+}
+
 bool
 was_simple::Control::SendHeader(enum was_command command, size_t length)
 {
-    struct was_header header = {
-        .length = uint16_t(length),
-        .command = uint16_t(command),
-    };
-
+    const auto header = MakeHeader(command, length);
     return Send(&header, sizeof(header));
 }
 
@@ -916,6 +921,15 @@ was_simple::Accept(const char *would_block)
     return request.uri;
 }
 
+static constexpr struct pollfd
+MakePollfd(int fd, short events) noexcept
+{
+    struct pollfd pfd{};
+    pfd.fd = fd;
+    pfd.events = events;
+    return pfd;
+}
+
 enum was_simple_poll_result
 was_simple::PollInput(int timeout_ms)
 {
@@ -943,16 +957,8 @@ was_simple::PollInput(int timeout_ms)
         return WAS_SIMPLE_POLL_END;
 
     struct pollfd fds[] = {
-        {
-            .fd = control.fd,
-            .events = POLLIN,
-            .revents = 0,
-        },
-        {
-            .fd = input.fd,
-            .events = POLLIN,
-            .revents = 0,
-        },
+        MakePollfd(control.fd, POLLIN),
+        MakePollfd(input.fd, POLLIN),
     };
 
     while (true) {
@@ -1261,16 +1267,8 @@ was_simple::PollOutput(int timeout_ms)
         return WAS_SIMPLE_POLL_ERROR;
 
     struct pollfd fds[] = {
-        {
-            .fd = control.fd,
-            .events = POLLIN,
-            .revents = 0,
-        },
-        {
-            .fd = output.fd,
-            .events = POLLOUT,
-            .revents = 0,
-        },
+        MakePollfd(control.fd, POLLIN),
+        MakePollfd(output.fd, POLLOUT),
     };
 
     while (true) {
