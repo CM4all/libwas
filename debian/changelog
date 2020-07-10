@@ -1,6 +1,7 @@
 libcm4all-was (1.17) unstable; urgency=low
 
   * simple: add was_simple_set_header_n()
+  * simple: send headers without allocating memory
   * debian: use debhelper 12
 
  --   

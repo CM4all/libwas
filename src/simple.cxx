@@ -1150,16 +1150,15 @@ was_simple::SetHeader(const char *name, size_t name_length,
         /* too late for sending headers */
         return false;
 
-    char *p = (char *)malloc(name_length + 1 + value_length);
-    char *q = (char *)mempcpy(p, name, name_length);
-    *q++ = '=';
-    q = (char *)mempcpy(q, value, value_length);
+    bool success = control.SendHeader(WAS_COMMAND_HEADER,
+                                      name_length + 1 + value_length) &&
+        control.Send(name, name_length) &&
+        control.Send("=", 1) &&
+        control.Send(value, value_length);
 
-    bool success = control.SendPacket(WAS_COMMAND_HEADER, p, q - p);
     if (!success)
         response.state = Response::State::ERROR;
 
-    free(p);
     return success;
 }
 
