@@ -4,7 +4,7 @@ libcm4all-was (1.17) unstable; urgency=low
   * simple: send headers without allocating memory
   * debian: use debhelper 12
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Fri, 10 Jul 2020 12:22:39 +0200
 
 libcm4all-was (1.16) unstable; urgency=low
 
