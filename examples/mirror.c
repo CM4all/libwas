@@ -49,21 +49,7 @@ main(int argc, const char *const*argv)
     while (was_simple_accept(was) != NULL) {
         if (was_simple_has_body(was)) {
             was_simple_copy_all_headers(was);
-
-            int64_t remaining = was_simple_input_remaining(was);
-            if (remaining >= 0)
-                was_simple_set_length(was, remaining);
-
-            while (true) {
-                // TODO: use splice()
-                char buffer[8192];
-                ssize_t nbytes = was_simple_read(was, buffer, sizeof(buffer));
-                if (nbytes <= 0)
-                    break;
-
-                if (!was_simple_write(was, buffer, nbytes))
-                    break;
-            }
+            was_simple_splice_all(was);
         } else
             was_simple_status(was, HTTP_STATUS_NO_CONTENT);
     }

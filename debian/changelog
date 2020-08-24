@@ -1,6 +1,6 @@
 libcm4all-was (1.18) unstable; urgency=low
 
-  * 
+  * simple: add was_simple_splice(), was_simple_splice_all()
 
  --   
 

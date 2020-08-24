@@ -33,6 +33,8 @@ libcm4all_was_simple_0 {
 		was_simple_write;
 		was_simple_puts;
 		was_simple_printf;
+		was_simple_splice;
+		was_simple_splice_all;
 		was_simple_end;
 		was_simple_abort;
 		was_simple_iterator_free;

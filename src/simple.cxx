@@ -44,6 +44,7 @@
 
 #include <cassert>
 #include <cerrno>
+#include <climits>
 #include <cstring>
 #include <map>
 #include <string>
@@ -458,6 +459,9 @@ struct was_simple {
 
     enum was_simple_poll_result PollOutput(int timeout_ms);
     bool Write(const void *data, size_t length);
+
+    ssize_t Splice(size_t max_length) noexcept;
+    bool SpliceAll() noexcept;
 
     bool SetResponseStateBody();
 
@@ -1356,6 +1360,117 @@ was_simple::Write(const void *data0, size_t length)
     return true;
 }
 
+inline ssize_t
+was_simple::Splice(size_t max_length) noexcept
+{
+    assert(response.state != Response::State::NONE);
+
+    if (response.state == Response::State::ERROR)
+        return -2;
+
+    if (input.premature && !input.ignore_premature)
+        return -2;
+
+    if (input.no_body || input.IsEOF())
+        return 0;
+
+    max_length = input.ClampRemaining(max_length);
+    if (max_length == 0)
+        return 0;
+
+    if (!SetResponseStateBody() ||
+        !output.CanSend(max_length))
+        return -2;
+
+    if (!control.Flush()) {
+        response.state = Response::State::ERROR;
+        return -2;
+    }
+
+    if (partial_read_state == PartialReadState::PARTIAL) {
+        partial_read_state = PartialReadState::FINISHED;
+
+        switch (PollInput(-1)) {
+        case WAS_SIMPLE_POLL_SUCCESS:
+            break;
+
+        case WAS_SIMPLE_POLL_ERROR:
+        case WAS_SIMPLE_POLL_TIMEOUT:
+        case WAS_SIMPLE_POLL_CLOSED:
+            return -2;
+
+        case WAS_SIMPLE_POLL_END:
+            return 0;
+        }
+    }
+
+    ssize_t nbytes = splice(input.fd, nullptr,
+                            output.fd, nullptr, max_length,
+                            SPLICE_F_MOVE|SPLICE_F_NONBLOCK);
+    if (nbytes < 0 && errno == EAGAIN) {
+        switch (PollInput(-1)) {
+        case WAS_SIMPLE_POLL_SUCCESS:
+            break;
+
+        case WAS_SIMPLE_POLL_ERROR:
+        case WAS_SIMPLE_POLL_TIMEOUT:
+        case WAS_SIMPLE_POLL_CLOSED:
+            return -2;
+
+        case WAS_SIMPLE_POLL_END:
+            return 0;
+        }
+
+        switch (PollOutput(-1)) {
+        case WAS_SIMPLE_POLL_SUCCESS:
+            break;
+
+        case WAS_SIMPLE_POLL_ERROR:
+        case WAS_SIMPLE_POLL_TIMEOUT:
+        case WAS_SIMPLE_POLL_CLOSED:
+        case WAS_SIMPLE_POLL_END:
+            return -2;
+        }
+
+        nbytes = splice(input.fd, nullptr,
+                        output.fd, nullptr, max_length,
+                        SPLICE_F_MOVE|SPLICE_F_NONBLOCK);
+    }
+
+    if (nbytes < 0)
+        return -1;
+
+    if (nbytes == 0)
+        /* the pipe was closed - this shouldn't happen */
+        return -2;
+
+    if (!Received(nbytes))
+        return -2;
+
+    output.Sent(nbytes);
+    if (output.IsFull())
+        response.state = Response::State::END;
+
+    return nbytes;
+}
+
+inline bool
+was_simple::SpliceAll() noexcept
+{
+    while (true) {
+        if (!output.known_length && input.known_length &&
+            !SetLength(input.announced - input.received + output.sent))
+            return false;
+
+        ssize_t nbytes = Splice(INT_MAX);
+        if (nbytes < 0)
+            return false;
+
+        if (nbytes == 0)
+            return End();
+    }
+}
+
 inline bool
 was_simple::DiscardAllInput()
 {
@@ -1745,6 +1860,18 @@ was_simple_printf(struct was_simple *w, const char *fmt, ...)
     va_end(va);
 
     return was_simple_puts(w, buffer);
+}
+
+ssize_t
+was_simple_splice(struct was_simple *w, size_t max_length)
+{
+    return w->Splice(max_length);
+}
+
+bool
+was_simple_splice_all(struct was_simple *w)
+{
+    return w->SpliceAll();
 }
 
 bool
