@@ -42,12 +42,12 @@
 
 #include <http/header.h>
 
+#include <cassert>
+#include <cerrno>
+#include <cstring>
 #include <map>
 #include <string>
 
-#include <assert.h>
-#include <errno.h>
-#include <string.h>
 #include <unistd.h>
 #include <poll.h>
 #include <stdio.h>
