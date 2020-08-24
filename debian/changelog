@@ -2,7 +2,7 @@ libcm4all-was (1.18) unstable; urgency=low
 
   * simple: add was_simple_splice(), was_simple_splice_all()
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Mon, 24 Aug 2020 15:10:37 +0200
 
 libcm4all-was (1.17) unstable; urgency=low
 
