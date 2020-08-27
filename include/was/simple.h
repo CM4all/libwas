@@ -383,13 +383,14 @@ ssize_t
 was_simple_splice(struct was_simple *w, size_t max_length);
 
 /**
- * Copy all data from the request body to the response body (and end
- * it there).
+ * Copy all data from the request body to the response body
  *
+ * @param end shall this function end the response?  If true, then it will
+ * also declare the length, which enables optimizations
  * @return true on success, false on error
  */
 bool
-was_simple_splice_all(struct was_simple *w);
+was_simple_splice_all(struct was_simple *w, bool end);
 
 /**
  * Mark the end of the current request.  If no status has been set,

@@ -1,6 +1,6 @@
 libcm4all-was (1.19) unstable; urgency=low
 
-  * 
+  * simple: make the response end optional in was_simple_splice_all()
 
  --   
 

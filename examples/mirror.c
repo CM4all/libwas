@@ -49,7 +49,7 @@ main(int argc, const char *const*argv)
     while (was_simple_accept(was) != NULL) {
         if (was_simple_has_body(was)) {
             was_simple_copy_all_headers(was);
-            was_simple_splice_all(was);
+            was_simple_splice_all(was, true);
         } else
             was_simple_status(was, HTTP_STATUS_NO_CONTENT);
     }

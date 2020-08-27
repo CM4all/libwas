@@ -461,7 +461,7 @@ struct was_simple {
     bool Write(const void *data, size_t length);
 
     ssize_t Splice(size_t max_length) noexcept;
-    bool SpliceAll() noexcept;
+    bool SpliceAll(bool end) noexcept;
 
     bool SetResponseStateBody();
 
@@ -1455,10 +1455,10 @@ was_simple::Splice(size_t max_length) noexcept
 }
 
 inline bool
-was_simple::SpliceAll() noexcept
+was_simple::SpliceAll(bool end) noexcept
 {
     while (true) {
-        if (!output.known_length && input.known_length &&
+        if (end && !output.known_length && input.known_length &&
             !SetLength(input.announced - input.received + output.sent))
             return false;
 
@@ -1467,7 +1467,7 @@ was_simple::SpliceAll() noexcept
             return false;
 
         if (nbytes == 0)
-            return End();
+            return !end || End();
     }
 }
 
@@ -1869,9 +1869,9 @@ was_simple_splice(struct was_simple *w, size_t max_length)
 }
 
 bool
-was_simple_splice_all(struct was_simple *w)
+was_simple_splice_all(struct was_simple *w, bool end)
 {
-    return w->SpliceAll();
+    return w->SpliceAll(end);
 }
 
 bool
