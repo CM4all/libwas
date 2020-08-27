@@ -1,4 +1,4 @@
-project('libwas', ['c', 'cpp'], version: '1.19',
+project('libwas', ['c', 'cpp'], version: '1.20',
   meson_version: '>= 0.49',
   default_options: [
     'c_std=c99',
