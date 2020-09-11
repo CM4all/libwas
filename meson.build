@@ -36,8 +36,11 @@ if apreq2_linkld.returncode() != 0
   error('"apreq2-config --link-ld" failed')
 endif
 
-libapreq2 = declare_dependency(compile_args: '-I' + apreq2_includedir.stdout().strip(),
-                               link_args: apreq2_linkld.stdout().strip().split())
+libapreq2 = declare_dependency(
+  compile_args: '-I' + apreq2_includedir.stdout().strip(),
+  link_args: apreq2_linkld.stdout().strip().split(),
+  dependencies: [ libapr, libapr_util ],
+)
 
 libhttp = dependency('libcm4all-http', version: '>= 1.2.6')
 libcore = dependency('libcore', version: '>= 1.20.5', required: get_option('xios'), disabler: true)
@@ -143,7 +146,7 @@ libwas_apreq = library('cm4all-was-apreq',
   include_directories: inc,
   dependencies: [
     libhttp,
-    libapr, libapr_util, libapreq2,
+    libapreq2,
     libwas_simple_dep,
   ],
   c_args: [
