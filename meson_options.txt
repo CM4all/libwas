@@ -1,3 +1,6 @@
+option('apreq2', type: 'feature',
+  description: 'Enable the libapreq2 module')
+
 option('xios', type: 'feature',
   description: 'Enable the libcm4all-core xios implementation')
 

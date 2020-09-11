@@ -21,26 +21,30 @@ c_compiler = meson.get_compiler('c')
 
 pkg_mod = import('pkgconfig')
 
-libapr = dependency('apr-1')
-libapr_util = dependency('apr-util-1')
+apreq2_config = find_program('apreq2-config', required: get_option('apreq2'))
 
-apreq2_config = find_program('apreq2-config')
+if apreq2_config.found()
+  apreq2_includedir = run_command(apreq2_config, '--includedir')
+  if apreq2_includedir.returncode() != 0
+    error('"apreq2-config --includedir" failed')
+  endif
 
-apreq2_includedir = run_command(apreq2_config, '--includedir')
-if apreq2_includedir.returncode() != 0
-  error('"apreq2-config --includedir" failed')
+  apreq2_linkld = run_command(apreq2_config, '--link-ld')
+  if apreq2_linkld.returncode() != 0
+    error('"apreq2-config --link-ld" failed')
+  endif
+
+  libapr = dependency('apr-1')
+  libapr_util = dependency('apr-util-1')
+
+  libapreq2 = declare_dependency(
+    compile_args: '-I' + apreq2_includedir.stdout().strip(),
+    link_args: apreq2_linkld.stdout().strip().split(),
+    dependencies: [ libapr, libapr_util ],
+  )
+else
+  libapreq2 = disabler()
 endif
-
-apreq2_linkld = run_command(apreq2_config, '--link-ld')
-if apreq2_linkld.returncode() != 0
-  error('"apreq2-config --link-ld" failed')
-endif
-
-libapreq2 = declare_dependency(
-  compile_args: '-I' + apreq2_includedir.stdout().strip(),
-  link_args: apreq2_linkld.stdout().strip().split(),
-  dependencies: [ libapr, libapr_util ],
-)
 
 libhttp = dependency('libcm4all-http', version: '>= 1.2.6')
 libcore = dependency('libcore', version: '>= 1.20.5', required: get_option('xios'), disabler: true)
