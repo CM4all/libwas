@@ -40,7 +40,7 @@ libapreq2 = declare_dependency(compile_args: '-I' + apreq2_includedir.stdout().s
                                link_args: apreq2_linkld.stdout().strip().split())
 
 libhttp = dependency('libcm4all-http', version: '>= 1.2.6')
-libcore = dependency('libcore', version: '>= 1.20.5')
+libcore = dependency('libcore', version: '>= 1.20.5', required: get_option('xios'), disabler: true)
 
 common_flags = [
   '-D_REENTRANT', '-D_GNU_SOURCE',

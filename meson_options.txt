@@ -1,2 +1,5 @@
+option('xios', type: 'feature',
+  description: 'Enable the libcm4all-core xios implementation')
+
 option('documentation', type: 'feature',
   description: 'Build documentation')

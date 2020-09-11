@@ -6,6 +6,7 @@
 
 MESON_OPTIONS = \
 	--includedir=include/cm4all/libwas-1 \
+	-Dxios=enabled \
 	-Ddocumentation=enabled \
 	--werror
 
