@@ -164,7 +164,7 @@ was_simple_get_query_string(const struct was_simple *w);
  */
 was_gcc_pure
 const char *
-was_simple_get_header(struct was_simple *w, const char *name);
+was_simple_get_header(const struct was_simple *w, const char *name);
 
 /**
  * Returns an object that can iterate all request headers with the
@@ -173,28 +173,28 @@ was_simple_get_header(struct was_simple *w, const char *name);
  * If you need only one value, call was_simple_get_header() instead.
  */
 struct was_simple_iterator *
-was_simple_get_multi_header(struct was_simple *w, const char *name);
+was_simple_get_multi_header(const struct was_simple *w, const char *name);
 
 /**
  * Returns an object that can iterate all request headers.  It must be
  * freed with was_simple_iterator_free().
  */
 struct was_simple_iterator *
-was_simple_get_header_iterator(struct was_simple *w);
+was_simple_get_header_iterator(const struct was_simple *w);
 
 /**
  * Returns the value of a WAS parameter.
  */
 was_gcc_pure
 const char *
-was_simple_get_parameter(struct was_simple *w, const char *name);
+was_simple_get_parameter(const struct was_simple *w, const char *name);
 
 /**
  * Returns an object that can iterate all request parameters.  It must
  * be freed with was_simple_iterator_free().
  */
 struct was_simple_iterator *
-was_simple_get_parameter_iterator(struct was_simple *w);
+was_simple_get_parameter_iterator(const struct was_simple *w);
 
 /**
  * Is a request body present?  (May be empty, though)

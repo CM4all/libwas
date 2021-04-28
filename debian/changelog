@@ -1,5 +1,6 @@
 libcm4all-was (1.20) unstable; urgency=low
 
+  * simple: make several parameters "const"
   * meson.build: add option to disable the libapreq2 module
   * meson.build: add option to disable the libcore-xios implementation
 

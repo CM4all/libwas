@@ -1655,7 +1655,7 @@ was_simple_get_query_string(const struct was_simple *w)
 }
 
 const char *
-was_simple_get_header(struct was_simple *w, const char *name)
+was_simple_get_header(const struct was_simple *w, const char *name)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
@@ -1666,21 +1666,21 @@ was_simple_get_header(struct was_simple *w, const char *name)
 }
 
 struct was_simple_iterator *
-was_simple_get_multi_header(struct was_simple *w, const char *name)
+was_simple_get_multi_header(const struct was_simple *w, const char *name)
 {
     auto x = w->request.headers.equal_range(name);
     return was_simple_iterator_new(x.first, x.second);
 }
 
 struct was_simple_iterator *
-was_simple_get_header_iterator(struct was_simple *w)
+was_simple_get_header_iterator(const struct was_simple *w)
 {
     return was_simple_iterator_new(w->request.headers.begin(),
                                    w->request.headers.end());
 }
 
 const char *
-was_simple_get_parameter(struct was_simple *w, const char *name)
+was_simple_get_parameter(const struct was_simple *w, const char *name)
 {
     assert(w->response.state != was_simple::Response::State::NONE);
 
@@ -1691,7 +1691,7 @@ was_simple_get_parameter(struct was_simple *w, const char *name)
 }
 
 struct was_simple_iterator *
-was_simple_get_parameter_iterator(struct was_simple *w)
+was_simple_get_parameter_iterator(const struct was_simple *w)
 {
     return was_simple_iterator_new(w->request.parameters.begin(),
                                    w->request.parameters.end());
