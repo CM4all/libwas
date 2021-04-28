@@ -4,7 +4,7 @@ libcm4all-was (1.20) unstable; urgency=low
   * meson.build: add option to disable the libapreq2 module
   * meson.build: add option to disable the libcore-xios implementation
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Wed, 28 Apr 2021 18:25:47 +0200
 
 libcm4all-was (1.19) unstable; urgency=low
 
