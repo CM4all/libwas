@@ -1,6 +1,6 @@
 /*
 **  Copyright 2003-2006  The Apache Software Foundation
-**  Copyright (C) 2009 Content Management AG, Cologne, Germany
+**  Copyright 2010-2021 CM4all GmbH
 **
 **  Licensed under the Apache License, Version 2.0 (the "License");
 **  you may not use this file except in compliance with the License.
