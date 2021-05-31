@@ -1,6 +1,6 @@
 libcm4all-was (1.22) unstable; urgency=low
 
-  * 
+  * multi: simple MultiWAS implementation
 
  --   
 

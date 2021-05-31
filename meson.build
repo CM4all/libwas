@@ -112,6 +112,7 @@ pkg_mod.generate(
 libwas_simple = library('cm4all-was-simple',
   'src/iterator.cxx',
   'src/simple.cxx',
+  'src/multi.cxx',
   link_depends: [
     'libcm4all-was-simple.ld'
   ],
@@ -203,6 +204,7 @@ install_headers(
   'include/was/ostub.h',
   'include/was/protocol.h',
   'include/was/simple.h',
+  'include/was/multi.h',
   'include/was/compiler.h',
   subdir: 'was')
 

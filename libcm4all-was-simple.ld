@@ -48,3 +48,14 @@ libcm4all_was_simple_0b {
         global:
 		was_simple_splice_all;
 };
+
+libcm4all_was_multi_0 {
+        global:
+		was_multi_new;
+		was_multi_free;
+		was_multi_fd;
+		was_multi_accept_simple;
+
+        local:
+                *;
+};
