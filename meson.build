@@ -1,7 +1,7 @@
 project('libwas', ['c', 'cpp'], version: '2.0',
   meson_version: '>= 0.49',
   default_options: [
-    'c_std=c99',
+    'c_std=c11',
     'cpp_std=c++14',
     'warning_level=3',
   ],
