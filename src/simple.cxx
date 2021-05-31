@@ -79,8 +79,6 @@ struct was_simple {
      * The control channel.
      */
     struct Control {
-        static constexpr int fd = 3;
-
         union {
             char raw[4096];
             struct was_header header;
@@ -103,7 +101,11 @@ struct was_simple {
 
         struct was_control_packet packet;
 
-        Control() {
+        const int fd;
+
+        explicit Control(int _fd) noexcept
+            :fd(_fd)
+        {
             packet.payload = nullptr;
         }
 
@@ -165,8 +167,6 @@ struct was_simple {
      * The request body.
      */
     struct Input {
-        static constexpr int fd = 0;
-
         /**
          * Number of bytes received on the pipe.
          */
@@ -177,6 +177,8 @@ struct was_simple {
          * #WAS_COMMAND_LENGTH.  Only valid if #known_length is true.
          */
         uint64_t announced;
+
+        const int fd;
 
         /**
          * Is #announced valid?
@@ -205,7 +207,9 @@ struct was_simple {
          */
         bool no_body;
 
-        Input() {
+        explicit Input(int _fd) noexcept
+            :fd(_fd)
+        {
             fd_set_nonblock(fd);
         }
 
@@ -244,8 +248,6 @@ struct was_simple {
      * The response body.
      */
     struct Output {
-        static constexpr int fd = 1;
-
         /**
          * Number of bytes sent to the pipe.
          */
@@ -258,6 +260,8 @@ struct was_simple {
          */
         uint64_t announced;
 
+        const int fd;
+
         /**
          * Is #announced valid?
          */
@@ -269,7 +273,9 @@ struct was_simple {
          */
         bool no_body;
 
-        Output() {
+        explicit Output(int _fd) noexcept
+            :fd(_fd)
+        {
             fd_set_nonblock(fd);
         }
 
@@ -393,6 +399,11 @@ struct was_simple {
 
         FINISHED,
     } partial_read_state = PartialReadState::INITIAL;
+
+    was_simple() noexcept
+        :control(3), input(0), output(1)
+    {
+    }
 
     ~was_simple() {
         if (response.state != Response::State::NONE)
