@@ -400,8 +400,8 @@ struct was_simple {
         FINISHED,
     } partial_read_state = PartialReadState::INITIAL;
 
-    was_simple() noexcept
-        :control(3), input(0), output(1)
+    was_simple(int control_fd, int input_fd, int output_fd) noexcept
+        :control(control_fd), input(input_fd), output(output_fd)
     {
     }
 
@@ -1606,7 +1606,13 @@ was_simple::Abort()
 struct was_simple *
 was_simple_new(void)
 {
-    return new was_simple();
+    return new was_simple{3, 0, 1};
+}
+
+struct was_simple *
+was_simple_new_fds(int control_fd, int input_fd, int output_fd)
+{
+    return new was_simple{control_fd, input_fd, output_fd};
 }
 
 void

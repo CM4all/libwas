@@ -1,6 +1,7 @@
 libcm4all_was_simple_0 {
         global:
 		was_simple_new;
+		was_simple_new_fds;
 		was_simple_free;
 		was_simple_accept;
 		was_simple_accept_non_block;

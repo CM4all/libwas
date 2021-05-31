@@ -93,6 +93,12 @@ struct was_simple *
 was_simple_new(void);
 
 /**
+ * Create a new #was_simple object with the given file descriptors.
+ */
+struct was_simple *
+was_simple_new_fds(int control_fd, int input_fd, int output_fd);
+
+/**
  * Frees the #was_simple object.
  */
 void
