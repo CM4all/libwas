@@ -9,3 +9,5 @@ as (Fast)CGI and AJPv13, it is optimized for fast zero-copy operation.
 
 This repository contains the protocol definition and a reference
 implementation written in C.
+
+`Documentation <https://libwas.readthedocs.io/en/latest/>`__
