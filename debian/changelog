@@ -1,4 +1,4 @@
-libcm4all-was (1.21) unstable; urgency=low
+libcm4all-was (2.0) unstable; urgency=low
 
   * simple: add was_simple_new_fds()
 
