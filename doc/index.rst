@@ -199,3 +199,22 @@ Common packets
 * :envvar:`PREMATURE`: announces the premature end of the body; packet
   includes the total number of bytes sent to the data pipe
   (:envvar:`uint64_t`)
+
+The Multi Protocol
+``````````````````
+
+Some WAS programs can handle multiple WAS connections; for example,
+they could handle each connection per thread or they could be
+non-blocking and thus be able to handle multiple concurrent requests.
+Doing so would save some overhead of spawning one WAS process per
+concurrent request.
+
+A Multi-WAS program is launched with an unidirectional ``AF_LOCAL`` /
+``SOCK_SEQPACKET`` socket as file descriptor 0.  On this socket, the
+WAS process receives ``MULTI_WAS_COMMAND_NEW`` packets with three file
+descriptors: control socket, input pipe and output pipe of a new WAS
+connection.  The Multi-WAS program starts receiving requests on this
+new WAS connection until its control socket is closed (as usual).
+
+The Multi-WAS process exits when its initial socket gets closed by the
+peer.

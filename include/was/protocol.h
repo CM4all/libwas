@@ -97,6 +97,17 @@ enum was_command {
     WAS_COMMAND_PREMATURE = 14,
 };
 
+enum multi_was_command {
+    MULTI_WAS_COMMAND_NOP = 0,
+
+    /**
+     * The container submits a new connection to the WAS process.  The
+     * payload is empty, but three file descriptors are part of the
+     * datagram: control, input and output of the new WAS connection.
+     */
+    MULTI_WAS_COMMAND_NEW = 1,
+};
+
 struct was_header {
     uint16_t length;
     uint16_t command;
