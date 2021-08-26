@@ -3,7 +3,7 @@ libcm4all-was (1.21) unstable; urgency=low
   * simple: add was_simple_new_fds()
   * protocol: extension for multiple WAS connections to one server process
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Thu, 26 Aug 2021 09:50:56 +0200
 
 libcm4all-was (1.20) unstable; urgency=low
 
