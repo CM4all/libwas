@@ -1,7 +1,7 @@
 libcm4all-was (2.0) unstable; urgency=low
 
   * simple: add was_simple_new_fds()
-  * multi: protocol extension for multiple WAS connections to one server process
+  * protocol: extension for multiple WAS connections to one server process
 
  --   
 
