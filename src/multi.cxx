@@ -153,8 +153,5 @@ was_multi_accept_simple(struct was_multi *m)
             CloseFds(msg);
             return nullptr;
         }
-
-        CloseFds(msg);
-        return nullptr;
     }
 }
