@@ -1,6 +1,6 @@
 libcm4all-was (1.23) unstable; urgency=low
 
-  * 
+  * include was/multi.h in Debian package
 
  --   
 

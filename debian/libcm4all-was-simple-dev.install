@@ -1,4 +1,5 @@
 usr/include/cm4all/libwas-1/was/simple.h
+usr/include/cm4all/libwas-1/was/multi.h
 usr/include/cm4all/libwas-1/was/compiler.h
 usr/lib/*/libcm4all-was-simple.so
 usr/lib/*/pkgconfig/libcm4all-was-simple.pc
