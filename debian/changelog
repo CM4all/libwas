@@ -1,5 +1,6 @@
 libcm4all-was (1.22) unstable; urgency=low
 
+  * simple: close file descriptors in _free()
   * multi: simple MultiWAS implementation
 
  --   

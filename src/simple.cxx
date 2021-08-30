@@ -109,6 +109,10 @@ struct was_simple {
             packet.payload = nullptr;
         }
 
+        ~Control() noexcept {
+            close(fd);
+        }
+
         ssize_t DirectSend(const void *p, size_t length) {
             return send(fd, p, length, MSG_NOSIGNAL);
         }
@@ -213,6 +217,11 @@ struct was_simple {
             fd_set_nonblock(fd);
         }
 
+        ~Input() noexcept {
+            if (fd != STDIN_FILENO)
+                close(fd);
+        }
+
         bool HasBody() const {
             return !no_body;
         }
@@ -277,6 +286,11 @@ struct was_simple {
             :fd(_fd)
         {
             fd_set_nonblock(fd);
+        }
+
+        ~Output() noexcept {
+            if (fd != STDOUT_FILENO)
+                close(fd);
         }
 
         /**
