@@ -97,11 +97,11 @@ test_cflags = test_common_flags + [
   '-Wnested-externs',
 ]
 
-add_global_arguments(common_flags, language: 'c')
-add_global_arguments(common_flags, language: 'cpp')
+add_project_arguments(common_flags, language: 'c')
+add_project_arguments(common_flags, language: 'cpp')
 
-add_global_arguments(compiler.get_supported_arguments(test_cxxflags), language: 'cpp')
-add_global_arguments(c_compiler.get_supported_arguments(test_cflags), language: 'c')
+add_project_arguments(compiler.get_supported_arguments(test_cxxflags), language: 'cpp')
+add_project_arguments(c_compiler.get_supported_arguments(test_cflags), language: 'c')
 
 libhttp = dependency('libcm4all-http', version: '>= 1.2.6')
 libcore = dependency('libcore', version: '>= 1.20.5', required: get_option('xios'), disabler: true)
