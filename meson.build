@@ -41,9 +41,6 @@ else
   libapreq2 = disabler()
 endif
 
-libhttp = dependency('libcm4all-http', version: '>= 1.2.6')
-libcore = dependency('libcore', version: '>= 1.20.5', required: get_option('xios'), disabler: true)
-
 common_flags = [
   '-D_REENTRANT', '-D_GNU_SOURCE',
   '-Wwrite-strings', '-Wcast-qual', '-Wcast-align', '-Wfloat-equal',
@@ -99,6 +96,9 @@ add_global_arguments(common_flags, language: 'cpp')
 
 add_global_arguments(compiler.get_supported_arguments(test_cxxflags), language: 'cpp')
 add_global_arguments(c_compiler.get_supported_arguments(test_cflags), language: 'c')
+
+libhttp = dependency('libcm4all-http', version: '>= 1.2.6')
+libcore = dependency('libcore', version: '>= 1.20.5', required: get_option('xios'), disabler: true)
 
 inc = include_directories('src', 'include')
 
