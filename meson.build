@@ -59,7 +59,7 @@ test_common_flags = [
   '-Wwrite-strings',
 ]
 
-if not debug
+if not debug and not meson.is_subproject()
   test_common_flags += [
     '-ffunction-sections',
     '-fdata-sections',
