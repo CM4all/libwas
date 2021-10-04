@@ -55,7 +55,4 @@ libcm4all_was_multi_0 {
 		was_multi_free;
 		was_multi_fd;
 		was_multi_accept_simple;
-
-        local:
-                *;
 };
