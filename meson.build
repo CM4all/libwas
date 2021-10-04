@@ -129,13 +129,15 @@ libwas_simple = library('cm4all-was-simple',
 )
 libwas_simple_dep = declare_dependency(link_with: libwas_simple)
 
-pkg_mod.generate(
-  libwas_simple,
-  version: meson.project_version(),
-  name: 'libcm4all-was-simple',
-  description: 'CM4all simple WAS server library',
-  requires: [libhttp],
-)
+if libhttp.type_name() != 'internal'
+  pkg_mod.generate(
+    libwas_simple,
+    version: meson.project_version(),
+    name: 'libcm4all-was-simple',
+    description: 'CM4all simple WAS server library',
+    requires: [libhttp],
+  )
+endif
 
 libwas_apreq = library('cm4all-was-apreq',
   'src/parser.c',
@@ -161,13 +163,15 @@ libwas_apreq = library('cm4all-was-apreq',
 )
 libwas_apreq_dep = declare_dependency(link_with: libwas_apreq)
 
-pkg_mod.generate(
-  libraries: libwas_apreq,
-  version: meson.project_version(),
-  name: 'libcm4all-was-apreq',
-  description: 'CM4all WAS server library, request parser',
-  requires: [libwas_simple],
-)
+if libhttp.type_name() != 'internal'
+  pkg_mod.generate(
+    libraries: libwas_apreq,
+    version: meson.project_version(),
+    name: 'libcm4all-was-apreq',
+    description: 'CM4all WAS server library, request parser',
+    requires: [libwas_simple],
+  )
+endif
 
 libwas_xios = library('cm4all-was-xios',
   'src/istub.c',
@@ -190,13 +194,15 @@ libwas_xios = library('cm4all-was-xios',
 )
 libwas_xios_dep = declare_dependency(link_with: libwas_xios)
 
-pkg_mod.generate(
-  libraries: libwas_xios,
-  version: meson.project_version(),
-  name: 'libcm4all-was-xios',
-  description: 'CM4all WAS server library, libcore xios implementation',
-  requires: [libwas_simple, libcore],
-)
+if libhttp.type_name() != 'internal'
+  pkg_mod.generate(
+    libraries: libwas_xios,
+    version: meson.project_version(),
+    name: 'libcm4all-was-xios',
+    description: 'CM4all WAS server library, libcore xios implementation',
+    requires: [libwas_simple, libcore],
+  )
+endif
 
 install_headers(
   'include/was/apreq.h',
