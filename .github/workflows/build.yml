@@ -1,0 +1,31 @@
+---
+on:
+  workflow_dispatch:
+  push:
+    paths-ignore:
+      - 'debian/**'
+      - 'doc/**'
+    branches:
+      - master
+  pull_request:
+    paths-ignore:
+      - 'debian/**'
+      - 'doc/**'
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        uses: actions/checkout@v2
+      - id: cache-ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: ${{ matrix.os }}-${{ matrix.type }}
+      - name: Meson Build
+        uses: BSFishy/meson-build@v1.0.3
+        with:
+          action: test
+          setup-options: -Dapreq2=disabled -Dxios=disabled -Ddocumentation=disabled
+          meson-version: 0.56.0
