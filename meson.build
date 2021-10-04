@@ -115,6 +115,10 @@ pkg_mod.generate(
   install_dir: join_paths(get_option('datadir'), 'pkgconfig')
 )
 
+libwas_protocol_dep = declare_dependency(
+  include_directories: inc,
+)
+
 libwas_simple = library('cm4all-was-simple',
   'src/iterator.cxx',
   'src/simple.cxx',
