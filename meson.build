@@ -133,7 +133,10 @@ libwas_simple = library('cm4all-was-simple',
   soversion: splitted_version[0],
   install: true,
 )
-libwas_simple_dep = declare_dependency(link_with: libwas_simple)
+libwas_simple_dep = declare_dependency(
+  link_with: libwas_simple,
+  include_directories: inc,
+)
 
 if libhttp.type_name() != 'internal'
   pkg_mod.generate(
@@ -167,7 +170,10 @@ libwas_apreq = library('cm4all-was-apreq',
   soversion: splitted_version[0],
   install: true,
 )
-libwas_apreq_dep = declare_dependency(link_with: libwas_apreq)
+libwas_apreq_dep = declare_dependency(
+  link_with: libwas_apreq,
+  include_directories: inc,
+)
 
 if libhttp.type_name() != 'internal'
   pkg_mod.generate(
@@ -198,7 +204,10 @@ libwas_xios = library('cm4all-was-xios',
   soversion: splitted_version[0],
   install: true,
 )
-libwas_xios_dep = declare_dependency(link_with: libwas_xios)
+libwas_xios_dep = declare_dependency(
+  link_with: libwas_xios,
+  include_directories: inc,
+)
 
 if libhttp.type_name() != 'internal'
   pkg_mod.generate(
