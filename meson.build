@@ -47,7 +47,7 @@ common_flags = [
 
 test_common_flags = [
   '-Wwrite-strings', '-Wcast-qual', '-Wcast-align', '-Wfloat-equal',
-  '-Wshadow', '-Wpointer-arith', '-Wsign-compare',
+  '-Wshadow',
   '-Wmissing-declarations', '-Wmissing-noreturn', '-Wmissing-format-attribute',
   '-Wredundant-decls', '-Wno-long-long', '-Wundef',
   '-Wunused',
