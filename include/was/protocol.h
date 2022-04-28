@@ -95,6 +95,12 @@ enum was_command {
      * number to recover, to empty the pipe.
      */
     WAS_COMMAND_PREMATURE = 14,
+
+    /**
+     * The client's address (canonical string representation of the IP
+     * address, no port number and no square braces).
+     */
+    WAS_COMMAND_REMOTE_HOST = 15,
 };
 
 enum multi_was_command {

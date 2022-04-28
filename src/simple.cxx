@@ -323,6 +323,8 @@ struct was_simple {
         http_method_t method;
         char *uri, *script_name, *path_info, *query_string;
 
+        char *remote_host;
+
         std::multimap<std::string, std::string> headers, parameters;
 
         /**
@@ -338,6 +340,8 @@ struct was_simple {
             path_info = nullptr;
             query_string = nullptr;
 
+            remote_host = nullptr;
+
             finished = false;
         }
 
@@ -346,6 +350,8 @@ struct was_simple {
             free(script_name);
             free(path_info);
             free(query_string);
+
+            free(remote_host);
 
             headers.clear();
             parameters.clear();
@@ -852,6 +858,13 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         input.known_length = true;
         input.premature = true;
         return true;
+
+    case WAS_COMMAND_REMOTE_HOST:
+        if (request.finished)
+            return false;
+
+        return was_simple_apply_string(&request.remote_host,
+                                       packet.payload, packet.length);
     }
 
     return true;
@@ -1708,6 +1721,14 @@ was_simple_get_header_iterator(const struct was_simple *w)
 {
     return was_simple_iterator_new(w->request.headers.begin(),
                                    w->request.headers.end());
+}
+
+const char *
+was_simple_get_remote_host(const struct was_simple *w)
+{
+    assert(w->response.state != was_simple::Response::State::NONE);
+
+    return w->request.remote_host;
 }
 
 const char *

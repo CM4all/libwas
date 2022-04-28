@@ -189,6 +189,13 @@ struct was_simple_iterator *
 was_simple_get_header_iterator(const struct was_simple *w);
 
 /**
+ * Returns the REMOTE_HOST attribute.
+ */
+was_gcc_pure
+const char *
+was_simple_get_remote_host(const struct was_simple *w);
+
+/**
  * Returns the value of a WAS parameter.
  */
 was_gcc_pure
