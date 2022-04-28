@@ -2,7 +2,7 @@ libcm4all-was (1.24) unstable; urgency=low
 
   * protocol: add packet REMOTE_HOST
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Thu, 28 Apr 2022 20:07:10 +0200
 
 libcm4all-was (1.23) unstable; urgency=low
 
