@@ -1,3 +1,9 @@
+libcm4all-was (1.25) unstable; urgency=low
+
+  * 
+
+ --   
+
 libcm4all-was (1.24) unstable; urgency=low
 
   * protocol: add packet REMOTE_HOST
