@@ -13,6 +13,10 @@ on:
       - 'doc/**'
     branches:
       - master
+
+permissions:
+  contents: read #  to fetch code (actions/checkout)
+
 jobs:
   build:
     runs-on: ubuntu-latest
