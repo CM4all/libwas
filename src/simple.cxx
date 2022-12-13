@@ -133,22 +133,6 @@ struct was_simple {
         }
 
         /**
-         * Can this control packet be ignored if it's too large for
-         * the buffer?
-         */
-        static bool CanDiscardLargePacket(enum was_command cmd) {
-            switch (cmd) {
-            case WAS_COMMAND_HEADER:
-                /* yup, just ignore large headers */
-                return true;
-
-            default:
-                /* nope, this may be fatal - bail out */
-                return false;
-            }
-        }
-
-        /**
          * Fill the #input_buffer.
          *
          * @param dontwait if true, then MSG_DONTWAIT is used to avoid
@@ -164,6 +148,16 @@ struct was_simple {
          * packet.
          */
         void Shift();
+
+        /**
+         * Determine the command of the current packet whose header
+         * has been received.  This can be used to peek at a packet
+         * which will be discarded, e.g. if Read() returns nullptr
+         * with errno=E2BIG.
+         */
+        enum was_command PeekCommand() const noexcept {
+            return (enum was_command)input_buffer.header.command;
+        }
 
         /**
          * @return the current WAS control packet or nullptr if no
@@ -183,7 +177,8 @@ struct was_simple {
          * control packet, if one was fully received)
          *
          * @return the next complete WAS control packet or nullptr on
-         * error (end-of-socket or I/O error)
+         * error (end-of-socket or I/O error) with errno set; E2BIG
+         * means the packet payload is too large for the #input_buffer
          */
         const struct was_control_packet *Read(bool dontwait);
 
@@ -499,6 +494,12 @@ struct was_simple {
         FINISHED,
     } partial_read_state = PartialReadState::INITIAL;
 
+    /**
+     * If this is non-zero, the this library rejects the request with
+     * this HTTP status instead of letting the caller handle it.
+     */
+    http_status_t error_status;
+
     was_simple(int control_fd, int input_fd, int output_fd) noexcept
         :control(control_fd), input(input_fd), output(output_fd)
     {
@@ -666,16 +667,16 @@ was_simple::Control::Read(bool dontwait)
             return p;
 
         if (IsInputBufferFull()) {
-            /* input buffer is full */
-            if (!CanDiscardLargePacket((enum was_command)input_buffer.header.command))
-                /* error out */
-                return nullptr;
+            /* input buffer is full: discard the packet and return an
+               error to the caller */
 
-            /* discard this packet */
             const size_t total_size = sizeof(input_buffer.header) +
                 input_buffer.header.length;
             discard_input = total_size - input_position;
             input_position = 0;
+
+            errno = E2BIG;
+            return nullptr;
         }
 
         if (!Fill(dontwait))
@@ -964,6 +965,31 @@ was_simple::ReadAndApplyControl()
 {
     const auto *packet = control.Read(false);
     if (packet == nullptr) {
+        if (errno == E2BIG) {
+            /* the payload is too large for our control input buffer;
+               check the command to see whether to fail the request
+               with a HTTP error status or abort the WAS connection */
+            switch (control.PeekCommand()) {
+            case WAS_COMMAND_URI:
+            case WAS_COMMAND_SCRIPT_NAME:
+            case WAS_COMMAND_PATH_INFO:
+            case WAS_COMMAND_QUERY_STRING:
+                error_status = HTTP_STATUS_REQUEST_URI_TOO_LONG;
+                return true;
+
+            case WAS_COMMAND_HEADER:
+            case WAS_COMMAND_PARAMETER:
+                if (error_status == http_status_t{})
+                    error_status = HTTP_STATUS_REQUEST_HEADER_FIELDS_TOO_LARGE;
+                return true;
+
+            default:
+                /* there's no good way to handle this gracefully;
+                   abort the WAS connection */
+                break;
+            }
+        }
+
         response.state = Response::State::ERROR;
         return false;
     }
@@ -1011,6 +1037,8 @@ was_simple::Accept(const char *would_block)
 
     assert(response.state == Response::State::NONE);
 
+    error_status = http_status_t{};
+
     input.received = 0;
     input.known_length = false;
     input.stopped = false;
@@ -1038,6 +1066,18 @@ was_simple::Accept(const char *would_block)
     if (!ApplyPendingControl()) {
         response.state = Response::State::ERROR;
         return nullptr;
+    }
+
+    if (error_status != http_status_t{}) {
+        /* a recoverable error has occurred - generate an empty
+           response without returning this request to the caller */
+        SetStatus(error_status);
+
+        /* TODO let's hope the compiler optimizes this to a JMP or
+           else we risk stack overflow; but I don't want to use "goto"
+           here, and wrapping the whole method in a loop is ugly,
+           too */
+        return Accept(would_block);
     }
 
     return request.uri;

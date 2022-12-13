@@ -1,6 +1,7 @@
 libcm4all-was (1.25) unstable; urgency=low
 
   * simple: reduce header/parameter lookup overhead
+  * simple: generate status 414/431 if control packet is too large
   * suppress clang warnings from APR/libapreq2 headers
 
  --   
