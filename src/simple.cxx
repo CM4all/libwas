@@ -73,6 +73,10 @@ struct was_control_packet {
     enum was_command command;
     size_t length;
     const void *payload;
+
+    constexpr std::string_view GetPayloadString() const noexcept {
+        return {static_cast<const char *>(payload), length};
+    }
 };
 
 struct was_simple {
@@ -764,16 +768,13 @@ was_simple_apply_string(char **value_r,
 
 static bool
 was_simple_apply_map(std::multimap<std::string, std::string> &map,
-                     const void *_payload, size_t length)
+                     std::string_view payload)
 {
-    const char *payload = (const char *)_payload;
-
-    const char *p = (const char *)memchr(payload, '=', length);
-    if (p == nullptr || p == payload)
+    const auto eq = payload.find('=');
+    if (eq == 0 || eq == payload.npos)
         return false;
 
-    map.emplace(std::string(payload, p),
-                std::string(p + 1, payload + length));
+    map.emplace(payload.substr(0, eq), payload.substr(eq + 1));
     return true;
 }
 
@@ -843,16 +844,14 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         if (request.finished)
             return false;
 
-        was_simple_apply_map(request.headers,
-                             packet.payload, packet.length);
+        was_simple_apply_map(request.headers, packet.GetPayloadString());
         break;
 
     case WAS_COMMAND_PARAMETER:
         if (request.finished)
             return false;
 
-        was_simple_apply_map(request.parameters,
-                             packet.payload, packet.length);
+        was_simple_apply_map(request.parameters, packet.GetPayloadString());
         break;
 
     case WAS_COMMAND_STATUS:
