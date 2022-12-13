@@ -709,10 +709,10 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
 {
     assert(response.state != Response::State::NONE);
 
-    switch (packet.command) {
-        http_method_t method;
-        uint64_t length;
+    http_method_t method;
+    uint64_t length;
 
+    switch (packet.command) {
     case WAS_COMMAND_NOP:
         break;
 

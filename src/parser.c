@@ -247,9 +247,9 @@ static apr_status_t cgi_read(apreq_handle_t *handle,
         return req->body_status;
 
 
-    switch (s = apr_brigade_partition(req->in, bytes, &e)) {
-        apr_off_t len;
+    apr_off_t len;
 
+    switch (s = apr_brigade_partition(req->in, bytes, &e)) {
     case APR_SUCCESS:
 
         apreq_brigade_move(req->tmpbb, req->in, e);

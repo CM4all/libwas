@@ -98,7 +98,7 @@ xios_was_output_write_internal(xiostub *stub, was_gcc_unused xioexec *exec,
 }
 
 static int
-xios_was_output_write(xiostub *stub, was_gcc_unused xioexec *exec, void *ctxt,
+xios_was_output_write(xiostub *stub, xioexec *exec, void *ctxt,
                       int byte)
 {
     struct was_simple *w = ctxt;
@@ -120,7 +120,7 @@ xios_was_output_write(xiostub *stub, was_gcc_unused xioexec *exec, void *ctxt,
 }
 
 static int
-xios_was_output_writen(xiostub *stub, was_gcc_unused xioexec *exec, void *ctxt,
+xios_was_output_writen(xiostub *stub, xioexec *exec, void *ctxt,
                        const char *buff, xoffs size)
 {
     struct was_simple *w = ctxt;
