@@ -143,25 +143,99 @@ struct was_simple {
             }
         }
 
+        /**
+         * Fill the #input_buffer.
+         *
+         * @param dontwait if true, then MSG_DONTWAIT is used to avoid
+         * blocking (fails with EAGAIN/EWOULDBLOCK if it would block)
+         *
+         * @return true on success, false on error (end-of-socket or
+         * I/O error, including EAGAIN/EWOULDBLOCK)
+         */
         bool Fill(bool dontwait);
+
+        /**
+         * Shift the input buffer, removing the current WAS control
+         * packet.
+         */
         void Shift();
+
+        /**
+         * @return the current WAS control packet or nullptr if no
+         * complete packet (header + payload) has been received yet
+         */
         const struct was_control_packet *Get();
+
+        /**
+         * @return the next WAS control packet (discarding the current
+         * control packet, if one was fully received) or nullptr if
+         * another complete packet has not been received yet
+         */
         const struct was_control_packet *Next();
+
+        /**
+         * Read the next WAS control packet (discarding the current
+         * control packet, if one was fully received)
+         *
+         * @return the next complete WAS control packet or nullptr on
+         * error (end-of-socket or I/O error)
+         */
         const struct was_control_packet *Read(bool dontwait);
+
+        /**
+         * Send the #output_buffer to the control socket.
+         *
+         * @return true on success, false on I/O error
+         */
         bool Flush();
+
+        /**
+         * Append data to the #output_buffer (but does not yet send
+         * it).  The caller must ensure that there is enough space in
+         * the #output_buffer.
+         */
         void Append(const void *p, size_t length);
+
+        /**
+         * Append data to the #output_buffer if there is enough room,
+         * possibly flushing it and possibly sending the data directly
+         * to the socket.
+         *
+         * @return true on success, false on I/O error
+         */
         bool Send(const void *data, size_t length);
+
+        /**
+         * Assemble a WAS control header and send it.
+         *
+         * @return true on success, false on I/O error
+         */
         bool SendHeader(enum was_command command, size_t length);
 
+        /**
+         * Send a WAS control packet without a payload.
+         *
+         * @return true on success, false on I/O error
+         */
         bool SendEmpty(enum was_command command) {
             return SendHeader(command, 0);
         }
 
+        /**
+         * Send a WAS control packet with a payload.
+         *
+         * @return true on success, false on I/O error
+         */
         bool SendPacket(enum was_command command,
                         const void *payload, size_t length) {
             return SendHeader(command, length) && Send(payload, length);
         }
 
+        /**
+         * Send a WAS control packet with a uint64_t payload.
+         *
+         * @return true on success, false on I/O error
+         */
         bool SendUint64(enum was_command command, uint64_t payload) {
             return SendPacket(command, &payload, sizeof(payload));
         }
