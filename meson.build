@@ -33,7 +33,7 @@ if apreq2_config.found()
   libapr_util = dependency('apr-util-1')
 
   libapreq2 = declare_dependency(
-    compile_args: '-I' + apreq2_includedir.stdout().strip(),
+    include_directories: include_directories(apreq2_includedir.stdout().strip()),
     link_args: apreq2_linkld.stdout().strip().split(),
     dependencies: [ libapr, libapr_util ],
   )
