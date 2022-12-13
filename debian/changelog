@@ -1,6 +1,6 @@
 libcm4all-was (1.25) unstable; urgency=low
 
-  * 
+  * suppress clang warnings from APR/libapreq2 headers
 
  --   
 

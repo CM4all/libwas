@@ -29,11 +29,11 @@ if apreq2_config.found()
     error('"apreq2-config --link-ld" failed')
   endif
 
-  libapr = dependency('apr-1')
-  libapr_util = dependency('apr-util-1')
+  libapr = dependency('apr-1', include_type: 'system')
+  libapr_util = dependency('apr-util-1', include_type: 'system')
 
   libapreq2 = declare_dependency(
-    include_directories: include_directories(apreq2_includedir.stdout().strip()),
+    include_directories: include_directories(apreq2_includedir.stdout().strip(), is_system: true),
     link_args: apreq2_linkld.stdout().strip().split(),
     dependencies: [ libapr, libapr_util ],
   )
