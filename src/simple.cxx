@@ -404,7 +404,7 @@ struct was_simple {
 
         char *remote_host;
 
-        std::multimap<std::string, std::string> headers, parameters;
+        std::multimap<std::string, std::string, std::less<>> headers, parameters;
 
         /**
          * True when all request metadata has been received.
@@ -767,7 +767,7 @@ was_simple_apply_string(char **value_r,
 }
 
 static bool
-was_simple_apply_map(std::multimap<std::string, std::string> &map,
+was_simple_apply_map(std::multimap<std::string, std::string, std::less<>> &map,
                      std::string_view payload)
 {
     const auto eq = payload.find('=');
