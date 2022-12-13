@@ -592,8 +592,15 @@ was_simple::Control::Fill(bool dontwait)
                           input_buffer.raw + input_position,
                           max_read,
                           dontwait * MSG_DONTWAIT);
-    if (nbytes <= 0)
+    if (nbytes <= 0) {
+        if (nbytes == 0)
+            /* the WAS client closed the control socket; recv()==0
+               doesn't set errno, but our caller checks errno if we
+               return false; to avoid leaving a random errno value,
+               set one that fits best */
+            errno = ECONNRESET;
         return false;
+    }
 
     if (discard_input > 0)
         discard_input -= nbytes;
