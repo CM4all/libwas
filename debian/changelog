@@ -5,7 +5,7 @@ libcm4all-was (1.25) unstable; urgency=low
   * simple: allow request URIs and headers up to 8000 bytes
   * suppress clang warnings from APR/libapreq2 headers
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Tue, 13 Dec 2022 12:39:05 +0100
 
 libcm4all-was (1.24) unstable; urgency=low
 
