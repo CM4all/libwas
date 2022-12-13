@@ -48,6 +48,7 @@ common_flags = [
 test_common_flags = [
   '-Wcast-align',
   '-Wcast-qual',
+  '-Wdouble-promotion',
   '-Wfloat-equal',
   '-Wmissing-declarations',
   '-Wmissing-format-attribute',
@@ -56,7 +57,12 @@ test_common_flags = [
   '-Wshadow',
   '-Wundef',
   '-Wunused',
+  '-Wvla',
   '-Wwrite-strings',
+
+  # clang specific warning options:
+  '-Wunreachable-code-aggressive',
+  '-Wused-but-marked-unused',
 ]
 
 if not debug and not meson.is_subproject()
@@ -84,10 +90,24 @@ endif
 
 test_cxxflags = test_common_flags + [
   '-fno-exceptions', '-fno-rtti',
+
   '-fno-threadsafe-statics',
   '-fmerge-all-constants',
+
+  '-Wcomma-subscript',
+  '-Wextra-semi',
+  '-Wmismatched-tags',
+  '-Woverloaded-virtual',
+  '-Wsign-promo',
+  '-Wvolatile',
+  '-Wvirtual-inheritance',
+
   '-Wno-missing-field-initializers',
-  '-Wno-non-virtual-dtor',
+
+  # clang specific warning options:
+  '-Wcomma',
+  '-Wheader-hygiene',
+  '-Winconsistent-missing-destructor-override',
 ]
 
 test_cflags = test_common_flags + [
