@@ -85,7 +85,7 @@ struct was_simple {
      */
     struct Control {
         union {
-            char raw[4096];
+            char raw[8192];
             struct was_header header;
         } input_buffer;
 
