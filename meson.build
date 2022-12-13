@@ -19,12 +19,12 @@ pkg_mod = import('pkgconfig')
 apreq2_config = find_program('apreq2-config', required: get_option('apreq2'))
 
 if apreq2_config.found()
-  apreq2_includedir = run_command(apreq2_config, '--includedir')
+  apreq2_includedir = run_command(apreq2_config, '--includedir', check: true)
   if apreq2_includedir.returncode() != 0
     error('"apreq2-config --includedir" failed')
   endif
 
-  apreq2_linkld = run_command(apreq2_config, '--link-ld')
+  apreq2_linkld = run_command(apreq2_config, '--link-ld', check: true)
   if apreq2_linkld.returncode() != 0
     error('"apreq2-config --link-ld" failed')
   endif
