@@ -1,3 +1,9 @@
+libcm4all-was (1.26) unstable; urgency=low
+
+  * 
+
+ --   
+
 libcm4all-was (1.25) unstable; urgency=low
 
   * simple: reduce header/parameter lookup overhead
