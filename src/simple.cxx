@@ -763,13 +763,12 @@ was_simple::FinishRequest()
 }
 
 static bool
-was_simple_apply_string(char **value_r,
-                        const void *payload, size_t length)
+was_simple_apply_string(char **value_r, std::string_view payload)
 {
     if (*value_r != nullptr)
         return false;
 
-    *value_r = strndup((const char *)payload, length);
+    *value_r = strndup(payload.data(), payload.size());
     return true;
 }
 
@@ -824,28 +823,28 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
             return false;
 
         return was_simple_apply_string(&request.uri,
-                                       packet.payload, packet.length);
+                                       packet.GetPayloadString());
 
     case WAS_COMMAND_SCRIPT_NAME:
         if (request.finished)
             return false;
 
         return was_simple_apply_string(&request.script_name,
-                                       packet.payload, packet.length);
+                                       packet.GetPayloadString());
 
     case WAS_COMMAND_PATH_INFO:
         if (request.finished)
             return false;
 
         return was_simple_apply_string(&request.path_info,
-                                       packet.payload, packet.length);
+                                       packet.GetPayloadString());
 
     case WAS_COMMAND_QUERY_STRING:
         if (request.finished)
             return false;
 
         return was_simple_apply_string(&request.query_string,
-                                       packet.payload, packet.length);
+                                       packet.GetPayloadString());
 
     case WAS_COMMAND_HEADER:
         if (request.finished)
@@ -943,7 +942,7 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
             return false;
 
         return was_simple_apply_string(&request.remote_host,
-                                       packet.payload, packet.length);
+                                       packet.GetPayloadString());
     }
 
     return true;
