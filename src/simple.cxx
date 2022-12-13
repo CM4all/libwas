@@ -557,7 +557,6 @@ struct was_simple {
 
     bool CloseInput();
     bool SetStatus(http_status_t status);
-    bool SetHeader(const char *name, const char *value);
     bool SetHeader(const char *name, size_t name_length,
                    const char *value, size_t value_length) noexcept;
     bool SetLength(uint64_t length);
