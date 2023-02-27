@@ -176,6 +176,8 @@ Request packets
   after the question mark (excluding the question mark itself)
 * :envvar:`PARAMETER`: an application-defined parameter: a name-value
   pair, separated by a "=" character
+* :envvar:`METRIC`: enable metrics, i.e. ask the application to
+  provide counters in :envvar:`METRIC` response packets.  No payload.
 
 Response packets
 ''''''''''''''''
@@ -183,6 +185,9 @@ Response packets
 * :envvar:`STATUS`: start of a HTTP request; payload is a
   :envvar:`uint16_t` with integer values from the :path:`libcm4all-http`
   enumeration type :envvar:`http_status`
+* :envvar:`METRIC`: provide one metric.  Payload is a 32 bit floating
+  point counter value followed by a symbolic name (ASCII letters,
+  digits, underscore; without null-terminator).
 
 Common packets
 ''''''''''''''

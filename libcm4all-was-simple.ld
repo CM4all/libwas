@@ -40,6 +40,8 @@ libcm4all_was_simple_0 {
 		was_simple_abort;
 		was_simple_iterator_free;
 		was_simple_iterator_next;
+		was_simple_want_metrics;
+		was_simple_metric;
 
         local:
                 *;

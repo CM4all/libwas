@@ -374,6 +374,11 @@ struct was_simple {
         std::multimap<std::string, std::string, std::less<>> headers, parameters;
 
         /**
+         * True if #WAS_COMMAND_METRIC has been received.
+         */
+        bool want_metrics;
+
+        /**
          * True when all request metadata has been received.
          */
         bool finished;
@@ -388,6 +393,7 @@ struct was_simple {
 
             remote_host = nullptr;
 
+            want_metrics = false;
             finished = false;
         }
 
@@ -547,6 +553,14 @@ struct was_simple {
     bool SetResponseStateBody();
 
     bool DiscardAllInput();
+
+    bool WantMetrics() const noexcept {
+        assert(response.state != Response::State::NONE);
+
+        return request.want_metrics;
+    }
+
+    bool SendMetric(std::string_view name, float value) noexcept;
 
     bool End();
     bool Abort();
@@ -916,6 +930,10 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
 
         return was_simple_apply_string(&request.remote_host,
                                        packet.GetPayloadString());
+
+    case WAS_COMMAND_METRIC:
+        request.want_metrics = true;
+        return true;
     }
 
     return true;
@@ -1720,6 +1738,25 @@ was_simple::Abort()
     was_gcc_unreachable();
 }
 
+inline bool
+was_simple::SendMetric(std::string_view name, float value) noexcept
+{
+    assert(response.state != Response::State::NONE);
+
+    if (!WantMetrics())
+        return true;
+
+    bool success = control.SendHeader(WAS_COMMAND_METRIC,
+                                      sizeof(value) + name.size()) &&
+        control.Send(&value, sizeof(value)) &&
+        control.Send(name.data(), name.size());
+
+    if (!success)
+        response.state = Response::State::ERROR;
+
+    return success;
+}
+
 struct was_simple *
 was_simple_new(void)
 {
@@ -2013,6 +2050,18 @@ bool
 was_simple_splice_all(struct was_simple *w, bool end)
 {
     return w->SpliceAll(end);
+}
+
+bool
+was_simple_want_metrics(const struct was_simple *w)
+{
+    return w->WantMetrics();
+}
+
+bool
+was_simple_metric(struct was_simple *w, const char *name, float value)
+{
+    return w->SendMetric(name, value);
 }
 
 bool

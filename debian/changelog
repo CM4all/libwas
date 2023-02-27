@@ -1,6 +1,6 @@
 libcm4all-was (1.26) unstable; urgency=low
 
-  * 
+  * protocol: add packet METRIC
 
  --   
 

@@ -73,6 +73,15 @@ enum was_command {
      * address, no port number and no square braces).
      */
     WAS_COMMAND_REMOTE_HOST = 15,
+
+    /**
+     * Request: collect metrics for this request (no payload).
+     *
+     * Response: provide one metric value.  Payload is a 32 bit
+     * floating point counter value followed by a symbolic name (ASCII
+     * letters, digits, underscore; without null-terminator).
+     */
+    WAS_COMMAND_METRIC = 16,
 };
 
 enum multi_was_command {

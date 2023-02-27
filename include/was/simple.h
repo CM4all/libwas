@@ -399,6 +399,19 @@ was_simple_iterator_free(struct was_simple_iterator *i);
 const struct was_simple_pair *
 was_simple_iterator_next(struct was_simple_iterator *i);
 
+/**
+ * Did we receive a #WAS_COMMAND_METRIC packet for the current request?
+ */
+was_gcc_pure
+bool
+was_simple_want_metrics(const struct was_simple *w);
+
+/**
+ * Send one #WAS_COMMAND_METRIC packet.
+ */
+bool
+was_simple_metric(struct was_simple *w, const char *name, float value);
+
 #ifdef __cplusplus
 }
 #endif
