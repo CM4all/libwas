@@ -277,7 +277,7 @@ struct was_simple {
         }
 
         int64_t GetRemaining() const {
-            assert(!stopped);
+            assert(!stopped || ignore_premature);
 
             return known_length
                 ? int64_t(announced - received)
