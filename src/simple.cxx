@@ -478,12 +478,22 @@ struct was_simple {
      */
     http_status_t error_status;
 
+    /**
+     * A writable file handle for /dev/null which may be used to
+     * discard input by splicing it to /dev/null.  -2 means not yet
+     * opened, -1 means opening /dev/null has failed.
+     */
+    int dev_null = -2;
+
     was_simple(int control_fd, int input_fd, int output_fd) noexcept
         :control(control_fd), input(input_fd), output(output_fd)
     {
     }
 
     ~was_simple() {
+        if (dev_null >= 0)
+            close(dev_null);
+
         if (response.state != Response::State::NONE)
             request.Deinit();
     }
@@ -549,6 +559,8 @@ struct was_simple {
 
     ssize_t Splice(size_t max_length) noexcept;
     bool SpliceAll(bool end) noexcept;
+
+    bool SpliceTo(int out_fd) noexcept;
 
     bool SetResponseStateBody();
 
@@ -1640,11 +1652,58 @@ was_simple::SpliceAll(bool end) noexcept
 }
 
 inline bool
+was_simple::SpliceTo(const int out_fd) noexcept
+{
+    constexpr std::size_t max_len = 1 << 30;
+
+    const int in_fd = was_simple_input_fd(this);
+    if (in_fd < 0)
+        return false;
+
+    while (true) {
+        switch (PollInput(-1)) {
+        case WAS_SIMPLE_POLL_SUCCESS:
+            break;
+
+        case WAS_SIMPLE_POLL_ERROR:
+        case WAS_SIMPLE_POLL_TIMEOUT:
+            return false;
+
+        case WAS_SIMPLE_POLL_END:
+            return true;
+
+        case WAS_SIMPLE_POLL_CLOSED:
+            return false;
+        }
+
+        auto nbytes = splice(in_fd, nullptr,
+                             out_fd, nullptr,
+                             input.ClampRemaining(max_len),
+                             SPLICE_F_MOVE|SPLICE_F_NONBLOCK);
+        if (nbytes < 0) {
+            if (errno == EAGAIN)
+                continue;
+
+            return false;
+        }
+
+        if (!Received(nbytes))
+            return false;
+    }
+}
+
+inline bool
 was_simple::DiscardAllInput()
 {
     /* since we're discarding everything, receiving PREMATURE is okay,
        just stop there and report success */
     input.ignore_premature = true;
+
+    if (dev_null == -2)
+        dev_null = open("/dev/null", O_WRONLY|O_NOCTTY|O_CLOEXEC);
+
+    if (dev_null >= 0)
+        return SpliceTo(dev_null);
 
     while (true) {
         char buffer[4096];
