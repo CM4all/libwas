@@ -554,6 +554,11 @@ struct was_simple {
 
     bool DiscardAllInput();
 
+    bool CloseDiscardInput() noexcept {
+        return (input.stopped || (CloseInput() && control.Flush())) &&
+            DiscardAllInput();
+    }
+
     bool WantMetrics() const noexcept {
         assert(response.state != Response::State::NONE);
 
@@ -1342,6 +1347,14 @@ was_simple::SetLength(uint64_t length)
 
     assert(response.state == Response::State::BODY);
 
+    /* before finishing the response, the whole request body must be
+       discarded, or else we may mix up with the next request body if
+       we miss a PREMATURE packet */
+    if (length == output.sent && !CloseDiscardInput()) {
+        response.state = Response::State::ERROR;
+        return false;
+    }
+
     if (!control.SendUint64(WAS_COMMAND_LENGTH, length) ||
         !control.Flush()) {
         response.state = Response::State::ERROR;
@@ -1461,6 +1474,15 @@ was_simple::Write(const void *data0, size_t length)
     if (!SetResponseStateBody() ||
         !output.CanSend(length))
         return false;
+
+    /* before finishing the response, the whole request body must be
+       discarded, or else we may mix up with the next request body if
+       we miss a PREMATURE packet */
+    if (output.known_length && output.sent + length >= output.announced &&
+        !CloseDiscardInput()) {
+        response.state = Response::State::ERROR;
+        return false;
+    }
 
     if (!control.Flush()) {
         response.state = Response::State::ERROR;
@@ -1637,7 +1659,10 @@ was_simple::End()
 {
     assert(response.state != Response::State::NONE);
 
-    if (!CloseInput())
+    /* before finishing the response, the whole request body must be
+       discarded, or else we may mix up with the next request body if
+       we miss a PREMATURE packet */
+    if (!CloseDiscardInput())
         return false;
 
     /* generate a status code? */
@@ -1682,10 +1707,6 @@ was_simple::End()
 
     assert(response.state == Response::State::END ||
            response.state == Response::State::STOP);
-
-    /* discard the request body? */
-    if (!DiscardAllInput())
-        return false;
 
     /* wait for PREMATURE? */
     if (input.stopped && !input.IsEOF()) {
