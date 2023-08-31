@@ -1620,6 +1620,10 @@ was_simple::SpliceAll(bool end) noexcept
 inline bool
 was_simple::DiscardAllInput()
 {
+    /* since we're discarding everything, receiving PREMATURE is okay,
+       just stop there and report success */
+    input.ignore_premature = true;
+
     while (true) {
         char buffer[4096];
         ssize_t nbytes = Read(buffer, sizeof(buffer));
@@ -1632,8 +1636,6 @@ bool
 was_simple::End()
 {
     assert(response.state != Response::State::NONE);
-
-    input.ignore_premature = true;
 
     if (!CloseInput())
         return false;
