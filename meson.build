@@ -160,6 +160,9 @@ libwas_simple = library('cm4all-was-simple',
 libwas_simple_dep = declare_dependency(
   link_with: libwas_simple,
   include_directories: inc,
+  dependencies: [
+    libhttp,
+  ],
 )
 
 if libhttp.type_name() != 'internal'
@@ -180,7 +183,6 @@ libwas_apreq = library('cm4all-was-apreq',
   ],
   include_directories: inc,
   dependencies: [
-    libhttp,
     libapreq2,
     libwas_simple_dep,
   ],
@@ -217,7 +219,6 @@ libwas_xios = library('cm4all-was-xios',
   ],
   include_directories: inc,
   dependencies: [
-    libhttp,
     libcore,
     libwas_simple_dep,
   ],
@@ -231,6 +232,9 @@ libwas_xios = library('cm4all-was-xios',
 libwas_xios_dep = declare_dependency(
   link_with: libwas_xios,
   include_directories: inc,
+  dependencies: [
+    libcore,
+  ],
 )
 
 if libhttp.type_name() != 'internal'
