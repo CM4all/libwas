@@ -23,12 +23,35 @@ jobs:
     steps:
       - id: checkout
         uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            meson \
+            ccache
+
       - id: cache-ccache
         uses: hendrikmuhs/ccache-action@v1
 
-      - name: Meson Build
-        uses: BSFishy/meson-build@v1.0.3
-        with:
-          action: test
-          setup-options: -Dapreq2=disabled -Dxios=disabled -Ddocumentation=disabled
-          meson-version: 0.56.0
+      - name: Configure
+        run: |
+          meson setup \
+            -Dauto_features=enabled \
+            -Dapreq2=disabled \
+            -Dxios=disabled \
+            -Ddocumentation=disabled \
+            -Dwrap_mode=nofallback \
+            --force-fallback-for=libcm4all-http \
+            output
+
+      - name: Build
+        run: ninja -C output -v
+
+      - name: Unit Tests
+        run: meson test -C output
+
+      - name: Dump Unit Test Log
+        if: ${{ failure() }}
+        continue-on-error: true
+        run: cat output/meson-logs/testlog.txt
