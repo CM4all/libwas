@@ -25,8 +25,7 @@ jobs:
         uses: actions/checkout@v4
       - id: cache-ccache
         uses: hendrikmuhs/ccache-action@v1
-        with:
-          key: ${{ matrix.os }}-${{ matrix.type }}
+
       - name: Meson Build
         uses: BSFishy/meson-build@v1.0.3
         with:
