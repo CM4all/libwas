@@ -11,6 +11,7 @@
 #include <was/protocol.h>
 
 #include "iterator.hxx"
+#include "util/Unaligned.hxx"
 
 #include <http/header.h>
 
@@ -810,7 +811,7 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         if (packet.length != sizeof(uint32_t))
             return false;
 
-        method = (http_method_t)*(const uint32_t *)packet.payload;
+        method = static_cast<http_method_t>(LoadUnaligned<uint32_t>(packet.payload));
         if (request.method != HTTP_METHOD_GET &&
             method != request.method)
             /* sending that packet twice is illegal */
@@ -893,7 +894,7 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         if (packet.length != sizeof(length))
             return false;
 
-        length = *(const uint64_t *)packet.payload;
+        length = LoadUnaligned<uint64_t>(packet.payload);
         if (length < input.received ||
             (input.known_length && length != input.announced))
             return false;
@@ -931,7 +932,7 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         if (packet.length != sizeof(length))
             return false;
 
-        length = *(const uint64_t *)packet.payload;
+        length = LoadUnaligned<uint64_t>(packet.payload);
         if (length < input.received ||
             (input.known_length && length > input.announced))
             return false;

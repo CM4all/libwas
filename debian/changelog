@@ -1,6 +1,6 @@
 libcm4all-was (1.28) unstable; urgency=low
 
-  * 
+  * simple: fix misaligned loads
 
  --   
 
