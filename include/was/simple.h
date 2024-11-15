@@ -380,7 +380,11 @@ was_simple_splice_all(struct was_simple *w, bool end);
 /**
  * Mark the end of the current request.  If no status has been set,
  * then "204 No Content" is used.  If no request body has been
- * announced, then NO_DATA is sent.
+ * announced, then NO_DATA is sent.  The current request will also
+ * be ended by was_simple_accept, so calling this function is not
+ * required, but may be useful to signal NO_DATA early.
+ *
+ * @return true on success, false on error
  */
 bool
 was_simple_end(struct was_simple *w);
@@ -389,6 +393,8 @@ was_simple_end(struct was_simple *w);
  * Abort the current request by sending an error condition to the
  * client (i.e. the web server).  This is useful when an error is
  * found after the status has been sent already.
+ *
+ * @return true on success, false on error
  */
 bool
 was_simple_abort(struct was_simple *w);
