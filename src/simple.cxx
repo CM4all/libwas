@@ -2034,9 +2034,8 @@ bool
 was_simple_copy_all_headers(struct was_simple *w)
 {
     for (const auto &i : w->request.headers)
-        if (!http_header_is_hop_by_hop(i.first.c_str()))
-            if (!was_simple_set_header(w, i.first.c_str(), i.second.c_str()))
-                return false;
+        if (!was_simple_set_header(w, i.first.c_str(), i.second.c_str()))
+            return false;
 
     return true;
 }
