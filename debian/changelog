@@ -2,7 +2,7 @@ libcm4all-was (1.30) unstable; urgency=low
 
   * simple: refuse to send packets longer than 65535 bytes
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Fri, 29 Nov 2024 22:59:38 +0100
 
 libcm4all-was (1.29) unstable; urgency=low
 
