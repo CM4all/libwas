@@ -114,6 +114,7 @@ struct was_simple {
          * @return true on success, false on error (end-of-socket or
          * I/O error, including EAGAIN/EWOULDBLOCK)
          */
+        [[nodiscard]]
         bool Fill(bool dontwait);
 
         /**
@@ -128,6 +129,7 @@ struct was_simple {
          * which will be discarded, e.g. if Read() returns nullptr
          * with errno=E2BIG.
          */
+        [[nodiscard]]
         enum was_command PeekCommand() const noexcept {
             return (enum was_command)input_buffer.header.command;
         }
@@ -136,6 +138,7 @@ struct was_simple {
          * @return the current WAS control packet or nullptr if no
          * complete packet (header + payload) has been received yet
          */
+        [[nodiscard]]
         const struct was_control_packet *Get();
 
         /**
@@ -143,6 +146,7 @@ struct was_simple {
          * control packet, if one was fully received) or nullptr if
          * another complete packet has not been received yet
          */
+        [[nodiscard]]
         const struct was_control_packet *Next();
 
         /**
@@ -153,6 +157,7 @@ struct was_simple {
          * error (end-of-socket or I/O error) with errno set; E2BIG
          * means the packet payload is too large for the #input_buffer
          */
+        [[nodiscard]]
         const struct was_control_packet *Read(bool dontwait);
 
         /**
@@ -160,6 +165,7 @@ struct was_simple {
          *
          * @return true on success, false on I/O error
          */
+        [[nodiscard]]
         bool Flush();
 
         /**
@@ -176,6 +182,7 @@ struct was_simple {
          *
          * @return true on success, false on I/O error
          */
+        [[nodiscard]]
         bool Send(const void *data, size_t length);
 
         /**
@@ -183,6 +190,7 @@ struct was_simple {
          *
          * @return true on success, false on I/O error
          */
+        [[nodiscard]]
         bool SendHeader(enum was_command command, size_t length);
 
         /**
@@ -190,6 +198,7 @@ struct was_simple {
          *
          * @return true on success, false on I/O error
          */
+        [[nodiscard]]
         bool SendEmpty(enum was_command command) {
             return SendHeader(command, 0);
         }
@@ -199,6 +208,7 @@ struct was_simple {
          *
          * @return true on success, false on I/O error
          */
+        [[nodiscard]]
         bool SendPacket(enum was_command command,
                         const void *payload, size_t length) {
             return SendHeader(command, length) && Send(payload, length);
@@ -209,6 +219,7 @@ struct was_simple {
          *
          * @return true on success, false on I/O error
          */
+        [[nodiscard]]
         bool SendUint64(enum was_command command, uint64_t payload) {
             return SendPacket(command, &payload, sizeof(payload));
         }
@@ -289,6 +300,7 @@ struct was_simple {
          * Clamp the given size to the number of remaining bytes, if
          * that is known.
          */
+        [[nodiscard]]
         size_t ClampRemaining(size_t size) const {
             if (known_length) {
                 uint64_t remaining = announced - received;
@@ -350,6 +362,7 @@ struct was_simple {
         /**
          * Can this much data be sent?
          */
+        [[nodiscard]]
         bool CanSend(size_t nbytes) const {
             return !no_body && (!known_length || sent + nbytes <= announced);
         }
@@ -486,6 +499,7 @@ struct was_simple {
      */
     int dev_null = -2;
 
+    [[nodiscard]]
     was_simple(int control_fd, int input_fd, int output_fd) noexcept
         :control(control_fd), input(input_fd), output(output_fd)
     {
@@ -499,6 +513,7 @@ struct was_simple {
             request.Deinit();
     }
 
+    [[nodiscard]]
     bool HasRequestBody() const {
         assert(response.state != Response::State::NONE);
 
@@ -522,27 +537,41 @@ struct was_simple {
     /**
      * @return true if the connection can be reused
      */
+    [[nodiscard]]
     bool FinishRequest();
 
     /**
      * @return true if no more control packets can be sent for the
      * current request
      */
+    [[nodiscard]]
     bool IsControlFinished() const {
         return response.state == Response::State::END ||
             response.state == Response::State::STOP;
     }
 
+    [[nodiscard]]
     bool ApplyRequestPacket(const struct was_control_packet &packet);
+
+    [[nodiscard]]
     bool ApplyPendingControl();
+
+    [[nodiscard]]
     bool ReadAndApplyControl();
 
+    [[nodiscard]]
     const char *Accept(const char *would_block=nullptr);
+
+    [[nodiscard]]
     enum was_simple_poll_result PollInput(int timeout_ms);
 
+    [[nodiscard]]
     bool Received(size_t nbytes);
+
+    [[nodiscard]]
     ssize_t Read(void *buffer, size_t length);
 
+    [[nodiscard]]
     int64_t GetInputRemaining() const {
         if (input.premature)
             return -1;
@@ -550,37 +579,59 @@ struct was_simple {
         return input.GetRemaining();
     }
 
+    [[nodiscard]]
     bool CloseInput();
+
+    [[nodiscard]]
     bool SetStatus(http_status_t status);
+
+    [[nodiscard]]
     bool SetHeader(std::string_view name, std::string_view value) noexcept;
+
+    [[nodiscard]]
     bool SetLength(uint64_t length);
 
+    [[nodiscard]]
     enum was_simple_poll_result PollOutput(int timeout_ms);
+
+    [[nodiscard]]
     bool Write(const void *data, size_t length);
 
+    [[nodiscard]]
     ssize_t Splice(size_t max_length) noexcept;
+
+    [[nodiscard]]
     bool SpliceAll(bool end) noexcept;
 
+    [[nodiscard]]
     bool SpliceTo(int out_fd) noexcept;
 
+    [[nodiscard]]
     bool SetResponseStateBody();
 
+    [[nodiscard]]
     bool DiscardAllInput();
 
+    [[nodiscard]]
     bool CloseDiscardInput() noexcept {
         return (input.stopped || (CloseInput() && control.Flush())) &&
             DiscardAllInput();
     }
 
+    [[nodiscard]]
     bool WantMetrics() const noexcept {
         assert(response.state != Response::State::NONE);
 
         return request.want_metrics;
     }
 
+    [[nodiscard]]
     bool SendMetric(std::string_view name, float value) noexcept;
 
+    [[nodiscard]]
     bool End();
+
+    [[nodiscard]]
     bool Abort();
 };
 
