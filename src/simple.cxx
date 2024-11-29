@@ -1079,7 +1079,8 @@ was_simple::Accept(const char *would_block)
     if (error_status != http_status_t{}) {
         /* a recoverable error has occurred - generate an empty
            response without returning this request to the caller */
-        SetStatus(error_status);
+        if (!SetStatus(error_status))
+            return nullptr;
 
         /* TODO let's hope the compiler optimizes this to a JMP or
            else we risk stack overflow; but I don't want to use "goto"
