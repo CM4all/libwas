@@ -790,6 +790,8 @@ was_simple::Control::Send(const void *data, size_t length)
 static constexpr struct was_header
 MakeHeader(enum was_command command, size_t length) noexcept
 {
+    assert(length <= 0xffff);
+
     struct was_header h{};
     h.length = uint16_t(length);
     h.command = uint16_t(command);
@@ -799,6 +801,10 @@ MakeHeader(enum was_command command, size_t length) noexcept
 bool
 was_simple::Control::SendHeader(enum was_command command, size_t length)
 {
+    if (length > 0xffff)
+        /* doesn't fit in was_header.length - don't truncate */
+        return false;
+
     const auto header = MakeHeader(command, length);
     return Send(&header, sizeof(header));
 }
