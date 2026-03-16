@@ -865,10 +865,16 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         if (request.finished)
             return false;
 
-        if (packet.length != sizeof(uint32_t))
+        if (packet.length == sizeof(uint16_t))
+            /* documented payload size is 16 bit */
+            method = static_cast<http_method_t>(LoadUnaligned<uint16_t>(packet.payload));
+        else if (packet.length == sizeof(uint32_t))
+            /* accept 32 bit as well (for buggy clients which send the
+               enum) */
+            method = static_cast<http_method_t>(LoadUnaligned<uint32_t>(packet.payload));
+        else
             return false;
 
-        method = static_cast<http_method_t>(LoadUnaligned<uint32_t>(packet.payload));
         if (request.method != HTTP_METHOD_GET &&
             method != request.method)
             /* sending that packet twice is illegal */

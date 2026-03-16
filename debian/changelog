@@ -1,6 +1,6 @@
 libcm4all-was (1.31) unstable; urgency=low
 
-  * 
+  * simple: allow 16-bit METHOD payload (as documented)
 
  --   
 
