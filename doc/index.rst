@@ -151,9 +151,7 @@ by the following C declaration::
       uint16_t command;
   };
 
-:envvar:`length` is the length of the payload in bytes.  If the
-payload length is not a multiple of 4, it is padded.  This padding is
-not included in the :envvar:`length` attribute.
+:envvar:`length` is the length of the payload in bytes.
 
 All numbers are in host byte order.  That includes the packet payload,
 if applicable.
