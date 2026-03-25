@@ -1768,7 +1768,7 @@ was_simple::SpliceTo(const int out_fd) noexcept
                              out_fd, nullptr,
                              input.ClampRemaining(max_len),
                              SPLICE_F_MOVE|SPLICE_F_NONBLOCK);
-        if (nbytes < 0) {
+        if (nbytes <= 0) {
             if (nbytes == 0)
                 /* pipe was closed by the client - this can't be
                    good */
