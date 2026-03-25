@@ -174,6 +174,9 @@ Request packets
   after the question mark (excluding the question mark itself)
 * :envvar:`PARAMETER`: an application-defined parameter: a name-value
   pair, separated by a "=" character
+* :envvar:`REMOTE_HOST`: the client's address (canonical string
+  representation of the IP address, no port number and no square
+  braces)
 * :envvar:`METRIC`: enable metrics, i.e. ask the application to
   provide counters in :envvar:`METRIC` response packets.  No payload.
 
