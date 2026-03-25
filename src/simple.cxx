@@ -389,6 +389,11 @@ struct was_simple {
         std::multimap<std::string, std::string, std::less<>> headers, parameters;
 
         /**
+         * True if #WAS_COMMAND_TLS has been received.
+         */
+        bool tls;
+
+        /**
          * True if #WAS_COMMAND_METRIC has been received.
          */
         bool want_metrics;
@@ -409,6 +414,7 @@ struct was_simple {
             remote_host = nullptr;
             document_root = nullptr;
 
+            tls = false;
             want_metrics = false;
             finished = false;
         }
@@ -1021,6 +1027,13 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
 
         return was_simple_apply_string(&request.document_root,
                                        packet.GetPayloadString());
+
+    case WAS_COMMAND_TLS:
+        if (request.finished)
+            return false;
+
+        request.tls = true;
+        return true;
 
     case WAS_COMMAND_METRIC:
         request.want_metrics = true;
@@ -2026,6 +2039,14 @@ was_simple_get_document_root(const struct was_simple *w)
     assert(w->response.state != was_simple::Response::State::NONE);
 
     return w->request.document_root;
+}
+
+bool
+was_simple_is_tls(const struct was_simple *w)
+{
+    assert(w->response.state != was_simple::Response::State::NONE);
+
+    return w->request.tls;
 }
 
 const char *

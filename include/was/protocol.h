@@ -87,6 +87,12 @@ enum was_command {
      * The document root path for the current request.
      */
     WAS_COMMAND_DOCUMENT_ROOT = 17,
+
+    /**
+     * Indicates that the current request was received on a
+     * TLS-encrypted connection.  Payload is empty.
+     */
+    WAS_COMMAND_TLS = 18,
 };
 
 enum multi_was_command {

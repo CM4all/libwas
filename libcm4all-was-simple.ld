@@ -55,6 +55,7 @@ libcm4all_was_simple_0b {
 libcm4all_was_simple_0c {
         global:
 		was_simple_get_document_root;
+		was_simple_is_tls;
 };
 
 libcm4all_was_multi_0 {

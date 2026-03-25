@@ -179,6 +179,8 @@ Request packets
   braces)
 * :envvar:`DOCUMENT_ROOT`: the document root path for the current
   request
+* :envvar:`TLS`: indicates that the request was received on a
+  TLS-encrypted connection.  No payload.
 * :envvar:`METRIC`: enable metrics, i.e. ask the application to
   provide counters in :envvar:`METRIC` response packets.  No payload.
 

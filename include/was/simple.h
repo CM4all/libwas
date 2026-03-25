@@ -175,6 +175,13 @@ const char *
 was_simple_get_document_root(const struct was_simple *w);
 
 /**
+ * Was the request received on a TLS-encrypted connection?
+ */
+was_gcc_pure
+bool
+was_simple_is_tls(const struct was_simple *w);
+
+/**
  * Returns the value of a WAS parameter.
  */
 was_gcc_pure
