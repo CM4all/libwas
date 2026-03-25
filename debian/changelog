@@ -3,6 +3,7 @@ libcm4all-was (1.31) unstable; urgency=low
   * simple: fix buffer corruption after partial control send
   * simple: allow 16-bit METHOD payload (as documented)
   * simple: fix assertion failure after repeated was_simple_set_length()
+  * simple: handle end-of-file from input pipe while discarding data
   * doc: the payload is not padded
 
  --   
