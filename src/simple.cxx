@@ -1405,7 +1405,7 @@ was_simple::SetLength(uint64_t length)
     assert(length >= output.sent);
 
     if (output.known_length) {
-        assert(length == output.known_length);
+        assert(length == output.announced);
         return true;
     }
 
