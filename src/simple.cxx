@@ -130,7 +130,7 @@ struct was_simple {
          */
         [[nodiscard]]
         enum was_command PeekCommand() const noexcept {
-            return (enum was_command)input_buffer.header.command;
+            return static_cast<enum was_command>(input_buffer.header.command);
         }
 
         /**
@@ -684,7 +684,7 @@ was_simple::Control::Get()
     if (!IsPacketComplete())
         return nullptr;
 
-    packet.command = (enum was_command)input_buffer.header.command;
+    packet.command = static_cast<enum was_command>(input_buffer.header.command);
     packet.length = input_buffer.header.length;
 
     if (packet.length > 0) {
@@ -775,7 +775,7 @@ was_simple::Control::Send(const void *data, size_t length)
         if (output_buffer.position == 0) {
             /* too large for the buffer */
             ssize_t nbytes = DirectSend(data, length);
-            return nbytes == (ssize_t)length;
+            return nbytes == static_cast<ssize_t>(length);
         }
 
         if (!Flush())
@@ -1565,7 +1565,7 @@ was_simple::Write(const void *data0, size_t length)
         return false;
     }
 
-    const char *data = (const char *)data0;
+    const char *data = static_cast<const char *>(data0);
 
     while (length > 0) {
         ssize_t nbytes = write(output.fd, data, length);
