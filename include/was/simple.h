@@ -168,6 +168,13 @@ const char *
 was_simple_get_remote_host(const struct was_simple *w);
 
 /**
+ * Returns the DOCUMENT_ROOT attribute.
+ */
+was_gcc_pure
+const char *
+was_simple_get_document_root(const struct was_simple *w);
+
+/**
  * Returns the value of a WAS parameter.
  */
 was_gcc_pure

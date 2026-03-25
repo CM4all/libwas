@@ -52,6 +52,11 @@ libcm4all_was_simple_0b {
 		was_simple_splice_all;
 };
 
+libcm4all_was_simple_0c {
+        global:
+		was_simple_get_document_root;
+};
+
 libcm4all_was_multi_0 {
         global:
 		was_multi_new;

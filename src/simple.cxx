@@ -384,6 +384,8 @@ struct was_simple {
 
         char *remote_host;
 
+        char *document_root;
+
         std::multimap<std::string, std::string, std::less<>> headers, parameters;
 
         /**
@@ -405,6 +407,7 @@ struct was_simple {
             query_string = nullptr;
 
             remote_host = nullptr;
+            document_root = nullptr;
 
             want_metrics = false;
             finished = false;
@@ -417,6 +420,7 @@ struct was_simple {
             free(query_string);
 
             free(remote_host);
+            free(document_root);
 
             headers.clear();
             parameters.clear();
@@ -1009,6 +1013,13 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
             return false;
 
         return was_simple_apply_string(&request.remote_host,
+                                       packet.GetPayloadString());
+
+    case WAS_COMMAND_DOCUMENT_ROOT:
+        if (request.finished)
+            return false;
+
+        return was_simple_apply_string(&request.document_root,
                                        packet.GetPayloadString());
 
     case WAS_COMMAND_METRIC:
@@ -2007,6 +2018,14 @@ was_simple_get_remote_host(const struct was_simple *w)
     assert(w->response.state != was_simple::Response::State::NONE);
 
     return w->request.remote_host;
+}
+
+const char *
+was_simple_get_document_root(const struct was_simple *w)
+{
+    assert(w->response.state != was_simple::Response::State::NONE);
+
+    return w->request.document_root;
 }
 
 const char *

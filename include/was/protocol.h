@@ -82,6 +82,11 @@ enum was_command {
      * letters, digits, underscore; without null-terminator).
      */
     WAS_COMMAND_METRIC = 16,
+
+    /**
+     * The document root path for the current request.
+     */
+    WAS_COMMAND_DOCUMENT_ROOT = 17,
 };
 
 enum multi_was_command {
