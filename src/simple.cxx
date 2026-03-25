@@ -15,6 +15,7 @@
 
 #include <http/header.h>
 
+#include <array>
 #include <cassert>
 #include <cerrno>
 #include <climits>
@@ -30,8 +31,6 @@
 #include <stdarg.h>
 #include <sys/socket.h>
 #include <fcntl.h>
-
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 /**
  * Enables non-blocking mode for the specified file descriptor.
@@ -1190,13 +1189,13 @@ was_simple::PollInput(int timeout_ms)
     if (input.IsEOF())
         return WAS_SIMPLE_POLL_END;
 
-    struct pollfd fds[] = {
+    std::array fds{
         MakePollfd(control.fd, POLLIN),
         MakePollfd(input.fd, POLLIN),
     };
 
     while (true) {
-        int ret = poll(fds, ARRAY_SIZE(fds), timeout_ms);
+        int ret = poll(fds.data(), fds.size(), timeout_ms);
         if (ret < 0) {
             response.state = Response::State::ERROR;
             return WAS_SIMPLE_POLL_ERROR;
@@ -1507,13 +1506,13 @@ was_simple::PollOutput(int timeout_ms)
            reused, so don't set state=ERROR */
         return WAS_SIMPLE_POLL_ERROR;
 
-    struct pollfd fds[] = {
+    std::array fds{
         MakePollfd(control.fd, POLLIN),
         MakePollfd(output.fd, POLLOUT),
     };
 
     while (true) {
-        int ret = poll(fds, ARRAY_SIZE(fds), timeout_ms);
+        int ret = poll(fds.data(), fds.size(), timeout_ms);
         if (ret < 0) {
             response.state = Response::State::ERROR;
             return WAS_SIMPLE_POLL_ERROR;
