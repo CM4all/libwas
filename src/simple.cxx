@@ -753,8 +753,8 @@ was_simple::Control::Flush()
         return false;
 
     output_buffer.position -= nbytes;
-    memmove(output_buffer.data + nbytes,
-            output_buffer.data,
+    memmove(output_buffer.data,
+            output_buffer.data + nbytes,
             output_buffer.position);
     return true;
 }
