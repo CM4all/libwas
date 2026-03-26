@@ -12,7 +12,7 @@ libcm4all-was (1.31) unstable; urgency=low
   * simple: malformed HEADER/PARAMETER packets are fatal
   * doc: the payload is not padded
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Thu, 26 Mar 2026 12:11:06 +0100
 
 libcm4all-was (1.30) unstable; urgency=low
 
