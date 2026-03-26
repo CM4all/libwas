@@ -535,6 +535,29 @@ TestAbort(FakeWasClient &client, struct was_simple *s, bool length)
 }
 
 static void
+TestAbortNoBodyStatus(FakeWasClient &client, struct was_simple *s)
+{
+    client.SendControl(WAS_COMMAND_REQUEST);
+    client.SendControl(WAS_COMMAND_URI, __func__);
+    client.SendControl(WAS_COMMAND_NO_DATA);
+
+    const char *uri = was_simple_accept(s);
+    if (uri == nullptr || strcmp(uri, __func__) != 0)
+        abort();
+
+    if (!was_simple_status(s, HTTP_STATUS_NO_CONTENT))
+        abort();
+
+    /* this aborts a response that has no body; can't send
+       PREMATURE */
+    if (!was_simple_abort(s))
+        abort();
+
+    client.ExpectStatus(HTTP_STATUS_NO_CONTENT);
+    client.ExpectControl(WAS_COMMAND_NO_DATA);
+}
+
+static void
 TestStopTooLate(FakeWasClient &client, struct was_simple *s)
 {
     client.SendControl(WAS_COMMAND_REQUEST);
@@ -607,6 +630,7 @@ TestAll()
     TestStopLate(client, s, true);
     TestAbort(client, s, false);
     TestAbort(client, s, true);
+    TestAbortNoBodyStatus(client, s);
     TestStopTooLate(client, s);
 
     /* invoke TestEmpty() again just to be sure the WAS connection is
