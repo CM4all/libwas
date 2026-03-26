@@ -1422,6 +1422,13 @@ was_simple::SetLength(uint64_t length)
 {
     assert(response.state != Response::State::NONE);
 
+    if (response.state == Response::State::STATUS &&
+        !SetStatus(HTTP_STATUS_OK))
+        return false;
+
+    if (response.state == Response::State::ERROR)
+        return false;
+
     if (output.no_body)
         return false;
 
@@ -1431,10 +1438,6 @@ was_simple::SetLength(uint64_t length)
         assert(length == output.announced);
         return true;
     }
-
-    if (response.state == Response::State::STATUS &&
-        !SetStatus(HTTP_STATUS_OK))
-        return false;
 
     if (response.state == Response::State::HEADERS) {
         if (!control.SendEmpty(WAS_COMMAND_DATA)) {
