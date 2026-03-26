@@ -1094,6 +1094,8 @@ was_simple::ReadAndApplyControl()
 const char *
 was_simple::Accept(const char *would_block)
 {
+retry:
+
     if (response.state != Response::State::NONE &&
         !FinishRequest())
         return nullptr;
@@ -1168,11 +1170,10 @@ was_simple::Accept(const char *would_block)
         if (!SetStatus(error_status))
             return nullptr;
 
-        /* TODO let's hope the compiler optimizes this to a JMP or
-           else we risk stack overflow; but I don't want to use "goto"
-           here, and wrapping the whole method in a loop is ugly,
-           too */
-        return Accept(would_block);
+        /* sorry sorry SORRY for this "goto", but after long
+           consideration, this is the least ugly way to restart this
+           method */
+        goto retry;
     }
 
     return request.uri;
