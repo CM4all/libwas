@@ -8,6 +8,7 @@ libcm4all-was (1.31) unstable; urgency=low
   * simple: fix uninitialized variable in was_simple_set_length()
   * simple: fix was_simple_abort() call before announcing response body
   * simple: fix potential stack overflow bug due to recursion
+  * simple: was_simple_printf() fails on truncation
   * doc: the payload is not padded
 
  --   

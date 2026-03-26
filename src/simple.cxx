@@ -2245,10 +2245,16 @@ was_simple_printf(struct was_simple *w, const char *fmt, ...)
 
     va_list va;
     va_start(va, fmt);
-    vsnprintf(buffer, sizeof(buffer), fmt, va);
+    int n = vsnprintf(buffer, sizeof(buffer), fmt, va);
     va_end(va);
 
-    return was_simple_puts(w, buffer);
+    if (n < 0 || static_cast<size_t>(n) >= sizeof(buffer)) {
+        /* truncated */
+        was_simple_abort(w);
+        return false;
+    }
+
+    return was_simple_write(w, buffer, static_cast<size_t>(n));
 }
 
 ssize_t
