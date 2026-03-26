@@ -927,15 +927,13 @@ was_simple::ApplyRequestPacket(const struct was_control_packet &packet)
         if (request.finished)
             return false;
 
-        was_simple_apply_map(request.headers, packet.GetPayloadString());
-        break;
+        return was_simple_apply_map(request.headers, packet.GetPayloadString());
 
     case WAS_COMMAND_PARAMETER:
         if (request.finished)
             return false;
 
-        was_simple_apply_map(request.parameters, packet.GetPayloadString());
-        break;
+        return was_simple_apply_map(request.parameters, packet.GetPayloadString());
 
     case WAS_COMMAND_STATUS:
         return false;
