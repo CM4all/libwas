@@ -558,6 +558,26 @@ TestAbortNoBodyStatus(FakeWasClient &client, struct was_simple *s)
 }
 
 static void
+TestMalformedMapPacket(enum was_command command)
+{
+    FakeWasClient client;
+    auto *s = was_simple_new();
+
+    client.SendControl(WAS_COMMAND_REQUEST);
+    client.SendControl(WAS_COMMAND_URI, __func__);
+    client.SendControl(command, "foo");
+    client.SendControl(WAS_COMMAND_NO_DATA);
+
+    /* must be rejected by was_simple_accept() */
+    if (was_simple_accept(s) != nullptr)
+        abort();
+
+    client.ExpectControlEmpty();
+
+    was_simple_free(s);
+}
+
+static void
 TestStopTooLate(FakeWasClient &client, struct was_simple *s)
 {
     client.SendControl(WAS_COMMAND_REQUEST);
@@ -612,7 +632,7 @@ TestStopTooLate(FakeWasClient &client, struct was_simple *s)
 }
 
 static void
-TestAll()
+TestAllOnOneConnection()
 {
     FakeWasClient client;
 
@@ -638,6 +658,15 @@ TestAll()
     TestEmpty(client, s);
 
     was_simple_free(s);
+}
+
+static void
+TestAll()
+{
+    TestAllOnOneConnection();
+
+    TestMalformedMapPacket(WAS_COMMAND_HEADER);
+    TestMalformedMapPacket(WAS_COMMAND_PARAMETER);
 }
 
 int
