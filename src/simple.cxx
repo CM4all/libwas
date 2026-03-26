@@ -1899,7 +1899,7 @@ was_simple::Abort()
         } else {
             /* announce a body which will be aborted right away with
                WAS_COMMAND_PREMATURE */
-            if (!control.SendEmpty(WAS_COMMAND_DATA) |
+            if (!control.SendEmpty(WAS_COMMAND_DATA) ||
                 !control.SendUint64(WAS_COMMAND_PREMATURE, 0) ||
                 !control.Flush()) {
                 response.state = Response::State::ERROR;
