@@ -1890,8 +1890,25 @@ was_simple::Abort()
         return SetStatus(HTTP_STATUS_INTERNAL_SERVER_ERROR) && End();
 
     case Response::State::HEADERS:
-        response.state = Response::State::BODY;
-        /* fall through */
+        if (output.no_body) {
+            if (!control.SendEmpty(WAS_COMMAND_NO_DATA) ||
+                !control.Flush()) {
+                response.state = Response::State::ERROR;
+                return false;
+            }
+        } else {
+            /* announce a body which will be aborted right away with
+               WAS_COMMAND_PREMATURE */
+            if (!control.SendEmpty(WAS_COMMAND_DATA) |
+                !control.SendUint64(WAS_COMMAND_PREMATURE, 0) ||
+                !control.Flush()) {
+                response.state = Response::State::ERROR;
+                return false;
+            }
+        }
+
+        response.state = Response::State::END;
+        return true;
 
     case Response::State::BODY:
         if (!output.no_body && !output.IsFull()) {

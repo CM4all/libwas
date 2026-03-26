@@ -6,6 +6,7 @@ libcm4all-was (1.31) unstable; urgency=low
   * simple: fix assertion failure after repeated was_simple_set_length()
   * simple: handle end-of-file from input pipe while discarding data
   * simple: fix uninitialized variable in was_simple_set_length()
+  * simple: fix was_simple_abort() call before announcing response body
   * doc: the payload is not padded
 
  --   
