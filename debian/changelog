@@ -5,6 +5,7 @@ libcm4all-was (1.32) unstable; urgency=low
   * debian/control: build with libapreq2-dev instead of
     libcm4all-thirdparty-apreq2-dev
   * debian/control: remove pkg-config dependencies
+  * debian/rules: enable dh_sphinxdoc
 
  --   
 
