@@ -4,9 +4,8 @@ test(
     'TestWasSimple',
     'TestWasSimple.cxx',
     include_directories: inc,
-    link_with: libwas_simple,
     dependencies: [
-      libhttp,
+      libwas_simple_dep,
     ],
   ),
 )

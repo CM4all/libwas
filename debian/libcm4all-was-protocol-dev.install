@@ -1,2 +1,4 @@
 usr/include/cm4all/libwas-1/was/protocol.h
+usr/include/cm4all/libwas-1/was/method.h
+usr/include/cm4all/libwas-1/was/status.h
 usr/share/pkgconfig/libcm4all-was-protocol.pc

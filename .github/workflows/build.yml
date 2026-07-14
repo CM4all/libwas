@@ -41,7 +41,6 @@ jobs:
             -Dapreq2=disabled \
             -Ddocumentation=disabled \
             -Dwrap_mode=nofallback \
-            --force-fallback-for=libcm4all-http \
             output
 
       - name: Build

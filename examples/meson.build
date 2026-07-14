@@ -4,7 +4,6 @@ executable(
   install: true,
   include_directories: inc,
   dependencies: [
-    libhttp,
     libwas_simple_dep
   ],
 )
@@ -15,7 +14,6 @@ executable(
   install: true,
   include_directories: inc,
   dependencies: [
-    libhttp,
     libwas_simple_dep
   ],
 )
@@ -26,7 +24,6 @@ executable(
   install: true,
   include_directories: inc,
   dependencies: [
-    libhttp,
     libwas_simple_dep
   ],
 )

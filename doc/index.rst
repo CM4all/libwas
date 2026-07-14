@@ -161,7 +161,7 @@ Request packets
 
 * :envvar:`REQUEST`: start of a HTTP request
 * :envvar:`METHOD`: The HTTP request method; payload is a
-  :envvar:`uint16_t` with integer values from the :file:`libcm4all-http`
+  :envvar:`uint16_t` with integer values from the
   enumeration type :envvar:`http_method`.  If this packet is not
   received, the application assumes that the method is :envvar:`GET`.
 * :envvar:`URI`: the HTTP request URI
@@ -188,7 +188,7 @@ Response packets
 ''''''''''''''''
 
 * :envvar:`STATUS`: start of a HTTP request; payload is a
-  :envvar:`uint16_t` with integer values from the :path:`libcm4all-http`
+  :envvar:`uint16_t` with integer values from the
   enumeration type :envvar:`http_status`
 * :envvar:`METRIC`: provide one metric.  Payload is a 32 bit floating
   point counter value followed by a symbolic name (ASCII letters,

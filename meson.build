@@ -123,8 +123,6 @@ add_project_arguments(common_flags, language: 'cpp')
 add_project_arguments(compiler.get_supported_arguments(test_cxxflags), language: 'cpp')
 add_project_arguments(c_compiler.get_supported_arguments(test_cflags), language: 'c')
 
-libhttp = dependency('libcm4all-http', version: '>= 1.2.6')
-
 inc = include_directories('src', 'include')
 
 pkg_mod.generate(
@@ -146,9 +144,6 @@ libwas_simple = library('cm4all-was-simple',
     'libcm4all-was-simple.ld'
   ],
   include_directories: inc,
-  dependencies: [
-    libhttp,
-  ],
   link_args: [
     '-Wl,--version-script=' + join_paths(meson.project_source_root(), 'libcm4all-was-simple.ld'),
   ],
@@ -159,20 +154,15 @@ libwas_simple = library('cm4all-was-simple',
 libwas_simple_dep = declare_dependency(
   link_with: libwas_simple,
   include_directories: inc,
-  dependencies: [
-    libhttp,
-  ],
 )
 
-if libhttp.type_name() != 'internal'
-  pkg_mod.generate(
-    libwas_simple,
-    version: meson.project_version(),
-    name: 'libcm4all-was-simple',
-    description: 'CM4all simple WAS server library',
-    requires: [libhttp],
-  )
-endif
+pkg_mod.generate(
+  libwas_simple,
+  version: meson.project_version(),
+  name: 'libcm4all-was-simple',
+  description: 'CM4all simple WAS server library',
+  requires: ['libcm4all-was-protocol >= 1.32'],
+)
 
 libwas_apreq = library('cm4all-was-apreq',
   'src/parser.c',
@@ -200,21 +190,21 @@ libwas_apreq_dep = declare_dependency(
   include_directories: inc,
 )
 
-if libhttp.type_name() != 'internal'
-  pkg_mod.generate(
-    libraries: libwas_apreq,
-    version: meson.project_version(),
-    name: 'libcm4all-was-apreq',
-    description: 'CM4all WAS server library, request parser',
-    requires: [libwas_simple],
-  )
-endif
+pkg_mod.generate(
+  libraries: libwas_apreq,
+  version: meson.project_version(),
+  name: 'libcm4all-was-apreq',
+  description: 'CM4all WAS server library, request parser',
+  requires: [libwas_simple],
+)
 
 install_headers(
   'include/was/apreq.h',
   'include/was/protocol.h',
   'include/was/simple.h',
   'include/was/multi.h',
+  'include/was/method.h',
+  'include/was/status.h',
   'include/was/compiler.h',
   subdir: 'was')
 

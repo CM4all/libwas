@@ -10,9 +10,10 @@
 #ifndef WAS_SIMPLE_H
 #define WAS_SIMPLE_H
 
+#include <was/status.h>
+#include <was/method.h>
+
 #include "compiler.h"
-#include <http/status.h>
-#include <http/method.h>
 
 #include <stdbool.h>
 #include <stdint.h>
