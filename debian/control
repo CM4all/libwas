@@ -60,7 +60,7 @@ Package: libcm4all-was-apreq-dev
 Section: libdevel
 Architecture: any
 Multi-Arch: same
-Depends: ${misc:Depends}
+Depends: ${misc:Depends},
  libcm4all-was-apreq1 (= ${binary:Version}),
  libcm4all-was-simple-dev (= ${binary:Version}),
  libapreq2-dev
