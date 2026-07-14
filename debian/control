@@ -16,7 +16,7 @@ Vcs-browser: https://github.com/CM4all/libwas/
 Package: libcm4all-was-protocol-dev
 Section: libdevel
 Architecture: all
-Depends: ${misc:Depends}, pkg-config (>= 0.9.0)
+Depends: ${misc:Depends}
 Replaces: libcm4all-was-dev
 Conflicts: libcm4all-was-dev
 Description: Development files for libwas, protocol definition
@@ -37,7 +37,7 @@ Package: libcm4all-was-simple-dev
 Section: libdevel
 Architecture: any
 Multi-Arch: same
-Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
+Depends: ${misc:Depends}
  libcm4all-was-simple1 (= ${binary:Version}),
  libcm4all-http-dev (>= 1.2)
 Replaces: libcm4all-was-dev
@@ -60,7 +60,7 @@ Package: libcm4all-was-apreq-dev
 Section: libdevel
 Architecture: any
 Multi-Arch: same
-Depends: ${misc:Depends}, pkg-config (>= 0.9.0),
+Depends: ${misc:Depends}
  libcm4all-was-apreq1 (= ${binary:Version}),
  libcm4all-was-simple-dev (= ${binary:Version}),
  libapreq2-dev
