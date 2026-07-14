@@ -654,7 +654,7 @@ was_simple::Control::Fill(bool dontwait)
     ssize_t nbytes = recv(fd,
                           input_buffer.raw + input_position,
                           max_read,
-                          dontwait * MSG_DONTWAIT);
+                          dontwait ? MSG_DONTWAIT : 0);
     if (nbytes <= 0) {
         if (nbytes == 0)
             /* the WAS client closed the control socket; recv()==0
