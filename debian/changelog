@@ -2,6 +2,8 @@ libcm4all-was (1.32) unstable; urgency=low
 
   * xios: remove obsolete bindings
   * debian: add source/format file
+  * debian/control: build with libapreq2-dev instead of
+    libcm4all-thirdparty-apreq2-dev
 
  --   
 
