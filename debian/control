@@ -12,6 +12,7 @@ Build-Depends: debhelper (>= 12~),
 Build-Conflicts: libcm4all-was-dev
 Standards-Version: 4.0.0
 Vcs-git: https://github.com/CM4all/libwas/
+Vcs-browser: https://github.com/CM4all/libwas/
 
 Package: libcm4all-was-protocol-dev
 Section: libdevel
