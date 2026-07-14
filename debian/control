@@ -1,7 +1,7 @@
 Source: libcm4all-was
 Section: libs
 Priority: optional
-Maintainer: Max Kellermann <mk@cm4all.com>
+Maintainer: Max Kellermann <max.kellermann@ionos.com>
 Build-Depends: debhelper (>= 12~),
  meson (>= 0.56),
  g++ (>= 4:8),

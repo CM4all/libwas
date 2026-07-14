@@ -1,7 +1,7 @@
 The Web Application Socket Protocol
 ===================================
 
-Author: Max Kellermann <mk@cm4all.com>
+Author: Max Kellermann <max.kellermann@ionos.com>
 
 *Web Application Socket* is a protocol between a web server and an
 application generating dynamic content.  Unlike other protocols such

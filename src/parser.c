@@ -18,7 +18,7 @@
 /*
  * This module is based on libapreq's CGI module.
  *
- * author: Max Kellermann <mk@cm4all.com>
+ * author: Max Kellermann <max.kellermann@ionos.com>
  */
 
 /* workaround for libapr compiler warning */
