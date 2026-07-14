@@ -39,7 +39,6 @@ jobs:
           meson setup \
             -Dauto_features=enabled \
             -Dapreq2=disabled \
-            -Dxios=disabled \
             -Ddocumentation=disabled \
             -Dwrap_mode=nofallback \
             --force-fallback-for=libcm4all-http \

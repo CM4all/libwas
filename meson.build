@@ -124,7 +124,6 @@ add_project_arguments(compiler.get_supported_arguments(test_cxxflags), language:
 add_project_arguments(c_compiler.get_supported_arguments(test_cflags), language: 'c')
 
 libhttp = dependency('libcm4all-http', version: '>= 1.2.6')
-libcore = dependency('libcore', version: '>= 1.20.5', required: get_option('xios'), disabler: true)
 
 inc = include_directories('src', 'include')
 
@@ -211,46 +210,8 @@ if libhttp.type_name() != 'internal'
   )
 endif
 
-libwas_xios = library('cm4all-was-xios',
-  'src/istub.c',
-  'src/ostub.c',
-  link_depends: [
-    'libcm4all-was-xios.ld'
-  ],
-  include_directories: inc,
-  dependencies: [
-    libcore,
-    libwas_simple_dep,
-  ],
-  link_args: [
-    '-Wl,--version-script=' + join_paths(meson.project_source_root(), 'libcm4all-was-xios.ld'),
-  ],
-  version: meson.project_version(),
-  soversion: splitted_version[0],
-  install: true,
-)
-libwas_xios_dep = declare_dependency(
-  link_with: libwas_xios,
-  include_directories: inc,
-  dependencies: [
-    libcore,
-  ],
-)
-
-if libhttp.type_name() != 'internal'
-  pkg_mod.generate(
-    libraries: libwas_xios,
-    version: meson.project_version(),
-    name: 'libcm4all-was-xios',
-    description: 'CM4all WAS server library, libcore xios implementation',
-    requires: [libwas_simple, libcore],
-  )
-endif
-
 install_headers(
   'include/was/apreq.h',
-  'include/was/istub.h',
-  'include/was/ostub.h',
   'include/was/protocol.h',
   'include/was/simple.h',
   'include/was/multi.h',
