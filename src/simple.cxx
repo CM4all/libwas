@@ -13,8 +13,6 @@
 #include "iterator.hxx"
 #include "util/Unaligned.hxx"
 
-#include <http/header.h>
-
 #include <array>
 #include <cassert>
 #include <cerrno>
