@@ -10,7 +10,7 @@ libcm4all-was (1.32) unstable; urgency=low
   * debian/control: remove pkg-config dependencies
   * debian/rules: enable dh_sphinxdoc
 
- --   
+ -- Max Kellermann <max.kellermann@ionos.com>  Wed, 15 Jul 2026 09:35:07 +0200
 
 libcm4all-was (1.31) unstable; urgency=low
 
