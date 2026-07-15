@@ -38,7 +38,7 @@ Package: libcm4all-was-simple-dev
 Section: libdevel
 Architecture: any
 Multi-Arch: same
-Depends: ${misc:Depends}
+Depends: ${misc:Depends},
  libcm4all-was-simple1 (= ${binary:Version}),
  libcm4all-http-dev (>= 1.2)
 Replaces: libcm4all-was-dev
