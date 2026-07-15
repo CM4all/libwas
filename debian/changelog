@@ -1,6 +1,7 @@
 libcm4all-was (1.32) unstable; urgency=low
 
   * incorporate libcm4all-http 1.3 into this project
+  * protocol: support HTTP QUERY (RFC 10008)
   * xios: remove obsolete bindings
   * debian: add source/format file
   * debian/control: add missing build-dependency on pkgconf

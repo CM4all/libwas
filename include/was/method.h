@@ -39,6 +39,9 @@ typedef enum {
 	/* Versioning Extensions to WebDAV methods (RFC3253) */
 	HTTP_METHOD_REPORT,
 
+	/* RFC 10008 */
+	HTTP_METHOD_QUERY,
+
 	HTTP_METHOD_INVALID,
 } http_method_t;
 
