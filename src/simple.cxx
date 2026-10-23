@@ -1689,6 +1689,10 @@ was_simple::Splice(size_t max_length) noexcept
         case WAS_SIMPLE_POLL_END:
             return 0;
         }
+
+        /* PollInput() may have applied LENGTH */
+        max_length = input.ClampRemaining(max_length);
+        assert(max_length > 0);
     }
 
     ssize_t nbytes = splice(input.fd, nullptr,
@@ -1719,6 +1723,15 @@ was_simple::Splice(size_t max_length) noexcept
             return -2;
         }
 
+        /* PollInput() and PollOutput() may have applied PREMATURE
+           or LENGTH */
+        if (input.premature && !input.ignore_premature)
+            return -2;
+
+        max_length = input.ClampRemaining(max_length);
+        if (max_length == 0)
+            return 0;
+
         nbytes = splice(input.fd, nullptr,
                         output.fd, nullptr, max_length,
                         SPLICE_F_MOVE|SPLICE_F_NONBLOCK);
@@ -1731,12 +1744,12 @@ was_simple::Splice(size_t max_length) noexcept
         /* the pipe was closed - this shouldn't happen */
         return -2;
 
-    if (!Received(nbytes))
-        return -2;
-
     output.Sent(nbytes);
     if (output.IsFull())
         response.state = Response::State::END;
+
+    if (!Received(nbytes))
+        return -2;
 
     return nbytes;
 }
