@@ -1313,6 +1313,10 @@ was_simple::Read(void *buffer, size_t length)
         case WAS_SIMPLE_POLL_END:
             return 0;
         }
+
+        /* PollInput() may have applied LENGTH */
+        length = input.ClampRemaining(length);
+        assert(length > 0);
     }
 
     ssize_t nbytes = read(input.fd, buffer, length);
