@@ -1245,6 +1245,12 @@ was_simple::PollInput(int timeout_ms)
 
         if (fds[1].revents & POLLIN)
             return WAS_SIMPLE_POLL_SUCCESS;
+
+        if (fds[1].revents & (POLLHUP|POLLERR)) {
+            /* the peer has closed the input pipe prematurely */
+            response.state = Response::State::ERROR;
+            return WAS_SIMPLE_POLL_ERROR;
+        }
     }
 }
 
@@ -1563,6 +1569,12 @@ was_simple::PollOutput(int timeout_ms)
 
         if (fds[1].revents & POLLOUT)
             return WAS_SIMPLE_POLL_SUCCESS;
+
+        if (fds[1].revents & POLLERR) {
+            /* the peer has closed the output pipe */
+            response.state = Response::State::ERROR;
+            return WAS_SIMPLE_POLL_ERROR;
+        }
     }
 }
 
