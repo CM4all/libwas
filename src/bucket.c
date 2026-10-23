@@ -56,7 +56,11 @@ wbucket_read(apr_bucket *b, const char **data_r, apr_size_t *length_r,
 
     char *buffer = apr_bucket_alloc(APR_BUCKET_BUFF_SIZE, b->list); /* XXX: check for failure? */
 
-    ssize_t nbytes = was_simple_read(was, buffer, APR_BUCKET_BUFF_SIZE);
+    /* in blocking mode, fill the whole buffer to avoid wasting
+       memory on many small heap buckets */
+    ssize_t nbytes = block == APR_BLOCK_READ
+        ? was_simple_read_most(was, buffer, APR_BUCKET_BUFF_SIZE)
+        : was_simple_read(was, buffer, APR_BUCKET_BUFF_SIZE);
     if (nbytes < 0) {
         apr_status_t status = nbytes == -1
             ? APR_FROM_OS_ERROR(errno)
