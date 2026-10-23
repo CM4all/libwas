@@ -18,26 +18,22 @@
 #include <unistd.h>
 #include <errno.h>
 
-struct was_bucket {
-    struct was_simple *was;
-};
-
 static void
 wbucket_destroy(void *data)
 {
-    struct was_bucket *fb = data;
+    struct was_simple *was = data;
 
-    was_simple_input_close(fb->was);
+    was_simple_input_close(was);
 }
 
 static apr_status_t
 wbucket_read(apr_bucket *b, const char **data_r, apr_size_t *length_r,
              apr_read_type_e block)
 {
-    struct was_bucket *fb = b->data;
+    struct was_simple *was = b->data;
 
     if (block == APR_NONBLOCK_READ) {
-        switch (was_simple_input_poll(fb->was, 0)) {
+        switch (was_simple_input_poll(was, 0)) {
         case WAS_SIMPLE_POLL_SUCCESS:
             break;
 
@@ -60,7 +56,7 @@ wbucket_read(apr_bucket *b, const char **data_r, apr_size_t *length_r,
 
     char *buffer = apr_bucket_alloc(APR_BUCKET_BUFF_SIZE, b->list); /* XXX: check for failure? */
 
-    ssize_t nbytes = was_simple_read(fb->was, buffer, APR_BUCKET_BUFF_SIZE);
+    ssize_t nbytes = was_simple_read(was, buffer, APR_BUCKET_BUFF_SIZE);
     if (nbytes < 0) {
         apr_status_t status = nbytes == -1
             ? APR_FROM_OS_ERROR(errno)
@@ -83,7 +79,7 @@ wbucket_read(apr_bucket *b, const char **data_r, apr_size_t *length_r,
     apr_bucket_heap *h = b->data;
     h->alloc_len = APR_BUCKET_BUFF_SIZE; /* note the real buffer size */
 
-    APR_BUCKET_INSERT_AFTER(b, apr_bucket_was_create(fb->was, b->list));
+    APR_BUCKET_INSERT_AFTER(b, apr_bucket_was_create(was, b->list));
 
     *data_r = buffer;
     *length_r = nbytes;
@@ -103,17 +99,13 @@ static const apr_bucket_type_t apr_bucket_type_was = {
 static apr_bucket *
 apr_bucket_was_make(apr_bucket *b, struct was_simple *was)
 {
-    struct was_bucket *fb = apr_bucket_alloc(sizeof(*fb), b->list);
-
     assert(b != NULL);
     assert(was != NULL);
-
-    fb->was = was;
 
     b->type = &apr_bucket_type_was;
     b->length = (apr_size_t)(-1);
     b->start = -1;
-    b->data = fb;
+    b->data = was;
 
     return b;
 }
