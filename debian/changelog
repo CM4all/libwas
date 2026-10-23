@@ -1,6 +1,7 @@
 libcm4all-was (1.33) unstable; urgency=low
 
   * simple: fail on pipe hangup
+  * simple: fail on full control receive buffer
 
  --   
 

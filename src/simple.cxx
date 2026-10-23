@@ -1047,6 +1047,13 @@ was_simple::ApplyPendingControl()
         if (!ApplyRequestPacket(*packet))
             return false;
 
+    if (control.IsInputBufferFull()) {
+        /* the payload is too large for our control input buffer;
+           this cannot be handled gracefully here */
+        errno = E2BIG;
+        return false;
+    }
+
     return true;
 }
 
