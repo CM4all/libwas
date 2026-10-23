@@ -828,10 +828,15 @@ was_simple::FinishRequest()
         /* cannot reuse this WAS connection */
         return false;
 
-    // TODO??
-    bool result = End();
+    if (!End()) {
+        /* the request body may not have been discarded
+           completely, so the WAS connection is out of sync */
+        response.state = Response::State::ERROR;
+        return false;
+    }
+
     ClearRequest();
-    return result;
+    return true;
 }
 
 static bool
