@@ -468,12 +468,15 @@ static apreq_param_t *cgi_body_get(apreq_handle_t *handle,
 
         do {
             cgi_read(handle, APREQ_DEFAULT_READ_BLOCK_SIZE);
-            if (hook_ctx->param != NULL)
-                return hook_ctx->param;
-        } while (req->body_status == APR_INCOMPLETE);
+        } while (hook_ctx->param == NULL &&
+                 req->body_status == APR_INCOMPLETE);
 
+        /* apreq_hook_find_param() does not unlink the hook because
+           hook_ctx->prev points to the hook itself; unlink it here
+           so it can be reused by the next call */
+        assert(req->parser->hook == h);
         req->parser->hook = h->next;
-        return NULL;
+        return hook_ctx->param;
 
 
     default:
