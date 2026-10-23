@@ -18,14 +18,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-static void
-wbucket_destroy(void *data)
-{
-    struct was_simple *was = data;
-
-    was_simple_input_close(was);
-}
-
 static apr_status_t
 wbucket_read(apr_bucket *b, const char **data_r, apr_size_t *length_r,
              apr_read_type_e block)
@@ -93,7 +85,7 @@ wbucket_read(apr_bucket *b, const char **data_r, apr_size_t *length_r,
 
 static const apr_bucket_type_t apr_bucket_type_was = {
     "WAS", 5, APR_BUCKET_DATA,
-    wbucket_destroy,
+    apr_bucket_destroy_noop,
     wbucket_read,
     apr_bucket_setaside_notimpl,
     apr_bucket_split_notimpl,

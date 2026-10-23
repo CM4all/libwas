@@ -10,6 +10,7 @@ libcm4all-was (1.33) unstable; urgency=low
   * apreq: fix memory leak
   * apreq: fill the whole buffer in blocking mode
   * apreq: fix infinite recursion
+  * apreq: don't call was_simple_input_close() from the destroy callback
 
  --   
 

@@ -17,6 +17,14 @@ struct was_simple;
 extern "C" {
 #endif
 
+/**
+ * Create a libapreq2 handle for the current request of the given
+ * #was_simple object (or return the existing one attached to the
+ * pool).
+ *
+ * The handle must not be used after the request has been finished
+ * (by was_simple_end(), was_simple_accept() or was_simple_free()).
+ */
 struct apreq_handle_t *
 apreq_handle_was(struct apr_pool_t *pool,
                  struct was_simple *was, const char *uri);
