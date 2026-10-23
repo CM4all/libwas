@@ -1498,9 +1498,15 @@ was_simple::SetLength(uint64_t length)
     /* before finishing the response, the whole request body must be
        discarded, or else we may mix up with the next request body if
        we miss a PREMATURE packet */
-    if (length == output.sent && !CloseDiscardInput()) {
-        response.state = Response::State::ERROR;
-        return false;
+    if (length == output.sent) {
+        if (!CloseDiscardInput()) {
+            response.state = Response::State::ERROR;
+            return false;
+        }
+
+        if (response.state != Response::State::BODY)
+            /* STOP was received while discarding */
+            return false;
     }
 
     if (!control.SendUint64(WAS_COMMAND_LENGTH, length) ||
@@ -1632,10 +1638,15 @@ was_simple::Write(const void *data0, size_t length)
     /* before finishing the response, the whole request body must be
        discarded, or else we may mix up with the next request body if
        we miss a PREMATURE packet */
-    if (output.known_length && output.sent + length >= output.announced &&
-        !CloseDiscardInput()) {
-        response.state = Response::State::ERROR;
-        return false;
+    if (output.known_length && output.sent + length >= output.announced) {
+        if (!CloseDiscardInput()) {
+            response.state = Response::State::ERROR;
+            return false;
+        }
+
+        if (response.state != Response::State::BODY)
+            /* STOP was received while discarding */
+            return false;
     }
 
     if (!control.Flush()) {

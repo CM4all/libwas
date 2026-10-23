@@ -591,6 +591,65 @@ TestStopDiscardRequestBody(FakeWasClient &client, struct was_simple *s,
     client.DiscardAllInput(3);
 }
 
+/**
+ * Receive STOP while the final write (or was_simple_set_length())
+ * discards the request body.  No response data and no LENGTH may be
+ * sent after PREMATURE.
+ */
+static void
+TestStopWhileDiscarding(FakeWasClient &client, struct was_simple *s,
+                        bool set_length)
+{
+    client.SendControl(WAS_COMMAND_REQUEST);
+    client.SendControl(WAS_COMMAND_URI, __func__);
+    client.SendControl(WAS_COMMAND_DATA);
+    client.SendLength(10);
+    client.SendOutput("helloworld");
+
+    const char *uri = was_simple_accept(s);
+    if (uri == nullptr || strcmp(uri, __func__) != 0)
+        abort();
+
+    if (set_length) {
+        if (!was_simple_puts(s, "foo"))
+            abort();
+
+        client.ExpectStatus(HTTP_STATUS_OK);
+        client.ExpectControl(WAS_COMMAND_DATA);
+    } else {
+        if (!was_simple_set_length(s, 3))
+            abort();
+
+        client.ExpectStatus(HTTP_STATUS_OK);
+        client.ExpectControl(WAS_COMMAND_DATA);
+        client.ExpectLength(3);
+    }
+
+    client.ExpectControlEmpty();
+
+    /* this STOP will be received while the library discards the
+       request body */
+    client.SendControl(WAS_COMMAND_STOP);
+
+    if (set_length) {
+        if (was_simple_set_length(s, 3))
+            abort();
+    } else {
+        if (was_simple_puts(s, "foo"))
+            abort();
+    }
+
+    client.ExpectControl(WAS_COMMAND_STOP);
+    client.ExpectPremature(set_length ? 3 : 0);
+    client.ExpectControlEmpty();
+
+    if (!was_simple_end(s))
+        abort();
+
+    client.ExpectControlEmpty();
+    client.DiscardAllInput(set_length ? 3 : 0);
+}
+
 static void
 TestAbortNoBodyStatus(FakeWasClient &client, struct was_simple *s)
 {
@@ -709,6 +768,8 @@ TestAllOnOneConnection()
     TestAbort(client, s, true);
     TestStopDiscardRequestBody(client, s, false);
     TestStopDiscardRequestBody(client, s, true);
+    TestStopWhileDiscarding(client, s, false);
+    TestStopWhileDiscarding(client, s, true);
     TestAbortNoBodyStatus(client, s);
     TestStopTooLate(client, s);
 
