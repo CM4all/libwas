@@ -256,8 +256,8 @@ struct was_simple {
 
         /**
          * True if reading from the input shall ignore the #premature
-         * flag.  This is used to disable the checks while discarding
-         * remaining input.
+         * flag and Response::State::STOP.  This is used to disable
+         * the checks while discarding remaining input.
          */
         bool ignore_premature;
 
@@ -1216,7 +1216,8 @@ was_simple::PollInput(int timeout_ms)
         return WAS_SIMPLE_POLL_ERROR;
     }
 
-    if (response.state == Response::State::STOP)
+    if (response.state == Response::State::STOP &&
+        !input.ignore_premature)
         /* this may have been caused by STOP */
         return WAS_SIMPLE_POLL_ERROR;
 
@@ -1250,7 +1251,8 @@ was_simple::PollInput(int timeout_ms)
             if (input.premature && !input.ignore_premature)
                 return WAS_SIMPLE_POLL_CLOSED;
 
-            if (response.state == Response::State::STOP)
+            if (response.state == Response::State::STOP &&
+                !input.ignore_premature)
                 /* this may have been caused by STOP */
                 return WAS_SIMPLE_POLL_ERROR;
 

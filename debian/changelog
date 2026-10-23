@@ -5,6 +5,7 @@ libcm4all-was (1.33) unstable; urgency=low
   * simple: fail on full control receive buffer
   * simple: re-check input state after polling
   * simple: don't reuse the connection after cleanup failure
+  * simple: allow discarding the request body after STOP
   * multi: fix file descriptor leak on unknown command
   * apreq: fix memory leak
   * apreq: fill the whole buffer in blocking mode

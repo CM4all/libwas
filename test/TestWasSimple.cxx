@@ -534,6 +534,63 @@ TestAbort(FakeWasClient &client, struct was_simple *s, bool length)
     client.DiscardAllInput(3);
 }
 
+/**
+ * Stop the response (by the client or by was_simple_abort()) while
+ * the request body is still being received.  was_simple_end() must
+ * discard the rest of the request body and allow reusing the
+ * connection.
+ */
+static void
+TestStopDiscardRequestBody(FakeWasClient &client, struct was_simple *s,
+                           bool use_abort)
+{
+    client.SendControl(WAS_COMMAND_REQUEST);
+    client.SendControl(WAS_COMMAND_URI, __func__);
+    client.SendControl(WAS_COMMAND_DATA);
+    client.SendLength(10);
+    client.SendOutput("hello");
+
+    const char *uri = was_simple_accept(s);
+    if (uri == nullptr || strcmp(uri, __func__) != 0)
+        abort();
+
+    if (!was_simple_has_body(s))
+        abort();
+
+    bool success = was_simple_puts(s, "foo");
+    if (!success)
+        abort();
+
+    client.ExpectStatus(HTTP_STATUS_OK);
+    client.ExpectControl(WAS_COMMAND_DATA);
+    client.ExpectControlEmpty();
+
+    if (use_abort) {
+        if (!was_simple_abort(s))
+            abort();
+    } else {
+        client.SendControl(WAS_COMMAND_STOP);
+
+        if (was_simple_output_poll(s, 0) != WAS_SIMPLE_POLL_ERROR)
+            abort();
+    }
+
+    client.ExpectPremature(3);
+    client.ExpectControlEmpty();
+
+    /* the application must still see the STOP */
+    if (was_simple_input_poll(s, 0) != WAS_SIMPLE_POLL_ERROR)
+        abort();
+
+    client.SendOutput("world");
+
+    if (!was_simple_end(s))
+        abort();
+
+    client.ExpectControlEmpty();
+    client.DiscardAllInput(3);
+}
+
 static void
 TestAbortNoBodyStatus(FakeWasClient &client, struct was_simple *s)
 {
@@ -650,6 +707,8 @@ TestAllOnOneConnection()
     TestStopLate(client, s, true);
     TestAbort(client, s, false);
     TestAbort(client, s, true);
+    TestStopDiscardRequestBody(client, s, false);
+    TestStopDiscardRequestBody(client, s, true);
     TestAbortNoBodyStatus(client, s);
     TestStopTooLate(client, s);
 
