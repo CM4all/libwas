@@ -1,5 +1,6 @@
 libcm4all-was (1.33) unstable; urgency=low
 
+  * simple: add was_simple_read_most()
   * simple: fail on pipe hangup
   * simple: fail on full control receive buffer
   * simple: re-check input state after polling

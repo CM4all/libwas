@@ -58,6 +58,11 @@ libcm4all_was_simple_0c {
 		was_simple_is_tls;
 };
 
+libcm4all_was_simple_0d {
+        global:
+		was_simple_read_most;
+};
+
 libcm4all_was_multi_0 {
         global:
 		was_multi_new;

@@ -579,6 +579,9 @@ struct was_simple {
     ssize_t Read(void *buffer, size_t length);
 
     [[nodiscard]]
+    ssize_t ReadMost(void *buffer, size_t length);
+
+    [[nodiscard]]
     int64_t GetInputRemaining() const {
         if (input.premature)
             return -1;
@@ -1356,6 +1359,27 @@ was_simple::Read(void *buffer, size_t length)
         partial_read_state = PartialReadState::PARTIAL;
 
     return nbytes;
+}
+
+ssize_t
+was_simple::ReadMost(void *buffer, size_t length)
+{
+    char *p = static_cast<char *>(buffer);
+    size_t fill = 0;
+
+    while (fill < length) {
+        ssize_t nbytes = Read(p + fill, length - fill);
+        if (nbytes < 0)
+            return nbytes;
+
+        if (nbytes == 0)
+            /* end of the request body */
+            break;
+
+        fill += nbytes;
+    }
+
+    return fill;
 }
 
 bool
@@ -2156,6 +2180,12 @@ ssize_t
 was_simple_read(struct was_simple *w, void *buffer, size_t length)
 {
     return w->Read(buffer, length);
+}
+
+ssize_t
+was_simple_read_most(struct was_simple *w, void *buffer, size_t length)
+{
+    return w->ReadMost(buffer, length);
 }
 
 int64_t

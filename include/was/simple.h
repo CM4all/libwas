@@ -245,6 +245,19 @@ ssize_t
 was_simple_read(struct was_simple *w, void *buffer, size_t length);
 
 /**
+ * Like was_simple_read(), but keep reading until the buffer is full
+ * or the end of the request body has been reached.
+ *
+ * @return the number of bytes read (less than #length only if the
+ * end of the request body has been reached), 0 if the end of the
+ * request body has been reached, -1 on I/O error (with errno set),
+ * -2 on other error; on error, data which has already been read is
+ * discarded
+ */
+ssize_t
+was_simple_read_most(struct was_simple *w, void *buffer, size_t length);
+
+/**
  * Determine how much request body data is remaining to be read.
  * Returns -1 if the total size of the request body is unknown.
  */
