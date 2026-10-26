@@ -1,3 +1,9 @@
+libcm4all-was (1.34) unstable; urgency=low
+
+  * 
+
+ --   
+
 libcm4all-was (1.33) unstable; urgency=low
 
   * simple: add was_simple_read_most()
