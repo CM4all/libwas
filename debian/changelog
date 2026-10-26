@@ -12,7 +12,7 @@ libcm4all-was (1.33) unstable; urgency=low
   * apreq: fix infinite recursion
   * apreq: don't call was_simple_input_close() from the destroy callback
 
- --   
+ -- Max Kellermann <max.kellermann@ionos.com>  Mon, 26 Oct 2026 21:41:01 +0100
 
 libcm4all-was (1.32) unstable; urgency=low
 
